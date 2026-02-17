@@ -28,8 +28,6 @@ export const mockMessages = (app: Elysia) =>
           x: parseFloat(x.toFixed(2)),
           y: parseFloat(y.toFixed(2)),
           z: parseFloat(z.toFixed(2)),
-
-          timestamp: Date.now(),
         })
 
         client.publish("test/spiral", payload)
