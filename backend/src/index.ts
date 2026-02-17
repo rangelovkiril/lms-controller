@@ -6,7 +6,7 @@ const BROKER_URL = "mqtt://localhost:1883"
 
 const app = new Elysia()
   .use(mockMessages)
-  
+
   .onStart(() => {
     const client = mqtt.connect(BROKER_URL)
 
@@ -30,3 +30,5 @@ const app = new Elysia()
   .listen(3000)
 
 console.log(`Elysia is running at ${app.server?.hostname}:${app.server?.port}`)
+
+export type App = typeof app

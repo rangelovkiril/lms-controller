@@ -19,18 +19,14 @@ export const mockMessages = (app: Elysia) =>
 
       setInterval(() => {
         const x = radius * Math.cos(angle)
-
         const y = radius * Math.sin(angle)
-
         z += zStep * direction
 
         if (z >= zMax || z <= 0) direction *= -1
 
         const payload = JSON.stringify({
           x: parseFloat(x.toFixed(2)),
-
           y: parseFloat(y.toFixed(2)),
-
           z: parseFloat(z.toFixed(2)),
 
           timestamp: Date.now(),
