@@ -9,9 +9,11 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@elysiajs/eden": "^1.2.10",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.5.0",
     "@types/three": "^0.182.0",
+    "elysia": "1.2.10",
     "next": "16.1.6",
     "react": "19.2.3",
     "react-dom": "19.2.3",
@@ -24,7 +26,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
-    "tailwindcss": "^4",
+    "tailwindcss": "^4.1.18",
     "typescript": "^5"
   },
   "ignoreScripts": [

@@ -1,4 +1,4 @@
-import { Elysia } from "elysia"
+import { Elysia, t } from "elysia"
 import mqtt from "mqtt"
 
 export const mqttClient = (options: { brokerUrl: string }) => 
@@ -14,9 +14,17 @@ export const mqttClient = (options: { brokerUrl: string }) =>
           })
         })
 
-        client.on("message", (topic, message) => {
-          console.log(`Received [${topic}]:`, message.toString())
-        })
+       client.on("message", (topic, message) => {
+         const payloadString = message.toString()
+         console.log(`MQTT -> WS Publishing [${topic}]:`, payloadString)
+
+         try {
+           const data = JSON.parse(payloadString)
+           app.server?.publish(topic, JSON.stringify(data))
+         } catch (e) {
+           app.server?.publish(topic, payloadString)
+         }
+       })
 
         client.on("error", (err) => console.error("MQTT Error:", err))
         
