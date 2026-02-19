@@ -9,19 +9,17 @@ export default function LaserLine({ targetPosVec, isFiring }) {
   const blinkTimer = useRef(0);
   const visible = useRef(true);
 
-  const BLINK_ON = 0.08;   // seconds laser is visible
-  const BLINK_OFF = 0.04;  // seconds laser is hidden
+  const BLINK_ON = 0.08;   
+  const BLINK_OFF = 0.04;  
 
   useFrame((_, delta) => {
     if (!isFiring || !lineRef.current) return;
 
-    // Update end position
     endPoint.current.lerp(targetPosVec.current, 0.1);
     const positions = lineRef.current.geometry.attributes.position;
     positions.setXYZ(1, endPoint.current.x, endPoint.current.y, endPoint.current.z);
     positions.needsUpdate = true;
 
-    // Blink logic
     blinkTimer.current += delta;
     const interval = visible.current ? BLINK_ON : BLINK_OFF;
     if (blinkTimer.current >= interval) {
