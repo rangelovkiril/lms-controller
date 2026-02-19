@@ -6,6 +6,7 @@
     "dev": "bun run --watch src/index.ts"
   },
   "dependencies": {
+    "@influxdata/influxdb-client": "^1.35.0",
     "elysia": "1.2.10",
     "mqtt": "^5.15.0"
   },

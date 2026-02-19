@@ -1,41 +1,50 @@
 import { Elysia } from "elysia"
-
 import mqtt from "mqtt"
 
-export const mockMessages = (app: Elysia) =>
-  app.onStart(() => {
-    const client = mqtt.connect("mqtt://localhost:1883")
+interface MockSensorConfig {
+  brokerUrl: string
+  topic: string
+  intervalMs?: number
+}
+
+export const mockSensor = (config: MockSensorConfig) => {
+  const { brokerUrl, topic, intervalMs = 500 } = config
+
+  return new Elysia({ name: "mock-sensor" }).onStart(() => {
+    const client = mqtt.connect(brokerUrl)
 
     let angle = 0
     let z = 0
-    let direction = 1
-    const radius = 10
-    const speed = 0.1
-    const zStep = 0.5
-    const zMax = 20
+    let zDirection = 1
+
+    const RADIUS = 10
+    const ANGLE_STEP = 0.1
+    const Z_STEP = 0.5
+    const Z_MAX = 20
 
     client.on("connect", () => {
-      console.log("Mock sensor: Connected and sending data...")
+      console.log(`[MockSensor] Publishing to "${topic}" every ${intervalMs}ms`)
 
       setInterval(() => {
-        const x = radius * Math.cos(angle)
-        const y = radius * Math.sin(angle)
-        z += zStep * direction
+        const x = RADIUS * Math.cos(angle)
+        const y = RADIUS * Math.sin(angle)
 
-        if (z >= zMax || z <= 0) direction *= -1
+        z += Z_STEP * zDirection
+        if (z >= Z_MAX || z <= 0) zDirection *= -1
 
-        const payload = JSON.stringify({
-          station: "test",
-          x: parseFloat(x.toFixed(2)),
-          y: parseFloat(y.toFixed(2)),
-          z: parseFloat(z.toFixed(2)),
-        })
+        client.publish(
+          topic,
+          JSON.stringify({
+            x: parseFloat(x.toFixed(2)),
+            y: parseFloat(y.toFixed(2)),
+            z: parseFloat(z.toFixed(2)),
+          })
+        )
 
-        client.publish("slr/test/position", payload)
-
-        angle += speed
-      }, 500)
+        angle += ANGLE_STEP
+      }, intervalMs)
     })
 
-    client.on("error", (err) => console.error("MQTT Error:", err))
+    client.on("error", (err) => console.error("[MockSensor] Error:", err))
   })
+}
