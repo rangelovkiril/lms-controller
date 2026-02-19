@@ -1,5 +1,10 @@
 import { Elysia } from "elysia"
-import { InfluxDB, Point, WriteApi, QueryApi } from "@influxdata/influxdb-client"
+import {
+  InfluxDB,
+  Point,
+  WriteApi,
+  QueryApi,
+} from "@influxdata/influxdb-client"
 
 interface InfluxConfig {
   url: string
@@ -16,7 +21,16 @@ export const influx = (config: InfluxConfig) => {
   return new Elysia({ name: "influx" })
     .decorate("influx", {
       writePoint: (point: Point): void => {
-        writeApi.writePoint(point)
+        try {
+          writeApi.writePoint(point)
+          writeApi
+            .flush().then()
+            .catch((err) => {
+              console.error("[InfluxDB] Flush error:", err)
+            })
+        } catch (err) {
+          console.error("[InfluxDB] Write error:", err)
+        }
       },
       query: (fluxQuery: string): Promise<unknown[]> => {
         return queryApi.collectRows(fluxQuery)
@@ -24,8 +38,10 @@ export const influx = (config: InfluxConfig) => {
       Point,
     })
     .onStop(() => {
-      writeApi.close().catch((err) =>
-        console.error("[InfluxDB] Failed to flush on shutdown:", err)
-      )
+      writeApi
+        .close()
+        .catch((err) =>
+          console.error("[InfluxDB] Failed to flush on shutdown:", err),
+        )
     })
 }

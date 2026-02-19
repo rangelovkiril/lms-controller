@@ -1,17 +1,15 @@
 services:
   influxdb:
-    image: influxdb:latest
-    container_name: influxdb
+    image: influxdb:2
     ports:
       - "8086:8086"
     environment:
-      - DOCKER_INFLUXDB_INIT_MODE=setup
-      - DOCKER_INFLUXDB_INIT_USERNAME=admin
-      - DOCKER_INFLUXDB_INIT_PASSWORD=password123
-      - DOCKER_INFLUXDB_INIT_ORG=my-org
-      - DOCKER_INFLUXDB_INIT_BUCKET=my-bucket
-      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=my-super-secret-token
-    restart: unless-stopped
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: admin
+      DOCKER_INFLUXDB_INIT_PASSWORD: adminadmin
+      DOCKER_INFLUXDB_INIT_ORG: LightMySatellite
+      DOCKER_INFLUXDB_INIT_BUCKET: slr
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: super-secret-token
     volumes:
       - influxdb_data:/var/lib/influxdb2
 

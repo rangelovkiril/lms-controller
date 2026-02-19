@@ -14,9 +14,9 @@ const app = new Elysia()
   .use(
     influx({
       url: process.env.INFLUX_URL ?? "http://localhost:8086",
-      token: process.env.INFLUX_TOKEN ?? "",
-      org: process.env.INFLUX_ORG ?? "",
-      bucket: process.env.INFLUX_BUCKET ?? "",
+      token: process.env.INFLUX_TOKEN ?? "PHsk2kM9-UvB4dAnl4Gt_EEVn4Sl4MkYaMGE9ZkJ1PpVwfSVckrQg_Eq_CqweC7eS3aDymACGb-4m_QYUFI9Lg==",
+      org: process.env.INFLUX_ORG ?? "LightMySatellite",
+      bucket: process.env.INFLUX_BUCKET ?? "slr",
     })
   )
   .onStart(app => {
@@ -26,7 +26,6 @@ const app = new Elysia()
 
     mqtt.onMessage((topic: any, payload: any) => {
       const subscribers = app.server?.publish(topic, payload)
-      console.log(`[App] Forwarded "${topic}" to ${subscribers ?? 0} WS client(s)`)
 
       try {
         const { x, y, z } = JSON.parse(payload)
@@ -43,6 +42,13 @@ const app = new Elysia()
     })
   })
   .get("/", () => "OK")
+  .get("/positions", async ({ influx }) => {
+  return await influx.query(`
+    from(bucket: "slr")
+  |> range(start: -1h)
+  |> filter(fn: (r) => r._measurement == "position")
+  `)
+})
   .listen(3000)
 
 
