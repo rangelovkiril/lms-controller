@@ -3,13 +3,16 @@ import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Vector3 } from "three";
 import { useWebSocket } from "@/hooks/useWebSocket"; 
+import { useModel } from "@/hooks/useModel"; // Adjust path as needed
 
-const SCALE = 0.2;
+const SCALE = 1;
 
 export default function Target() {
   const meshRef = useRef(null);
   const targetPosVec = useRef(new Vector3(0, 0, 0));
   const isRecordingRef = useRef(false);
+
+  const { scene } = useModel('/satellite.glb');
 
   useWebSocket("ws://localhost:3000", {
     onStatus: (status: string) => console.log("WS Status:", status),
@@ -33,13 +36,10 @@ export default function Target() {
   });
 
   return (
-    <mesh ref={meshRef}>
-      <sphereGeometry args={[0.5, 32, 32]} />
-      <meshStandardMaterial 
-        color="#e4e4e7" 
-        emissive="#e4e4e7" 
-        emissiveIntensity={0.3} 
-      />
-    </mesh>
+    <primitive 
+      ref={meshRef} 
+      object={scene} 
+      scale={0.5} 
+    />
   );
 }
