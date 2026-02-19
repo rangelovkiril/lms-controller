@@ -13,7 +13,8 @@ export const mqttClient = (options: MqttPluginOptions) =>
 
       client.on("connect", (): void => {
         console.log("Connected to MQTT broker")
-        client.subscribe("test/+")
+        client.subscribe("slr/+/position")
+        client.subscribe("slr/+/event")
       })
 
       client.on("message", (topic: string, message: Buffer): void => {

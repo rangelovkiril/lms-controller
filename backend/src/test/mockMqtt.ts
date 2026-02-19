@@ -30,7 +30,7 @@ export const mockMessages = (app: Elysia) =>
           z: parseFloat(z.toFixed(2)),
         })
 
-        client.publish("test/spiral", payload)
+        client.publish("slr/test/position", payload)
 
         angle += speed
       }, 500)

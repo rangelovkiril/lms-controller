@@ -13,7 +13,7 @@ useEffect(() => {
 
   ws.onopen = () => {
 
-ws.send(JSON.stringify({ action: "subscribe", topic: "test/spiral" }))
+  ws.send(JSON.stringify({ action: "subscribe", topic: "slr/test/position" }))
 };
 
 ws.onmessage = (event) => {
