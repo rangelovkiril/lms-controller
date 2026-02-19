@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Grid, Stars } from "@react-three/drei";
 import { Vector3 } from "three";
@@ -7,35 +7,64 @@ import Target from "./Target";
 import LaserLine from "./LaserLine";
 import { useWebSocket } from "@/hooks/useWebSocket";
 
+const WS_URL = "ws://localhost:3000";
+const TOPIC = "slr/test/position";
+const bgColor = "#050505";
+
 export default function Scene() {
   const [isFiring, setIsFiring] = useState(false);
+  const [wsStatus, setWsStatus] = useState<"CONNECTED" | "DISCONNECTED">("DISCONNECTED");
   const isRecordingRef = useRef(false);
   const targetPosVec = useRef(new Vector3(0, 0, 0));
 
-  // Дефинираме един цвят за всичко
-  const bgColor = "#050505";
+  const handleOpen = useCallback((socket: WebSocket) => {
+    setWsStatus("CONNECTED");
+    socket.send(JSON.stringify({ action: "subscribe", topic: TOPIC }));
+  }, []);
 
-  useWebSocket("ws://localhost:3000", {
-    onStatus: (status) => console.log("WS Status:", status),
-    onTargetPos: (pos) => {
-      targetPosVec.current.set(pos.x, pos.z, pos.y);
-    },
-    onFiring: (firing) => setIsFiring(firing),
-    onRecord: (data) => console.log(data),
-    isRecordingRef: isRecordingRef,
+  const handleMessage = useCallback((ev: MessageEvent) => {
+    try {
+      const msg = JSON.parse(ev.data);
+
+      if (msg.x !== undefined) {
+        targetPosVec.current.set(msg.x, msg.z, msg.y);
+      }
+
+      if (msg.firing !== undefined) {
+        setIsFiring(msg.firing);
+      }
+
+      if (isRecordingRef.current && msg.record !== undefined) {
+        console.log("Recorded data:", msg.record);
+      }
+    } catch {
+      // ignore parse errors
+    }
+  }, []);
+
+  const handleClose = useCallback(() => {
+    setWsStatus("DISCONNECTED");
+  }, []);
+
+  const handleError = useCallback((ev: Event) => {
+    console.error("WebSocket error:", ev);
+  }, []);
+
+  useWebSocket(WS_URL, {
+    onOpen: handleOpen,
+    onMessage: handleMessage,
+    onClose: handleClose,
+    onError: handleError,
   });
+
+  useEffect(() => {
+    console.log("Scene mounted");
+  }, []);
 
   return (
     <div className="w-full h-screen">
-      <Canvas
-        camera={{ position: [5, 5, 5] }}
-        // 1. Премахваме background от стила и го слагаме като обект в сцената
-        style={{ flex: 1 }} 
-      >
-        {/* 2. Задаваме цвета на фона директно в R3F */}
+      <Canvas camera={{ position: [5, 5, 5] }} style={{ flex: 1 }}>
         <color attach="background" args={[bgColor]} />
-        
-        {/* 3. Мъглата трябва да съвпада с цвета на фона */}
         <fog attach="fog" args={[bgColor, 20, 70]} />
 
         <ambientLight intensity={0.5} />
@@ -59,11 +88,7 @@ export default function Scene() {
         <Target targetPosVec={targetPosVec} />
         <LaserLine targetPosVec={targetPosVec} isFiring={true} />
 
-        <OrbitControls 
-          maxPolarAngle={Math.PI / 2.1} 
-          makeDefault 
-          enablePan={false} 
-        />
+        <OrbitControls maxPolarAngle={Math.PI / 2.1} makeDefault enablePan={false} />
       </Canvas>
     </div>
   );

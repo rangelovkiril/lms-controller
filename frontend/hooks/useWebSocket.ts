@@ -1,49 +1,63 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-export function useWebSocket(url: string, options: any) {
-  const { onStatus, onTargetPos, onFiring, onTrackingEvent, onRecord, isRecordingRef } = options;
+export interface WebSocketOptions {
+  onOpen?: (socket: WebSocket) => void;
+  onMessage?: (event: MessageEvent) => void;
+  onClose?: () => void;
+  onError?: (event: Event) => void;
+  reconnectDelay?: number;
+}
+
+export function useWebSocket(url: string, options: WebSocketOptions = {}) {
+  const { onOpen, onMessage, onClose, onError, reconnectDelay = 3000 } = options;
+  const socketRef = useRef<WebSocket | null>(null);
+
+  const onOpenRef = useRef(onOpen);
+  const onMessageRef = useRef(onMessage);
+  const onCloseRef = useRef(onClose);
+  const onErrorRef = useRef(onError);
+
+  useEffect(() => { onOpenRef.current = onOpen; }, [onOpen]);
+  useEffect(() => { onMessageRef.current = onMessage; }, [onMessage]);
+  useEffect(() => { onCloseRef.current = onClose; }, [onClose]);
+  useEffect(() => { onErrorRef.current = onError; }, [onError]);
+
   useEffect(() => {
-    let ws: WebSocket;
+    let active = true;
 
     const connect = () => {
-      try {
-        ws = new WebSocket(url);
+      console.log("Attempting to connect to:", url);
+      const socket = new WebSocket(url);
+      socketRef.current = socket;
 
-        ws.onopen = () => {
-          ws.send(JSON.stringify({ action: "subscribe", topic: "slr/test/position" }));
-          onStatus("CONNECTED");
-        };
+      socket.onopen = () => {
+        if (!active) { socket.close(); return; }
+        onOpenRef.current?.(socket);
+      };
 
-        ws.onclose = () => {
-          onStatus("DISCONNECTED");
-          setTimeout(connect, 3000);
-        };
+      socket.onmessage = (ev) => {
+        if (!active) return;
+        onMessageRef.current?.(ev);
+      };
 
-        ws.onerror = () => onStatus("ERROR");
+      socket.onclose = () => {
+        if (active) {
+          onCloseRef.current?.();
+          setTimeout(connect, reconnectDelay);
+        }
+      };
 
-        ws.onmessage = (ev) => {
-          try {
-            const msg = JSON.parse(ev.data);
-
-            if (msg.x !== undefined) {
-              const pos = { x: msg.x, y: msg.y, z: msg.z };
-              onTargetPos(pos);
-              if (isRecordingRef.current) {
-                onRecord({ timestamp: Date.now(), ...pos });
-              }
-            }
-
-          } catch (_) {}
-        };
-      } catch (_) {
-        onStatus("ERROR");
-      }
+      socket.onerror = (ev) => {
+        if (active) onErrorRef.current?.(ev);
+      };
     };
 
     connect();
-    return () => ws?.close();
-  }, [url]);
+
+    return () => {
+      active = false;
+      socketRef.current?.close();
+      socketRef.current = null;
+    };
+  }, [url, reconnectDelay]);
 }
