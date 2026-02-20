@@ -1,55 +1,80 @@
-import { Elysia } from "elysia"
+import { Elysia, t } from "elysia"
+import { cors } from "@elysiajs/cors"
 import { websocket } from "./plugins/websocket"
-import { mqttClient} from "./plugins/mqtt"
+import { mqttClient } from "./plugins/mqtt"
 import { influx } from "./plugins/influx"
 import { mockSensor } from "./test/mockMqtt"
+import {
+  writePosition,
+  getStations,
+  getObjects,
+  getData,
+} from "./services/slr.service"
 
-const IS_DEV = process.env.NODE_ENV !== "production"
+const IS_DEV     = process.env.NODE_ENV !== "production"
 const BROKER_URL = "mqtt://localhost:1883"
 
+const ALLOWED_ORIGINS = IS_DEV
+  ? ["http://localhost:3001"]
+  : [process.env.FRONTEND_URL ?? "http://localhost:3001"]
+
 const app = new Elysia()
+  .use(cors({
+    origin: "localhost:3001",
+    methods: ["GET", "POST", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: false,
+  }))
   .use(websocket)
   .use(mqttClient(BROKER_URL))
-  .use(IS_DEV ? mockSensor({ brokerUrl: BROKER_URL, topic: "slr/test/position" }) : new Elysia())
+  .use(IS_DEV
+    ? mockSensor({ brokerUrl: BROKER_URL, topic: "slr/test/position" })
+    : new Elysia()
+  )
   .use(
     influx({
-      url: process.env.INFLUX_URL ?? "http://localhost:8086",
-      token: process.env.INFLUX_TOKEN ?? "PHsk2kM9-UvB4dAnl4Gt_EEVn4Sl4MkYaMGE9ZkJ1PpVwfSVckrQg_Eq_CqweC7eS3aDymACGb-4m_QYUFI9Lg==",
-      org: process.env.INFLUX_ORG ?? "LightMySatellite",
-      bucket: process.env.INFLUX_BUCKET ?? "slr",
+      url:   process.env.INFLUX_URL   ?? "http://localhost:8086",
+      token: process.env.INFLUX_TOKEN ?? "eRFpmv6ilk0KbPEMT07OagqicCPIf1ZkGNhN5POKwxat8GU-3mQYx9MmOocDPISd5eZvu52bslghi3cyb-KJVQ==",
+      org:   process.env.INFLUX_ORG   ?? "LightMySatellite",
     })
   )
-  .onStart(app => {
+  .onStart((app) => {
     const { mqtt, influx } = app.decorator
 
-    mqtt.subscribe("slr/+/position")
+    mqtt.subscribe("slr/+/+")  // slr/{station}/{object}
 
-    mqtt.onMessage((topic: any, payload: any) => {
-      const subscribers = app.server?.publish(topic, payload)
+    mqtt.onMessage((topic: string, payload: string) => {
+      app.server?.publish(topic, payload)
 
-      try {
-        const { x, y, z } = JSON.parse(payload)
-        const point = new influx.Point("position")
-          .tag("topic", topic)
-          .floatField("x", x)
-          .floatField("y", y)
-          .floatField("z", z)
-
-        influx.writePoint(point)
-      } catch (err) {
-        console.error("[App] Failed to parse payload for InfluxDB:", err)
-      }
+      writePosition(influx, topic, payload).catch(console.error)
     })
   })
-  .get("/", () => "OK")
-  .get("/positions", async ({ influx }) => {
-  return await influx.query(`
-    from(bucket: "slr")
-  |> range(start: -1h)
-  |> filter(fn: (r) => r._measurement == "position")
-  `)
-})
-  .listen(3000)
 
+  .get("/", () => ({ status: "ok" }))
+
+  .get("/stations", async ({ influx }) => {
+    return getStations(influx)
+  })
+
+  .get("/objects", async ({ influx, query }) => {
+    return getObjects(influx, query.station)
+  }, {
+    query: t.Object({
+      station: t.String(),
+    }),
+  })
+
+  .get("/data", async ({ influx, query }) => {
+    return getData(influx, query)
+  }, {
+    query: t.Object({
+      station: t.String(),
+      object:  t.String(),
+      start:   t.Optional(t.String()),
+      stop:    t.Optional(t.String()),
+    }),
+  })
+
+  .listen(3000)
 
 console.log(`[Server] Running at http://${app.server?.hostname}:${app.server?.port}`)
