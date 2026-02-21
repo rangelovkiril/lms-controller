@@ -1,7 +1,6 @@
 import Elysia from "elysia"
 import mqtt, { MqttClient } from "mqtt"
 
-
 type MessageHandler = (topic: string, payload: string) => void
 
 export const mqttClient = (brokerUrl: string) => {
@@ -9,8 +8,11 @@ export const mqttClient = (brokerUrl: string) => {
 
   return new Elysia({ name: "mqtt" })
     .decorate("mqtt", {
-      subscribe: (topic: string): void => {
-        client.subscribe(topic)
+      subscribe: (topics: string | string[]): void => {
+        client.subscribe(topics)
+      },
+      publish: (topic: string, payload: string): void => {
+        client.publish(topic, payload)
       },
       onMessage: (handler: MessageHandler): void => {
         client.on("message", (topic: string, raw: Buffer) => {
@@ -20,9 +22,8 @@ export const mqttClient = (brokerUrl: string) => {
     })
     .onStart(() => {
       client = mqtt.connect(brokerUrl)
-
-      client.on("connect", ()   => console.log("[MQTT] Connected to broker:", brokerUrl))
-      client.on("error", (err)  => console.error("[MQTT] Error:", err))
+      client.on("connect", ()  => console.log("[MQTT] Connected to broker:", brokerUrl))
+      client.on("error", (err) => console.error("[MQTT] Error:", err))
     })
     .onStop(() => {
       client?.end()

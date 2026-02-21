@@ -11,12 +11,16 @@ import {
   getData,
 } from "./services/slr.service"
 
+import { createDispatcher, TOPICS } from "./services/dispatch.service"
+
 const IS_DEV     = process.env.NODE_ENV !== "production"
 const BROKER_URL = "mqtt://localhost:1883"
 
-const ALLOWED_ORIGINS = IS_DEV
-  ? ["http://localhost:3001"]
-  : [process.env.FRONTEND_URL ?? "http://localhost:3001"]
+process.on("SIGINT", async () => {
+  console.log("\n[Signal] SIGINT received.");
+  await app.stop(); 
+  process.exit(0);
+});
 
 const app = new Elysia()
   .use(cors({
@@ -28,8 +32,8 @@ const app = new Elysia()
   .use(websocket)
   .use(mqttClient(BROKER_URL))
   .use(IS_DEV
-    ? mockSensor({ brokerUrl: BROKER_URL, topic: "slr/test/position" })
-    : new Elysia()
+  ? mockSensor({ brokerUrl: BROKER_URL, stationId: "dispatcher_test", objId: "sat1" })
+  : new Elysia()
   )
   .use(
     influx({
@@ -38,17 +42,33 @@ const app = new Elysia()
       org:   process.env.INFLUX_ORG   ?? "LightMySatellite",
     })
   )
+ 
   .onStart((app) => {
-    const { mqtt, influx } = app.decorator
+  const { mqtt, influx } = app.decorator
 
-    mqtt.subscribe("slr/+/+")  // slr/{station}/{object}
+  mqtt.subscribe([...TOPICS])
 
-    mqtt.onMessage((topic: string, payload: string) => {
-      app.server?.publish(topic, payload)
-
-      writePosition(influx, topic, payload).catch(console.error)
-    })
+  const dispatch = createDispatcher({
+    "slr/:stationId/cmd": ({ stationId }, payload) => {
+      app.server?.publish(`slr/${stationId}/cmd`, payload)
+    },
+    "slr/:stationId/tracking/:objId/pos": ({ stationId, objId }, payload) => {
+      app.server?.publish(`slr/${stationId}/tracking/${objId}/pos`, payload)
+      writePosition(influx, stationId, objId, payload).catch(console.error)
+    },
+    "slr/:stationId/env": ({ stationId }, payload) => {
+      app.server?.publish(`slr/${stationId}/env`, payload)
+    },
+    "slr/:stationId/system": ({ stationId }, payload) => {
+      app.server?.publish(`slr/${stationId}/system`, payload)
+    },
+    "slr/:stationId/log/:level": ({ stationId, level }, payload) => {
+      app.server?.publish(`slr/${stationId}/log/${level}`, payload)
+    },
   })
+
+  mqtt.onMessage(dispatch)
+})
 
   .get("/", () => ({ status: "ok" }))
 

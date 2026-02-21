@@ -41,34 +41,31 @@ export function parseTopic(topic: string): ParsedTopic | null {
 
 export async function writePosition(
   influx: InfluxClient,
-  topic: string,
+  stationId: string,
+  objId: string,
   payload: string
 ): Promise<void> {
-  const parsed = parseTopic(topic)
-  if (!parsed) return
-
   let data: PositionPayload
   try {
     data = JSON.parse(payload)
   } catch {
-    console.error(`[SLR] Invalid JSON payload on topic "${topic}":`, payload)
+    console.error(`[SLR] Invalid JSON on slr/${stationId}/tracking/${objId}/pos:`, payload)
     return
   }
 
   const { x, y, z } = data
   if (x == null || y == null || z == null) {
-    console.error(`[SLR] Missing x/y/z fields in payload:`, data)
+    console.error(`[SLR] Missing x/y/z in payload:`, data)
     return
   }
 
-  const point = new Point(parsed.object) 
+  const point = new Point(objId)
     .floatField("x", x)
     .floatField("y", y)
     .floatField("z", z)
 
-  await influx.writePoint(point, parsed.station)
+  await influx.writePoint(point, stationId)
 }
-
 /**
  * Returns all buckets that belong to the SLR domain.
  * Filters out InfluxDB system buckets (_monitoring, _tasks).

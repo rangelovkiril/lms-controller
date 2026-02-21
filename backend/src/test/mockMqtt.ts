@@ -3,12 +3,14 @@ import mqtt from "mqtt"
 
 interface MockSensorConfig {
   brokerUrl: string
-  topic: string
+  stationId?: string
+  objId?: string
   intervalMs?: number
 }
 
 export const mockSensor = (config: MockSensorConfig) => {
-  const { brokerUrl, topic, intervalMs = 500 } = config
+  const { brokerUrl, stationId = "test", objId = "sat1", intervalMs = 500 } = config
+  const topic = `slr/${stationId}/tracking/${objId}/pos`
 
   return new Elysia({ name: "mock-sensor" }).onStart(() => {
     const client = mqtt.connect(brokerUrl)
@@ -32,14 +34,11 @@ export const mockSensor = (config: MockSensorConfig) => {
         z += Z_STEP * zDirection
         if (z >= Z_MAX || z <= 0) zDirection *= -1
 
-        client.publish(
-          topic,
-          JSON.stringify({
-            x: parseFloat(x.toFixed(2)),
-            y: parseFloat(y.toFixed(2)),
-            z: parseFloat(z.toFixed(2)),
-          })
-        )
+        client.publish(topic, JSON.stringify({
+          x: parseFloat(x.toFixed(2)),
+          y: parseFloat(y.toFixed(2)),
+          z: parseFloat(z.toFixed(2)),
+        }))
 
         angle += ANGLE_STEP
       }, intervalMs)

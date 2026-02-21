@@ -8,8 +8,11 @@ import LaserLine from "./LaserLine";
 import { useWebSocket } from "@/hooks/useWebSocket";
 
 const WS_URL = "ws://localhost:3000";
-const TOPIC = "slr/test/position";
 const bgColor = "#050505";
+
+const STATION_ID = "dispatcher_test"
+const OBJ_ID = "sat1"
+const TOPIC = `slr/${STATION_ID}/tracking/${OBJ_ID}/pos`
 
 export default function Scene() {
   const [isFiring, setIsFiring] = useState(false);
