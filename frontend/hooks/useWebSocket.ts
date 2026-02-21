@@ -1,32 +1,40 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 
 export interface WebSocketOptions {
-  onOpen?: (socket: WebSocket) => void;
+  onOpen?:    (socket: WebSocket) => void;
   onMessage?: (event: MessageEvent) => void;
-  onClose?: () => void;
-  onError?: (event: Event) => void;
+  onClose?:   () => void;
+  onError?:   (event: Event) => void;
   reconnectDelay?: number;
 }
 
-export function useWebSocket(url: string, options: WebSocketOptions = {}) {
-  const { onOpen, onMessage, onClose, onError, reconnectDelay = 3000 } = options;
+export interface WebSocketHandle {
+  send: (data: string | object) => void;
+}
+
+export function useWebSocket(
+  url: string,
+  options: WebSocketOptions = {}
+): WebSocketHandle {
+  const { reconnectDelay = 3000 } = options;
   const socketRef = useRef<WebSocket | null>(null);
 
-  const onOpenRef = useRef(onOpen);
-  const onMessageRef = useRef(onMessage);
-  const onCloseRef = useRef(onClose);
-  const onErrorRef = useRef(onError);
+  const onOpenRef    = useRef(options.onOpen);
+  const onMessageRef = useRef(options.onMessage);
+  const onCloseRef   = useRef(options.onClose);
+  const onErrorRef   = useRef(options.onError);
 
-  useEffect(() => { onOpenRef.current = onOpen; }, [onOpen]);
-  useEffect(() => { onMessageRef.current = onMessage; }, [onMessage]);
-  useEffect(() => { onCloseRef.current = onClose; }, [onClose]);
-  useEffect(() => { onErrorRef.current = onError; }, [onError]);
+  useEffect(() => { onOpenRef.current    = options.onOpen;    }, [options.onOpen]);
+  useEffect(() => { onMessageRef.current = options.onMessage; }, [options.onMessage]);
+  useEffect(() => { onCloseRef.current   = options.onClose;   }, [options.onClose]);
+  useEffect(() => { onErrorRef.current   = options.onError;   }, [options.onError]);
 
   useEffect(() => {
     let active = true;
+    let reconnectTimer: ReturnType<typeof setTimeout>;
 
     const connect = () => {
-      console.log("Attempting to connect to:", url);
+      if (!active) return;
       const socket = new WebSocket(url);
       socketRef.current = socket;
 
@@ -41,10 +49,9 @@ export function useWebSocket(url: string, options: WebSocketOptions = {}) {
       };
 
       socket.onclose = () => {
-        if (active) {
-          onCloseRef.current?.();
-          setTimeout(connect, reconnectDelay);
-        }
+        if (!active) return;
+        onCloseRef.current?.();
+        reconnectTimer = setTimeout(connect, reconnectDelay);
       };
 
       socket.onerror = (ev) => {
@@ -56,8 +63,20 @@ export function useWebSocket(url: string, options: WebSocketOptions = {}) {
 
     return () => {
       active = false;
+      clearTimeout(reconnectTimer);
       socketRef.current?.close();
       socketRef.current = null;
     };
   }, [url, reconnectDelay]);
+
+  const send = useCallback((data: string | object) => {
+    const socket = socketRef.current;
+    if (!socket || socket.readyState !== WebSocket.OPEN) {
+      console.warn("WebSocket not open - message dropped:", data);
+      return;
+    }
+    socket.send(typeof data === "string" ? data : JSON.stringify(data));
+  }, []);
+
+  return { send };
 }
