@@ -8,9 +8,48 @@
   }
 }
 
-@theme inline {
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+@theme {
+  /* Colors */
+  --color-bg: #080808;
+  --color-surface: #0f0f0f;
+  --color-surface-hi: #161616;
+  --color-border: #1e1e1e;
+  --color-border-hi: #2a2a2a;
+
+  --color-text: #ededed;
+  --color-text-muted: #666666;
+  --color-text-dim: #999999;
+
+  --color-accent: #00dc82;
+  --color-accent-dim: #00dc8220;
+  --color-accent-glow: #00dc8240;
+
+  --color-blue: #0070f3;
+  --color-blue-dim: #0070f320;
+
+  --color-danger: #ff4444;
+
+  /* Fonts */
+  --font-sans: "Geist", "system-ui", "sans-serif";
+  --font-mono: "Geist Mono", "monospace";
+
+  /* Animations & Keyframes */
+  --animate-shimmer: shimmer 1.5s infinite;
+  --animate-fade-in: fade-in 0.15s ease;
+  --animate-pulse-dot: pulse-dot 2s ease-in-out infinite;
+
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(-3px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
 }
 
 html, body { margin: 0; }

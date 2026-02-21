@@ -10,7 +10,7 @@ import { useWebSocket } from "@/hooks/useWebSocket";
 const WS_URL = "ws://localhost:3000";
 const bgColor = "#050505";
 
-const STATION_ID = "dispatcher_test"
+const STATION_ID = "test"
 const OBJ_ID = "sat1"
 const TOPIC = `slr/${STATION_ID}/tracking/${OBJ_ID}/pos`
 
