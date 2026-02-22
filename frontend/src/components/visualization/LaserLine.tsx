@@ -13,10 +13,9 @@ import {
 
 interface LaserLineProps {
   renderedGroupRef: React.RefObject<Group>;
-  isFiring:         boolean;
 }
 
-export default function LaserLine({ renderedGroupRef, isFiring }: LaserLineProps) {
+export default function LaserLine({ renderedGroupRef }: LaserLineProps) {
   const blinkTimer = useRef(0);
   const visible    = useRef(true);
 
@@ -49,18 +48,13 @@ export default function LaserLine({ renderedGroupRef, isFiring }: LaserLineProps
     posAttr.setXYZ(1, x, y, z);
     posAttr.needsUpdate = true;
 
-    if (!isFiring) {
-      line.visible = false;
-      return;
-    }
-
     blinkTimer.current += delta;
     const interval = visible.current ? BLINK_ON : BLINK_OFF;
     if (blinkTimer.current >= interval) {
       blinkTimer.current = 0;
       visible.current    = !visible.current;
     }
-    line.visible = visible.current && isFiring;
+    line.visible = visible.current;
   });
 
   return <primitive object={line} />;

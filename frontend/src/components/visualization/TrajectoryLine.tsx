@@ -22,7 +22,7 @@ interface Props {
 
 function speedToHue(t: number): number {
   t = Math.max(0, Math.min(1, t));
-  return (1 - t) * 240; // 240° blue → 0° red
+  return (1 - t) * 240; 
 }
 
 const _tmpColor = new Color();

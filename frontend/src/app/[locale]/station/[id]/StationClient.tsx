@@ -1,9 +1,9 @@
 "use client";
 import { useState, useRef, useCallback, useEffect } from "react";
 import dynamic     from "next/dynamic";
-import { Vector3 } from "three";
 import TrackingDashboard from "@/components/visualization/TrackingDashboard";
 import type { Station }  from "@/lib/data/stations";
+import type { TrackingPosition } from "@/lib/ws/tracking";
 
 const Scene = dynamic(
   () => import("@/components/visualization/Scene"),
@@ -25,7 +25,7 @@ export default function StationClient({ station }: { station: Station }) {
   const [selectedObject, setSelectedObject] = useState(station.objects[0]);
   const [wsStatus,       setWsStatus]       = useState<"CONNECTED" | "DISCONNECTED">("DISCONNECTED");
   const [isFiring,       setIsFiring]       = useState(false);
-  const [position,       setPosition]       = useState<Vector3 | null>(null);
+  const [position,       setPosition]       = useState<TrackingPosition | null>(null);
   const [isFullscreen,   setIsFullscreen]   = useState(false);
 
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -49,13 +49,16 @@ export default function StationClient({ station }: { station: Station }) {
 
   const handleFire = useCallback(() => {
     sendRef.current?.({ action: "fire", stationId: station.id, objectId: selectedObject });
-    setIsFiring(true);
   }, [station.id, selectedObject]);
 
   const handleStop = useCallback(() => {
     sendRef.current?.({ action: "stop", stationId: station.id, objectId: selectedObject });
-    setIsFiring(false);
   }, [station.id, selectedObject]);
+
+  const handlePositionChange = useCallback((pos: TrackingPosition | null) => {
+    setPosition(pos);
+    setIsFiring(pos !== null);
+  }, []);
 
   return (
     <div className="flex h-full min-h-0">
@@ -64,12 +67,9 @@ export default function StationClient({ station }: { station: Station }) {
           wsUrl={station.wsUrl}
           stationId={station.id}
           objectId={selectedObject}
-          callbacks={{
-            onStatusChange:   setWsStatus,
-            onFiringChange:   setIsFiring,
-            onPositionChange: setPosition,
-            onSendReady:      (send) => { sendRef.current = send; },
-          }}
+          onStatusChange={setWsStatus}
+          onPositionChange={handlePositionChange}
+          onSendReady={(send) => { sendRef.current = send; }}
         />
 
         <TrackingDashboard

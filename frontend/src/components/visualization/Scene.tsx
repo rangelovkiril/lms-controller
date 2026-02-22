@@ -10,14 +10,18 @@ import { useWebSocket }                  from "@/hooks/useWebSocket";
 import {
   buildTrackingTopic,
   parseTrackingMessage,
+  type TrackingPosition,
 } from "@/lib/ws/tracking";
-
-import { SceneProps, ContentProps } from "@/types/scene";
-import { TrajectoryConfig } from "@/types/trajectory";
 
 const BG = "#0a0f1a";
 
-function SceneContent({ groupRef, targetPosVec, isFiring, trajectory }: ContentProps) {
+interface ContentProps {
+  groupRef:     React.RefObject<Group>;
+  targetPosVec: React.RefObject<Vector3>;
+  trajectory:   Required<TrajectoryConfig>;
+}
+
+function SceneContent({ groupRef, targetPosVec, trajectory }: ContentProps) {
   return (
     <>
       <TrajectoryLine
@@ -29,9 +33,17 @@ function SceneContent({ groupRef, targetPosVec, isFiring, trajectory }: ContentP
         opacity={trajectory.opacity}
       />
       <Target    ref={groupRef} targetPosVec={targetPosVec} />
-      <LaserLine renderedGroupRef={groupRef} isFiring={isFiring} />
+      <LaserLine renderedGroupRef={groupRef} />
     </>
   );
+}
+
+export interface TrajectoryConfig {
+  maxPoints?:    number;
+  maxArcLength?: number;
+  minSpeed?:     number;
+  maxSpeed?:     number;
+  opacity?:      number;
 }
 
 const TRAJECTORY_DEFAULTS: Required<TrajectoryConfig> = {
@@ -42,44 +54,53 @@ const TRAJECTORY_DEFAULTS: Required<TrajectoryConfig> = {
   opacity:      0.85,
 };
 
+export interface SceneProps {
+  wsUrl:            string;
+  stationId:        string;
+  objectId:         string;
+  trajectory?:      TrajectoryConfig;
+  onStatusChange:   (status: "CONNECTED" | "DISCONNECTED") => void;
+  onPositionChange: (pos: TrackingPosition | null) => void;
+  onSendReady:      (send: (data: object) => void) => void;
+}
+
 export default function Scene({
   wsUrl, stationId, objectId,
-  callbacks = {},
   trajectory = {},
+  onStatusChange,
+  onPositionChange,
+  onSendReady,
 }: SceneProps) {
-  const { onStatusChange, onFiringChange, onPositionChange, onSendReady } = callbacks;
   const resolvedTrajectory = { ...TRAJECTORY_DEFAULTS, ...trajectory };
 
-  const [isFiring, setIsFiring] = useState(false);
-  const [hasData,  setHasData]  = useState(false);
+  const [isFiring,   setIsFiring] = useState(false);
   const targetPosVec = useRef(new Vector3(0, 0, 0));
   const groupRef     = useRef<Group>(null!);
 
   const topic = buildTrackingTopic(stationId, objectId);
 
   const handleOpen = useCallback((socket: WebSocket) => {
-    onStatusChange?.("CONNECTED");
+    onStatusChange("CONNECTED");
     socket.send(JSON.stringify({ action: "subscribe", topic }));
   }, [topic, onStatusChange]);
 
   const handleMessage = useCallback((ev: MessageEvent) => {
-    const msg = parseTrackingMessage(ev);
-    if (!msg) return;
-
-    if (msg.position) {
-      targetPosVec.current.copy(msg.position.vec);
-      onPositionChange?.(targetPosVec.current.clone());
-      setHasData(true);
+    const pos = parseTrackingMessage(ev);
+    if (!pos) {
+      setIsFiring(false);
+      onPositionChange(null);
+      return;
     }
-    if (msg.firing !== undefined) {
-      setIsFiring(msg.firing);
-      onFiringChange?.(msg.firing);
-    }
-  }, [onPositionChange, onFiringChange]);
+    targetPosVec.current.set(pos.x, pos.y, pos.z);
+    onPositionChange(pos);
+    setIsFiring(true);
+  }, [onPositionChange]);
 
   const handleClose = useCallback(() => {
-    onStatusChange?.("DISCONNECTED");
-  }, [onStatusChange]);
+    onStatusChange("DISCONNECTED");
+    setIsFiring(false);
+    onPositionChange(null);
+  }, [onStatusChange, onPositionChange]);
 
   const { send } = useWebSocket(wsUrl, {
     onOpen:    handleOpen,
@@ -88,7 +109,7 @@ export default function Scene({
     onError:   (ev) => console.error("WebSocket error:", ev),
   });
 
-  useEffect(() => { onSendReady?.(send); }, [send, onSendReady]);
+  useEffect(() => { onSendReady(send); }, [send, onSendReady]);
 
   return (
     <Canvas
@@ -128,11 +149,10 @@ export default function Scene({
           speed={0.3}
         />
 
-        {hasData && (
+        {isFiring && (
           <SceneContent
             groupRef={groupRef}
             targetPosVec={targetPosVec}
-            isFiring={isFiring}
             trajectory={resolvedTrajectory}
           />
         )}
