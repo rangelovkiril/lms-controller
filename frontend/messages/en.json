@@ -1,0 +1,12 @@
+{
+  "overlay": {
+    "station": "Station",
+    "object": "Object",
+    "noInfo": "No information",
+    "start": "Start",
+    "stop": "Stop",
+    "live": "LIVE",
+    "offline": "OFFLINE",
+    "position": "Cartesian position"
+  }
+}

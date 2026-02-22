@@ -23,7 +23,7 @@ const app = new Elysia()
   .use(websocket)
   .use(mqttClient(BROKER_URL))
   .use(IS_DEV
-    ? mockSensor({ brokerUrl: BROKER_URL, stationId: "dispatcher_test", objId: "sat1" })
+    ? mockSensor({ brokerUrl: BROKER_URL, stationId: "test", objId: "sat1" })
     : new Elysia()
   )
   .use(influx({
@@ -32,7 +32,6 @@ const app = new Elysia()
     org:   Bun.env.INFLUX_ORG   ?? "LightMySatellite",
   }))
 
- 
   .onStart(({ decorator: { mqtt, influx }, server }) => {
     setupMqtt(mqtt, influx, (topic, payload) => {
       server?.publish(topic, payload)
@@ -66,7 +65,7 @@ const app = new Elysia()
 
   .listen(PORT)
 
-  
+
 process.on("SIGINT", async () => {
   console.log("\n[Signal] SIGINT received. Shutting down…")
   await app.stop()
