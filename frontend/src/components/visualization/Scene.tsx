@@ -1,46 +1,61 @@
 "use client";
-import { useState, useRef, useCallback, Suspense } from "react";
-import { Canvas }           from "@react-three/fiber";
-import { OrbitControls, Grid, Stars } from "@react-three/drei";
-import { Vector3, Group }          from "three";
-import Target               from "./Target";
-import LaserLine            from "./LaserLine";
-import TrajectoryLine       from "./TrajectoryLine";   // ← NEW
-import { useWebSocket }     from "@/hooks/useWebSocket";
+import { useState, useRef, useCallback, useEffect, Suspense } from "react";
+import { Canvas }                        from "@react-three/fiber";
+import { OrbitControls, Grid, Stars }    from "@react-three/drei";
+import { Vector3, Group }                from "three";
+import Target                            from "./Target";
+import LaserLine                         from "./LaserLine";
+import TrajectoryLine                    from "./TrajectoryLine";
+import { useWebSocket }                  from "@/hooks/useWebSocket";
+import {
+  buildTrackingTopic,
+  parseTrackingMessage,
+} from "@/lib/ws/tracking";
+
+import { SceneProps, ContentProps } from "@/types/scene";
+import { TrajectoryConfig } from "@/types/trajectory";
 
 const BG = "#0a0f1a";
 
-export interface SceneProps {
-  wsUrl:            string;
-  stationId:        string;
-  objectId:         string;
-  onStatusChange?:  (status: "CONNECTED" | "DISCONNECTED") => void;
-  onFiringChange?:  (firing: boolean) => void;
-  onPositionChange?:(pos: Vector3) => void;
-  onSendReady?:     (send: (data: object) => void) => void;
-
-  trajectoryMaxPoints?:    number;
-  trajectoryMaxArcLength?: number;
-  trajectoryMinSpeed?: number;
-  trajectoryMaxSpeed?: number;
-  trajectoryOpacity?:  number;
+function SceneContent({ groupRef, targetPosVec, isFiring, trajectory }: ContentProps) {
+  return (
+    <>
+      <TrajectoryLine
+        renderedGroupRef={groupRef}
+        maxPoints={trajectory.maxPoints}
+        maxArcLength={trajectory.maxArcLength}
+        minSpeed={trajectory.minSpeed}
+        maxSpeed={trajectory.maxSpeed}
+        opacity={trajectory.opacity}
+      />
+      <Target    ref={groupRef} targetPosVec={targetPosVec} />
+      <LaserLine renderedGroupRef={groupRef} isFiring={isFiring} />
+    </>
+  );
 }
+
+const TRAJECTORY_DEFAULTS: Required<TrajectoryConfig> = {
+  maxPoints:    600,
+  maxArcLength: 200,
+  minSpeed:     0,
+  maxSpeed:     0.5,
+  opacity:      0.85,
+};
 
 export default function Scene({
   wsUrl, stationId, objectId,
-  onStatusChange, onFiringChange, onPositionChange, onSendReady,
-  trajectoryMaxPoints    = 600,
-  trajectoryMaxArcLength = 200,
-  trajectoryMinSpeed     = 0,
-  trajectoryMaxSpeed     = 0.5,
-  trajectoryOpacity      = 0.85,
+  callbacks = {},
+  trajectory = {},
 }: SceneProps) {
-  const [isFiring, setIsFiring] = useState(false);
-  const targetPosVec = useRef(new Vector3(0, 0, 0));
-  const groupRef = useRef<Group>(null!);
-  const [hasData, setHasData] = useState(false);
+  const { onStatusChange, onFiringChange, onPositionChange, onSendReady } = callbacks;
+  const resolvedTrajectory = { ...TRAJECTORY_DEFAULTS, ...trajectory };
 
-  const topic = `slr/${stationId}/tracking/${objectId}/pos`;
+  const [isFiring, setIsFiring] = useState(false);
+  const [hasData,  setHasData]  = useState(false);
+  const targetPosVec = useRef(new Vector3(0, 0, 0));
+  const groupRef     = useRef<Group>(null!);
+
+  const topic = buildTrackingTopic(stationId, objectId);
 
   const handleOpen = useCallback((socket: WebSocket) => {
     onStatusChange?.("CONNECTED");
@@ -48,18 +63,18 @@ export default function Scene({
   }, [topic, onStatusChange]);
 
   const handleMessage = useCallback((ev: MessageEvent) => {
-    try {
-      const msg = JSON.parse(ev.data);
-      if (msg.x !== undefined) {
-        targetPosVec.current.set(msg.x, msg.z, msg.y);
-        onPositionChange?.(targetPosVec.current.clone());
-        setHasData(true);
-      }
-      if (msg.firing !== undefined) {
-        setIsFiring(msg.firing);
-        onFiringChange?.(msg.firing);
-      }
-    } catch {}
+    const msg = parseTrackingMessage(ev);
+    if (!msg) return;
+
+    if (msg.position) {
+      targetPosVec.current.copy(msg.position.vec);
+      onPositionChange?.(targetPosVec.current.clone());
+      setHasData(true);
+    }
+    if (msg.firing !== undefined) {
+      setIsFiring(msg.firing);
+      onFiringChange?.(msg.firing);
+    }
   }, [onPositionChange, onFiringChange]);
 
   const handleClose = useCallback(() => {
@@ -73,7 +88,7 @@ export default function Scene({
     onError:   (ev) => console.error("WebSocket error:", ev),
   });
 
-  useCallback(() => { onSendReady?.(send); }, [send, onSendReady])();
+  useEffect(() => { onSendReady?.(send); }, [send, onSendReady]);
 
   return (
     <Canvas
@@ -114,18 +129,12 @@ export default function Scene({
         />
 
         {hasData && (
-          <>
-            <TrajectoryLine
-              renderedGroupRef={groupRef}
-              maxPoints={trajectoryMaxPoints}
-              maxArcLength={trajectoryMaxArcLength}
-              minSpeed={trajectoryMinSpeed}
-              maxSpeed={trajectoryMaxSpeed}
-              opacity={trajectoryOpacity}
-            />
-            <Target    ref={groupRef} targetPosVec={targetPosVec} />
-            <LaserLine renderedGroupRef={groupRef} isFiring={true} />
-          </>
+          <SceneContent
+            groupRef={groupRef}
+            targetPosVec={targetPosVec}
+            isFiring={isFiring}
+            trajectory={resolvedTrajectory}
+          />
         )}
       </Suspense>
 
