@@ -1,15 +1,20 @@
 "use client";
-import { useRef, Suspense } from "react";
-import { useFrame }         from "@react-three/fiber";
-import { Vector3, Group }   from "three";
-import SatelliteModel from "./SatelliteModel";
+import { useRef, Suspense, forwardRef, useImperativeHandle } from "react";
+import { useFrame }       from "@react-three/fiber";
+import { Vector3, Group } from "three";
+import SatelliteModel     from "./SatelliteModel";
 
 interface TargetProps {
   targetPosVec: React.RefObject<Vector3>;
 }
 
-export default function Target({ targetPosVec }: TargetProps) {
-  const groupRef = useRef<Group>(null);
+const Target = forwardRef<Group, TargetProps>(function Target(
+  { targetPosVec },
+  ref,
+) {
+  const groupRef = useRef<Group>(null!);
+
+  useImperativeHandle(ref, () => groupRef.current, []);
 
   useFrame((_, delta) => {
     if (!groupRef.current) return;
@@ -27,4 +32,6 @@ export default function Target({ targetPosVec }: TargetProps) {
       </Suspense>
     </group>
   );
-}
+});
+
+export default Target;

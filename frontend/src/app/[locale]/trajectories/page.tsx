@@ -1,4 +1,4 @@
-import Trajectories from "@/components/io/Trajctories"
+import Trajectories from "@/components/trajectories/Trajctories"
 
 export default function Trajec() {
   return <Trajectories/>  

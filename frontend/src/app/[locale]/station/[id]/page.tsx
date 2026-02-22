@@ -30,7 +30,7 @@ export default function StationPage() {
 
   const [selectedObject, setSelectedObject] = useState(station.objects[0]);
   const [wsStatus,       setWsStatus]       = useState<"CONNECTED" | "DISCONNECTED">("DISCONNECTED");
-  const [isFiring,       setIsFiring]       = useState(false);
+  const [isFiring,       setIsFiring]       = useState(false);  
   const [position,       setPosition]       = useState<Vector3 | null>(null);
   const [isFullscreen,   setIsFullscreen]   = useState(false);
 
@@ -55,7 +55,7 @@ export default function StationPage() {
 
   const handleFire = useCallback(() => {
     sendRef.current?.({ action: "fire", stationId: station.id, objectId: selectedObject });
-    setIsFiring(true);
+    setIsFiring(true);   
   }, [station.id, selectedObject]);
 
   const handleStop = useCallback(() => {
@@ -71,8 +71,9 @@ export default function StationPage() {
           wsUrl={station.wsUrl}
           stationId={station.id}
           objectId={selectedObject}
+          isFiring={isFiring}                 
           onStatusChange={setWsStatus}
-          onFiringChange={setIsFiring}
+          onFiringChange={setIsFiring}         
           onPositionChange={setPosition}
           onSendReady={(send) => { sendRef.current = send; }}
         />

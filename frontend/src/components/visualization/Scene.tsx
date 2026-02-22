@@ -1,30 +1,44 @@
 "use client";
 import { useState, useRef, useCallback, Suspense } from "react";
-import { Canvas }        from "@react-three/fiber";
+import { Canvas }           from "@react-three/fiber";
 import { OrbitControls, Grid, Stars } from "@react-three/drei";
-import { Vector3 }       from "three";
-import Target            from "./Target";
-import LaserLine         from "./LaserLine";
-import { useWebSocket }  from "@/hooks/useWebSocket";
+import { Vector3, Group }          from "three";
+import Target               from "./Target";
+import LaserLine            from "./LaserLine";
+import TrajectoryLine       from "./TrajectoryLine";   // ← NEW
+import { useWebSocket }     from "@/hooks/useWebSocket";
 
-const BG = "#0a0f1a"; 
+const BG = "#0a0f1a";
 
 export interface SceneProps {
-  wsUrl:           string;
-  stationId:       string;
-  objectId:        string;
-  onStatusChange?: (status: "CONNECTED" | "DISCONNECTED") => void;
-  onFiringChange?: (firing: boolean) => void;
-  onPositionChange?: (pos: Vector3) => void;
-  onSendReady?:    (send: (data: object) => void) => void;
+  wsUrl:            string;
+  stationId:        string;
+  objectId:         string;
+  onStatusChange?:  (status: "CONNECTED" | "DISCONNECTED") => void;
+  onFiringChange?:  (firing: boolean) => void;
+  onPositionChange?:(pos: Vector3) => void;
+  onSendReady?:     (send: (data: object) => void) => void;
+
+  trajectoryMaxPoints?:    number;
+  trajectoryMaxArcLength?: number;
+  trajectoryMinSpeed?: number;
+  trajectoryMaxSpeed?: number;
+  trajectoryOpacity?:  number;
 }
 
 export default function Scene({
   wsUrl, stationId, objectId,
   onStatusChange, onFiringChange, onPositionChange, onSendReady,
+  trajectoryMaxPoints    = 600,
+  trajectoryMaxArcLength = 200,
+  trajectoryMinSpeed     = 0,
+  trajectoryMaxSpeed     = 0.5,
+  trajectoryOpacity      = 0.85,
 }: SceneProps) {
-  const [isFiring, setIsFiring] = useState(true); // TODO: false когато WS е готов
+  const [isFiring, setIsFiring] = useState(false);
   const targetPosVec = useRef(new Vector3(0, 0, 0));
+  const groupRef = useRef<Group>(null!);
+  const [hasData, setHasData] = useState(false);
 
   const topic = `slr/${stationId}/tracking/${objectId}/pos`;
 
@@ -39,6 +53,7 @@ export default function Scene({
       if (msg.x !== undefined) {
         targetPosVec.current.set(msg.x, msg.z, msg.y);
         onPositionChange?.(targetPosVec.current.clone());
+        setHasData(true);
       }
       if (msg.firing !== undefined) {
         setIsFiring(msg.firing);
@@ -61,7 +76,6 @@ export default function Scene({
   useCallback(() => { onSendReady?.(send); }, [send, onSendReady])();
 
   return (
-  
     <Canvas
       camera={{ position: [5, 5, 5] }}
       style={{ width: "100%", height: "100%" }}
@@ -99,8 +113,20 @@ export default function Scene({
           speed={0.3}
         />
 
-        <Target    targetPosVec={targetPosVec} />
-        <LaserLine targetPosVec={targetPosVec} isFiring={isFiring} />
+        {hasData && (
+          <>
+            <TrajectoryLine
+              renderedGroupRef={groupRef}
+              maxPoints={trajectoryMaxPoints}
+              maxArcLength={trajectoryMaxArcLength}
+              minSpeed={trajectoryMinSpeed}
+              maxSpeed={trajectoryMaxSpeed}
+              opacity={trajectoryOpacity}
+            />
+            <Target    ref={groupRef} targetPosVec={targetPosVec} />
+            <LaserLine renderedGroupRef={groupRef} isFiring={true} />
+          </>
+        )}
       </Suspense>
 
       <OrbitControls
