@@ -4,10 +4,10 @@ import dynamic     from "next/dynamic";
 import { Vector3 } from "three";
 import { useParams, notFound } from "next/navigation";
 import { getStation } from "@/lib/data/stations";
-import TrackingDashboard from "@/components/TrackingDashboard";
+import TrackingDashboard from "@/components/visualization/TrackingDashboard";
 
 const Scene = dynamic(
-  () => import("@/components/Scene"),
+  () => import("@/components/visualization/Scene"),
   { ssr: false, loading: () => <SceneLoader /> }
 );
 

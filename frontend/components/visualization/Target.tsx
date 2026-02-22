@@ -8,7 +8,6 @@ interface TargetProps {
   targetPosVec: React.RefObject<Vector3>;
 }
 
-
 export default function Target({ targetPosVec }: TargetProps) {
   const groupRef = useRef<Group>(null);
 
