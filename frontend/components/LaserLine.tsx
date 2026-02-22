@@ -1,40 +1,37 @@
 "use client";
 import { useRef, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Vector3, BufferGeometry, Float32BufferAttribute } from "three";
+import { BufferGeometry, Float32BufferAttribute, Vector3 } from "three";
 
 interface LaserLineProps {
   targetPosVec: React.RefObject<Vector3>;
-  isFiring: boolean;
+  isFiring:     boolean;
 }
 
 export default function LaserLine({ targetPosVec, isFiring }: LaserLineProps) {
-  const lineRef = useRef<null>(null);
-  const endPoint = useRef(new Vector3());
   const blinkTimer = useRef(0);
-  const visible = useRef(true);
+  const visible    = useRef(true);
+  const lineRef    = useRef<any>(null);
 
   const BLINK_ON  = 0.08;
   const BLINK_OFF = 0.04;
 
   const geometry = useMemo(() => {
     const geo = new BufferGeometry();
-    geo.setAttribute(
-      "position",
-      new Float32BufferAttribute([0, 0, 0, 0, 0, 0], 3)
-    );
+    const positions = new Float32Array([0, 0, 0, 0, 0, 0]);
+    geo.setAttribute("position", new Float32BufferAttribute(positions, 3));
     return geo;
   }, []);
 
   useFrame((_, delta) => {
-    if (!isFiring || !lineRef.current) return;
+    if (!isFiring || !targetPosVec.current) return;
 
-    endPoint.current.lerp(targetPosVec.current, 0.1);
+    const t = targetPosVec.current;
+    const pos = geometry.attributes.position;
+    pos.setXYZ(1, t.x, t.y, t.z);
+    pos.needsUpdate = true;
 
-    const positions = lineRef.current.geometry.attributes.position;
-    positions.setXYZ(1, endPoint.current.x, endPoint.current.y, endPoint.current.z);
-    positions.needsUpdate = true;
-
+    if (!lineRef.current) return;
     blinkTimer.current += delta;
     const interval = visible.current ? BLINK_ON : BLINK_OFF;
     if (blinkTimer.current >= interval) {
@@ -48,7 +45,7 @@ export default function LaserLine({ targetPosVec, isFiring }: LaserLineProps) {
 
   return (
     <line ref={lineRef} geometry={geometry}>
-      <lineBasicMaterial color="#00dc82" linewidth={1.5} />
+      <lineBasicMaterial color="#00dc82" toneMapped={false} />
     </line>
   );
 }
