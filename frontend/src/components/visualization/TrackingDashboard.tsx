@@ -1,4 +1,3 @@
-"use client";
 import { Vector3 } from "three";
 
 interface Props {
