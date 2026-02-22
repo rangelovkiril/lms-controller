@@ -15,7 +15,7 @@ interface LaserLineProps {
   renderedGroupRef: React.RefObject<Group>;
 }
 
-export default function LaserLine({ renderedGroupRef }: LaserLineProps) {
+export default function Laser({ renderedGroupRef }: LaserLineProps) {
   const blinkTimer = useRef(0);
   const visible    = useRef(true);
 

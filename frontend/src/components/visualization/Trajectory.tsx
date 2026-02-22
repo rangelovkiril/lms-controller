@@ -34,7 +34,7 @@ function hueToRGB(hue: number, out: Float32Array, offset: number) {
   out[offset + 2] = _tmpColor.b;
 }
 
-export default function TrajectoryLine({
+export default function Trajectory({
   renderedGroupRef,
   maxPoints    = 600,
   maxArcLength = 200,
