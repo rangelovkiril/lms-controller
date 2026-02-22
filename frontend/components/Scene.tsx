@@ -7,7 +7,7 @@ import Target            from "./Target";
 import LaserLine         from "./LaserLine";
 import { useWebSocket }  from "@/hooks/useWebSocket";
 
-const BG = "#0a0f1a"; // тъмно синьо вместо чисто черно
+const BG = "#0a0f1a"; 
 
 export interface SceneProps {
   wsUrl:           string;
@@ -16,7 +16,6 @@ export interface SceneProps {
   onStatusChange?: (status: "CONNECTED" | "DISCONNECTED") => void;
   onFiringChange?: (firing: boolean) => void;
   onPositionChange?: (pos: Vector3) => void;
-  /** Получава send() функцията за да могат бутоните отвън да изпращат команди */
   onSendReady?:    (send: (data: object) => void) => void;
 }
 
@@ -45,7 +44,7 @@ export default function Scene({
         setIsFiring(msg.firing);
         onFiringChange?.(msg.firing);
       }
-    } catch { /* ignore */ }
+    } catch {}
   }, [onPositionChange, onFiringChange]);
 
   const handleClose = useCallback(() => {
@@ -59,12 +58,10 @@ export default function Scene({
     onError:   (ev) => console.error("WebSocket error:", ev),
   });
 
-  // Излагаме send нагоре веднъж при mount
   useCallback(() => { onSendReady?.(send); }, [send, onSendReady])();
 
   return (
-    // style е нужен защото Tailwind h-full изисква parent с конкретна height —
-    // style="100%" е по-robust в контекста на R3F.
+  
     <Canvas
       camera={{ position: [5, 5, 5] }}
       style={{ width: "100%", height: "100%" }}
@@ -76,7 +73,6 @@ export default function Scene({
       <directionalLight position={[5, 10, 5]}  intensity={1.2} color="#ffffff" />
       <directionalLight position={[-5, 8, -5]} intensity={0.5} color="#7eb8ff" />
 
-      {/* Suspense е задължителен вътре в Canvas за useLoader / lazy assets */}
       <Suspense fallback={null}>
         <Grid
           infiniteGrid

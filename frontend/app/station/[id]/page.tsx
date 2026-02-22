@@ -4,7 +4,7 @@ import dynamic     from "next/dynamic";
 import { Vector3 } from "three";
 import { useParams, notFound } from "next/navigation";
 import { getStation } from "@/lib/data/stations";
-import StationOverlay from "@/components/StationOverlay";
+import TrackingDashboard from "@/components/TrackingDashboard";
 
 const Scene = dynamic(
   () => import("@/components/Scene"),
@@ -77,7 +77,17 @@ export default function StationPage() {
           onSendReady={(send) => { sendRef.current = send; }}
         />
 
-       
+        <TrackingDashboard
+          stationId={station.id}
+          objectId={selectedObject}
+          position={position}
+          wsStatus={wsStatus}
+          isFiring={isFiring}
+          onFire={handleFire}
+          onStop={handleStop}
+          onFullscreen={toggleFullscreen}
+        />
+
         {isFullscreen && (
           <div className="absolute top-4 left-4 text-[10px] font-mono text-text-muted bg-surface/70 border border-border px-2 py-1 rounded-md backdrop-blur-sm">
             ESC за изход
