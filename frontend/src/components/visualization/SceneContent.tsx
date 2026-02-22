@@ -1,8 +1,8 @@
 "use client";
 import { Vector3, Group } from "three";
-import Target from "./Target";
-import Laser from "./Laser";
-import Trajectory from "./Trajectory";
+import Target from "./objects/Target";
+import Laser from "./objects/Laser";
+import Trajectory from "./objects/Trajectory";
 
 export interface TrajectoryConfig {
   maxPoints?: number;

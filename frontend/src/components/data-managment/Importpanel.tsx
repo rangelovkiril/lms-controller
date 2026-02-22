@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { Spinner, StatusBar, Dropdown, Label } from "../ui";
+import { StatusBar, Dropdown } from "../ui/Dropdown";
+import { Spinner } from "../ui/Spinner";
+import { Label } from "../ui/Label";
 
 type UploadStatus = "idle" | "uploading";
 

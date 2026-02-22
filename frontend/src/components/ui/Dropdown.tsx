@@ -1,25 +1,7 @@
-"use client";
-
 import { useState, useRef, useEffect } from "react";
 
-export function Spinner() {
-  return (
-    <span className="w-3 h-3 border-[1.5px] border-transparent border-t-current rounded-full animate-spin shrink-0" />
-  );
-}
-
-export function StatusDot({ variant }: { variant: "error" | "success" | "info" }) {
-  const color = variant === "error" ? "bg-danger" : variant === "success" ? "bg-accent" : "bg-blue";
-  return <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${color}`} />;
-}
-
-export function Label({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="text-[10.5px] font-mono font-medium uppercase tracking-[0.08em] text-text-muted">
-      {children}
-    </span>
-  );
-}
+import { Spinner } from "./Spinner";
+import { StatusDot } from "./StatusDot";
 
 export const inputBase =
   "w-full bg-bg border border-border rounded-md font-mono text-[13px] text-text px-3 py-[0.55rem] outline-none transition-[border-color,box-shadow] duration-150 focus:border-accent focus:shadow-[0_0_0_3px_#00dc8220] [color-scheme:dark]";

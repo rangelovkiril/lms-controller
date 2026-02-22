@@ -1,7 +1,9 @@
 "use client";
 
 import { TIME_PRESETS } from "../../types";
-import { Spinner, StatusBar, Dropdown, Label, inputBase } from "../ui";
+import {  StatusBar, Dropdown, inputBase } from "../ui/Dropdown";
+import { Spinner } from "../ui/Spinner";
+import { Label } from "../ui/Label";
 
 type Status = "idle" | "loading-objects" | "exporting";
 
