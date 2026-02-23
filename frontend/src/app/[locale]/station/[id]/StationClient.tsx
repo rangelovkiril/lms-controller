@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef, useCallback, useEffect } from "react";
 import dynamic     from "next/dynamic";
-import TrackingDashboard from "@/components/visualization/TrackingDashboard";
+import TrackingDashboard from "@/components/visualization/overlays/TrackingDashboard";
 import type { Station }  from "@/lib/data/stations";
 import type { TrackingPosition } from "@/lib/ws/tracking";
 

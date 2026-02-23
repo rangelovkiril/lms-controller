@@ -2,7 +2,7 @@
 import { Vector3, Group } from "three";
 import Target from "./objects/Target";
 import Laser from "./objects/Laser";
-import Trajectory from "./objects/Trajectory";
+import Trace from "./objects/Trace";
 
 export interface TrajectoryConfig {
   maxPoints?: number;
@@ -21,9 +21,8 @@ interface ContentProps {
 export function SceneContent({ groupRef, targetPosVec, trajectory }: ContentProps) {
   return (
     <>
-      <Trajectory
+      <Trace
         renderedGroupRef={groupRef}
-        maxPoints={trajectory.maxPoints}
         maxArcLength={trajectory.maxArcLength}
         minSpeed={trajectory.minSpeed}
         maxSpeed={trajectory.maxSpeed}
