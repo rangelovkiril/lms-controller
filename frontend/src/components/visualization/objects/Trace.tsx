@@ -23,11 +23,11 @@ interface Props {
 
 export default function Trace({
   renderedGroupRef,
-  maxArcLength = 5,
+  maxArcLength = 2,
   minSpeed     = 0,
   maxSpeed     = 0.5,
   opacity      = 0.85,
-  pointsPerUnit = 10, 
+  pointsPerUnit = 2, 
 }: Props) {
 
   
