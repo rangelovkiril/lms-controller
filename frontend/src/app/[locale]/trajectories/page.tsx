@@ -1,5 +1,5 @@
-import Trajectories from "@/components/data-managment/Trajctories"
+import Trajectories from "@/components/data-management/Trajectories";
 
-export default function Trajec() {
-  return <Trajectories/>  
+export default function TrajectoriesPage() {
+  return <Trajectories />;
 }

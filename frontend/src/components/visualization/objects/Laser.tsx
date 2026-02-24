@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useMemo } from "react";
+import { useRef, useMemo, useEffect } from "react";
 import { useFrame }        from "@react-three/fiber";
 import {
   BufferGeometry,
@@ -11,16 +11,19 @@ import {
   Color,
 } from "three";
 
-interface LaserLineProps {
+const BLINK_ON  = 0.08;
+const BLINK_OFF = 0.04;
+
+interface LaserProps {
   renderedGroupRef: React.RefObject<Group>;
 }
 
-export default function Laser({ renderedGroupRef }: LaserLineProps) {
+export default function Laser({ renderedGroupRef }: LaserProps) {
   const blinkTimer = useRef(0);
   const visible    = useRef(true);
 
   const { line, posAttr } = useMemo(() => {
-    const arr     = new Float32Array([0, 0, 0,  0, 0, 0]);
+    const arr     = new Float32Array([0, 0, 0, 0, 0, 0]);
     const posAttr = new BufferAttribute(arr, 3);
     posAttr.setUsage(DynamicDrawUsage);
 
@@ -33,13 +36,10 @@ export default function Laser({ renderedGroupRef }: LaserLineProps) {
     return { line, posAttr };
   }, []);
 
-  useMemo(() => () => {
+  useEffect(() => () => {
     line.geometry.dispose();
     (line.material as LineBasicMaterial).dispose();
   }, [line]);
-
-  const BLINK_ON  = 0.08;
-  const BLINK_OFF = 0.04;
 
   useFrame((_, delta) => {
     if (!renderedGroupRef.current) return;

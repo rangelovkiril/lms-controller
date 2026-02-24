@@ -2,45 +2,50 @@ import { Elysia } from "elysia"
 import mqtt from "mqtt"
 
 interface MockSensorConfig {
-  brokerUrl: string
-  stationId?: string
-  objId?: string
+  brokerUrl:   string
+  stationId?:  string
+  objId?:      string
   intervalMs?: number
 }
 
 export const mockSensor = (config: MockSensorConfig) => {
-  const { brokerUrl, stationId = "test", objId = "sat1", intervalMs = 500 } = config
+  const { brokerUrl, stationId = "test", objId = "sat1", intervalMs = 100 } = config
   const topic = `slr/${stationId}/tracking/${objId}/pos`
 
   return new Elysia({ name: "mock-sensor" }).onStart(() => {
     const client = mqtt.connect(brokerUrl)
 
-    let angle = 0
-    let z = 0
-    let zDirection = 1
+    let t = 0
+    const SCALE      = 0.6   // shrink the heart to fit the scene
+    const T_STEP     = 0.04  // how fast we trace the curve
+    const Z_DRIFT    = 0.05  // slow vertical float for depth
 
-    const RADIUS = 10
-    const ANGLE_STEP = 0.1
-    const Z_STEP = 0.5
-    const Z_MAX = 20
+    // Parametric heart:
+    //   x =  16 sin³(t)
+    //   y =  13 cos(t) − 5 cos(2t) − 2 cos(3t) − cos(4t)
+    // This is the classic cardioid-ish heart curve.
 
     client.on("connect", () => {
-      console.log(`[MockSensor] Publishing to "${topic}" every ${intervalMs}ms`)
+      console.log(`[MockSensor] ❤️  Publishing heart to "${topic}" every ${intervalMs}ms`)
 
       setInterval(() => {
-        const x = RADIUS * Math.cos(angle)
-        const y = RADIUS * Math.sin(angle)
-
-        z += Z_STEP * zDirection
-        if (z >= Z_MAX || z <= 0) zDirection *= -1
+        const sin_t  = Math.sin(t)
+        const x = 16 * sin_t * sin_t * sin_t
+        const z = 13 * Math.cos(t)
+              - 5 * Math.cos(2 * t)
+              - 2 * Math.cos(3 * t)
+              -     Math.cos(4 * t)
+        // gentle lift above the grid
+        const y = 20
 
         client.publish(topic, JSON.stringify({
-          x: parseFloat(x.toFixed(2)),
-          y: parseFloat(y.toFixed(2)),
-          z: parseFloat(z.toFixed(2)),
+          x: parseFloat((x * SCALE).toFixed(3)),
+          y: parseFloat((y * SCALE).toFixed(3)),
+          z: parseFloat((z * SCALE).toFixed(3)),
         }))
 
-        angle += ANGLE_STEP
+        t += T_STEP
+        if (t > 2 * Math.PI) t -= 2 * Math.PI
       }, intervalMs)
     })
 

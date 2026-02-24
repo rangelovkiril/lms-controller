@@ -1,63 +1,45 @@
 "use client";
 import { useRef, Suspense } from "react";
-import { Canvas } from "@react-three/fiber";
+import { Canvas }           from "@react-three/fiber";
 import { OrbitControls, Grid, Stars } from "@react-three/drei";
-import { Group } from "three";
+import { Group, Vector3 }   from "three";
 
-import { SceneContent, TrajectoryConfig } from "./SceneContent";
-import { useTracking } from "@/hooks/useTracking";
-import { TrackingPosition } from "@/lib/ws/tracking";
+import { SceneContent, type TrajectoryConfig } from "./SceneContent";
+import ObservationSet from "./objects/ObservationSet";
+import type { ObsSet } from "@/types";
 
 const BG = "#0a0f1a";
 
 const TRAJECTORY_DEFAULTS: Required<TrajectoryConfig> = {
-  maxPoints:    600,
-  maxArcLength: 200,
+  maxArcLength: 1000000,
   minSpeed:     0,
   maxSpeed:     0.5,
   opacity:      0.85,
+  smoothSteps:  6,
 };
 
 export interface SceneProps {
-  wsUrl:            string;
-  stationId:        string;
-  objectId:         string;
+  targetPosVec:     React.RefObject<Vector3>;
   trajectory?:      TrajectoryConfig;
-  onStatusChange:   (status: "CONNECTED" | "DISCONNECTED") => void;
-  onPositionChange: (pos: TrackingPosition | null) => void;
-  onSendReady:      (send: (data: object) => void) => void;
+  observationSets?: ObsSet[];          // ← НОВО
 }
 
 export default function Scene({
-  wsUrl, stationId, objectId,
+  targetPosVec,
   trajectory = {},
-  onStatusChange,
-  onPositionChange,
-  onSendReady,
+  observationSets = [],                // ← НОВО
 }: SceneProps) {
-  const groupRef = useRef<Group>(null!);
+  const groupRef           = useRef<Group>(null!);
   const resolvedTrajectory = { ...TRAJECTORY_DEFAULTS, ...trajectory };
 
-  const { isFiring, targetPosVec } = useTracking(
-    wsUrl,
-    stationId,
-    objectId,
-    onStatusChange,
-    onPositionChange,
-    onSendReady
-  );
-
   return (
-    <Canvas
-      camera={{ position: [5, 5, 5] }}
-      style={{ width: "100%", height: "100%" }}
-    >
+    <Canvas camera={{ position: [5, 5, 5] }} style={{ width: "100%", height: "100%" }}>
       <color attach="background" args={[BG]} />
       <fog   attach="fog"        args={[BG, 20, 70]} />
 
       <ambientLight intensity={0.6} />
-      <directionalLight position={[5, 10, 5]}  intensity={1.2} color="#ffffff" />
-      <directionalLight position={[-5, 8, -5]} intensity={0.5} color="#7eb8ff" />
+      <directionalLight position={[5,  10,  5]} intensity={1.2} color="#ffffff" />
+      <directionalLight position={[-5,  8, -5]} intensity={0.5} color="#7eb8ff" />
 
       <Suspense fallback={null}>
         <Grid
@@ -70,34 +52,38 @@ export default function Scene({
           fadeStrength={1}
         />
 
+        {/* ← НОВО: рендерирай реалните sets */}
+        {observationSets
+          .filter((s) => s.visible && s.points.length > 1)
+          .map((s) => (
+            <ObservationSet
+              key={s.id}
+              points={s.points}
+              minSpeed={resolvedTrajectory.minSpeed}
+              maxSpeed={resolvedTrajectory.maxSpeed}
+              opacity={resolvedTrajectory.opacity}
+              baseColor={s.color ?? undefined}
+            />
+          ))
+        }
+
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]}>
           <planeGeometry args={[2000, 2000]} />
           <meshBasicMaterial color={BG} />
         </mesh>
 
-        <Stars
-          radius={120}
-          depth={60}
-          count={8000}
-          factor={5}
-          saturation={0.3}
-          fade
-          speed={0.3}
-        />
+        <Stars radius={120} depth={60} count={8000} factor={5} saturation={0.3} fade speed={0.3} />
 
-        {isFiring && (
-          <SceneContent
-            groupRef={groupRef}
-            targetPosVec={targetPosVec}
-            trajectory={resolvedTrajectory}
-          />
-        )}
+        <SceneContent
+          groupRef={groupRef}
+          targetPosVec={targetPosVec}
+          trajectory={resolvedTrajectory}
+        />
       </Suspense>
 
       <OrbitControls
-        maxPolarAngle={Math.PI / 2.1}
+        maxPolarAngle={Math.PI}
         makeDefault
-        enablePan={false}
         zoomSpeed={0.6}
         rotateSpeed={0.5}
       />

@@ -1,7 +1,9 @@
 "use client";
 
 import { TIME_PRESETS } from "../../types";
-import {  StatusBar, Dropdown, inputBase } from "../ui/Dropdown";
+import { Dropdown } from "../ui/Dropdown";
+import { StatusBar } from "../ui/StatusBar";
+import { inputBase } from "../ui/inputStyles";
 import { Spinner } from "../ui/Spinner";
 import { Label } from "../ui/Label";
 
@@ -147,14 +149,6 @@ export default function ExportPanel({
             </button>
           </div>
 
-          <button
-            disabled={!canExport}
-            onClick={onOverlay}
-            className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-md text-[13px] font-medium border border-accent/30 text-accent bg-accent-dim transition-all duration-150 disabled:opacity-35 disabled:cursor-not-allowed hover:enabled:bg-accent/20 hover:enabled:border-accent/50 cursor-pointer"
-          >
-            <OverlayIcon />
-            Наложи траектория
-          </button>
         </div>
       </div>
 

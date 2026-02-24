@@ -1,21 +1,28 @@
 import { useState, useRef, useEffect } from "react";
 
 import { Spinner } from "./Spinner";
-import { StatusDot } from "./StatusDot";
-
-export const inputBase =
-  "w-full bg-bg border border-border rounded-md font-mono text-[13px] text-text px-3 py-[0.55rem] outline-none transition-[border-color,box-shadow] duration-150 focus:border-accent focus:shadow-[0_0_0_3px_#00dc8220] [color-scheme:dark]";
 
 interface DropdownProps {
-  value:        string;
-  options:      string[];
-  onChange:     (v: string) => void;
-  disabled?:    boolean;
-  loading?:     boolean;
-  placeholder?: string;
+  value:         string;
+  options:       string[];
+  onChange:      (v: string) => void;
+  disabled?:     boolean;
+  loading?:      boolean;
+  placeholder?:  string;
+  loadingLabel?: string;
+  emptyLabel?:   string;
 }
 
-export function Dropdown({ value, options, onChange, disabled, loading, placeholder }: DropdownProps) {
+export function Dropdown({
+  value,
+  options,
+  onChange,
+  disabled,
+  loading,
+  placeholder  = "—",
+  loadingLabel = "Loading…",
+  emptyLabel   = "No options",
+}: DropdownProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -28,7 +35,7 @@ export function Dropdown({ value, options, onChange, disabled, loading, placehol
   }, []);
 
   const isDisabled = disabled || loading;
-  const label      = loading ? "Зарежда се…" : (value || placeholder || "—");
+  const label      = loading ? loadingLabel : (value || placeholder);
 
   return (
     <div ref={ref} className="relative">
@@ -59,7 +66,7 @@ export function Dropdown({ value, options, onChange, disabled, loading, placehol
       {open && (
         <div className="absolute z-50 mt-1 w-full bg-surface border border-border rounded-md shadow-[0_8px_24px_#00000080] overflow-hidden animate-fade-in">
           {options.length === 0 ? (
-            <div className="px-3 py-2 text-[12px] font-mono text-text-muted">Няма опции</div>
+            <div className="px-3 py-2 text-[12px] font-mono text-text-muted">{emptyLabel}</div>
           ) : (
             options.map((opt) => (
               <button
@@ -79,40 +86,6 @@ export function Dropdown({ value, options, onChange, disabled, loading, placehol
             ))
           )}
         </div>
-      )}
-    </div>
-  );
-}
-
-interface StatusBarProps {
-  status:     string;
-  error:      string;
-  lastAction: { label: string; time: string } | null;
-  idleLabel:  string;
-  station:    string;
-  object:     string;
-}
-
-export function StatusBar({ status, error, lastAction, idleLabel, station, object }: StatusBarProps) {
-  const isLoading = status === "exporting" || status === "uploading";
-  return (
-    <div className={[
-      "border-t border-border px-6 py-3 flex items-center gap-2.5 font-mono text-[11.5px] min-h-[44px]",
-      error      ? "text-danger"      :
-      lastAction ? "text-accent"      : "text-text-muted",
-    ].join(" ")}>
-      {isLoading ? (
-        <><Spinner />Заявка към {station}/{object}…</>
-      ) : error ? (
-        <><StatusDot variant="error" />{error}</>
-      ) : lastAction ? (
-        <>
-          <StatusDot variant="success" />
-          {lastAction.label}
-          <span className="ml-auto text-text-muted text-[10.5px]">{lastAction.time}</span>
-        </>
-      ) : (
-        <span>{idleLabel}</span>
       )}
     </div>
   );

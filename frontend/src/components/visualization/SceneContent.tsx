@@ -5,11 +5,11 @@ import Laser from "./objects/Laser";
 import Trace from "./objects/Trace";
 
 export interface TrajectoryConfig {
-  maxPoints?: number;
   maxArcLength?: number;
-  minSpeed?: number;
-  maxSpeed?: number;
-  opacity?: number;
+  minSpeed?:     number;
+  maxSpeed?:     number;
+  opacity?:      number;
+  smoothSteps?:  number;
 }
 
 interface ContentProps {
@@ -27,6 +27,7 @@ export function SceneContent({ groupRef, targetPosVec, trajectory }: ContentProp
         minSpeed={trajectory.minSpeed}
         maxSpeed={trajectory.maxSpeed}
         opacity={trajectory.opacity}
+        smoothSteps={trajectory.smoothSteps}
       />
       <Target ref={groupRef} targetPosVec={targetPosVec} />
       <Laser renderedGroupRef={groupRef} />

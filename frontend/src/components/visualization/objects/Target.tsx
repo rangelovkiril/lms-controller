@@ -19,10 +19,10 @@ const Target = forwardRef<Group, TargetProps>(function Target(
   useFrame((_, delta) => {
     if (!groupRef.current) return;
     if (targetPosVec.current) {
-      groupRef.current.position.lerp(targetPosVec.current, delta * 2);
+      groupRef.current.position.lerp(targetPosVec.current, delta / 2);
     }
-    groupRef.current.rotation.y += delta * 0.6;
-    groupRef.current.rotation.x += delta * 0.3;
+    // groupRef.current.rotation.y += delta * 0.6;
+    // groupRef.current.rotation.x += delta * 0.3;
   });
 
   return (

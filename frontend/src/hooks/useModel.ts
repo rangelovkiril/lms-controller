@@ -8,10 +8,6 @@ dracoLoader.setDecoderPath(
   "https://www.gstatic.com/draco/versioned/decoders/1.5.6/"
 );
 
-const gltfLoader = new GLTFLoader();
-gltfLoader.setDRACOLoader(dracoLoader);
-
-
 export function useModel(path: string) {
   const gltf = useLoader(GLTFLoader, path, (loader) => {
     (loader as GLTFLoader).setDRACOLoader(dracoLoader);

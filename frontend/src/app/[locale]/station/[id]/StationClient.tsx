@@ -1,14 +1,17 @@
 "use client";
-import { useState, useRef, useCallback, useEffect } from "react";
-import dynamic     from "next/dynamic";
-import TrackingDashboard from "@/components/visualization/overlays/TrackingDashboard";
-import type { Station }  from "@/lib/data/stations";
-import type { TrackingPosition } from "@/lib/ws/tracking";
+import { useState, useCallback, useEffect } from "react";
+import dynamic from "next/dynamic";
+import type { Station }    from "@/lib/data/stations";
+import { useTracking, type TrackingState } from "@/hooks/useTracking";
+import ObservationSetPanel from "@/components/visualization/objects/ObservationSetPanel";
+import { useObservationSets } from "@/hooks/useObservationSets";
+import type { ObsSet } from "@/types";
+import { generateTrajectory } from "@/components/visualization/objects/mockTrajectory";
 
-const Scene = dynamic(
-  () => import("@/components/visualization/Scene"),
-  { ssr: false, loading: () => <SceneLoader /> }
-);
+const Scene = dynamic(() => import("@/components/visualization/Scene"), {
+  ssr:     false,
+  loading: () => <SceneLoader />,
+});
 
 function SceneLoader() {
   return (
@@ -21,23 +24,154 @@ function SceneLoader() {
   );
 }
 
+const STATUS_LABEL: Record<TrackingState["kind"], string> = {
+  disconnected: "Offline",
+  connected:    "Connected",
+  tracking:     "Tracking",
+  event:        "Event",
+};
+
+const STATUS_COLOR: Record<TrackingState["kind"], string> = {
+  disconnected: "text-text-muted",
+  connected:    "text-blue",
+  tracking:     "text-accent",
+  event:        "text-yellow-400",
+};
+
+const EVENT_LABEL: Record<string, string> = {
+  no_object:  "Object not found",
+  track_lost: "Track lost",
+  acquire:    "Re-acquired",
+  error:      "Server error",
+};
+
+function SidebarRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex flex-col gap-1">
+      <span className="text-[10px] font-mono uppercase tracking-widest text-text-muted">{label}</span>
+      {children}
+    </div>
+  );
+}
+
+function PositionDisplay({ state }: { state: TrackingState }) {
+  const pos = state.kind === "tracking" ? state.position : null;
+  return (
+    <SidebarRow label="Cartesian position">
+      <div className="grid grid-cols-3 gap-1.5">
+        {(["x", "y", "z"] as const).map((axis) => (
+          <div key={axis} className="flex flex-col rounded-md border border-border bg-bg px-2 py-1.5">
+            <span className="font-mono uppercase text-text-muted text-[9px]">{axis}</span>
+            <span className="font-mono text-text text-[12px]">
+              {pos ? pos[axis].toFixed(2) : "—"}
+            </span>
+          </div>
+        ))}
+      </div>
+    </SidebarRow>
+  );
+}
+
+function StatusBadge({ state }: { state: TrackingState }) {
+  const isLive = state.kind === "tracking";
+  return (
+    <div className="flex items-center gap-2">
+      <span className={[
+        "w-2 h-2 rounded-full shrink-0",
+        isLive                     ? "bg-accent animate-pulse-dot" :
+        state.kind === "connected" ? "bg-blue animate-pulse-dot"   :
+                                     "bg-border-hi",
+      ].join(" ")} />
+      <span className={`font-mono text-[11px] ${STATUS_COLOR[state.kind]}`}>
+        {STATUS_LABEL[state.kind]}
+        {state.kind === "event" && ` — ${EVENT_LABEL[state.event] ?? state.event}`}
+      </span>
+    </div>
+  );
+}
+
+function ObjectSelector({
+  objects, selected, onSelect,
+}: {
+  objects:  string[];
+  selected: string;
+  onSelect: (id: string) => void;
+}) {
+  return (
+    <SidebarRow label="Object">
+      <div className="flex flex-col gap-1">
+        {objects.map((id) => (
+          <button
+            key={id}
+            onClick={() => onSelect(id)}
+            className={[
+              "w-full text-left px-3 py-2 rounded-lg border font-mono text-[12px] transition-colors",
+              id === selected
+                ? "border-accent/50 bg-accent-dim text-accent"
+                : "border-border text-text-muted hover:border-border-hi hover:text-text",
+            ].join(" ")}
+          >
+            {id}
+          </button>
+        ))}
+      </div>
+    </SidebarRow>
+  );
+}
+
+function FireControls({
+  state, onFire, onStop,
+}: {
+  state:  TrackingState;
+  onFire: () => void;
+  onStop: () => void;
+}) {
+  const canInteract = state.kind !== "disconnected";
+  return (
+    <div className="mt-auto pt-4 border-t border-border flex flex-col gap-2">
+      {state.kind === "tracking" ? (
+        <button
+          onClick={onStop}
+          disabled={!canInteract}
+          className="w-full font-medium font-mono bg-danger/20 border border-danger/40 text-danger hover:bg-danger/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed rounded-lg py-2.5 text-[12px]"
+        >
+          ■ Stop
+        </button>
+      ) : (
+        <button
+          onClick={onFire}
+          disabled={!canInteract}
+          className="w-full font-medium font-mono bg-accent-dim border border-accent-glow text-accent hover:bg-accent/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed rounded-lg py-2.5 text-[12px]"
+        >
+          ▶ Fire
+        </button>
+      )}
+    </div>
+  );
+}
+
+// ─── Main component ───────────────────────────────────────────────────────────
+
 export default function StationClient({ station }: { station: Station }) {
   const [selectedObject, setSelectedObject] = useState(station.objects[0]);
-  const [wsStatus,       setWsStatus]       = useState<"CONNECTED" | "DISCONNECTED">("DISCONNECTED");
-  const [isFiring,       setIsFiring]       = useState(false);
-  const [position,       setPosition]       = useState<TrackingPosition | null>(null);
   const [isFullscreen,   setIsFullscreen]   = useState(false);
 
-  const wrapperRef = useRef<HTMLDivElement>(null);
-  const sendRef    = useRef<((data: object) => void) | null>(null);
+
+
+  const { state, targetPosVec, send } = useTracking(
+    station.wsUrl,
+    station.id,
+    selectedObject,
+  );
+
+  const { sets, activeSetId, setActiveSetId, addSet, removeSet, updateSet, clearSet } =
+    useObservationSets(targetPosVec);
 
   const toggleFullscreen = useCallback(async () => {
     if (!document.fullscreenElement) {
-      await wrapperRef.current?.requestFullscreen();
-      setIsFullscreen(true);
+      await document.documentElement.requestFullscreen();
     } else {
       await document.exitFullscreen();
-      setIsFullscreen(false);
     }
   }, []);
 
@@ -48,47 +182,77 @@ export default function StationClient({ station }: { station: Station }) {
   }, []);
 
   const handleFire = useCallback(() => {
-    sendRef.current?.({ action: "fire", stationId: station.id, objectId: selectedObject });
-  }, [station.id, selectedObject]);
+    send({ action: "fire", stationId: station.id, objectId: selectedObject });
+  }, [send, station.id, selectedObject]);
 
   const handleStop = useCallback(() => {
-    sendRef.current?.({ action: "stop", stationId: station.id, objectId: selectedObject });
-  }, [station.id, selectedObject]);
-
-  const handlePositionChange = useCallback((pos: TrackingPosition | null) => {
-    setPosition(pos);
-    setIsFiring(pos !== null);
-  }, []);
+    send({ action: "stop", stationId: station.id, objectId: selectedObject });
+  }, [send, station.id, selectedObject]);
 
   return (
     <div className="flex h-full min-h-0">
-      <div ref={wrapperRef} className="relative flex-1 min-h-0 overflow-hidden bg-[#050505]">
-        <Scene
-          wsUrl={station.wsUrl}
-          stationId={station.id}
-          objectId={selectedObject}
-          onStatusChange={setWsStatus}
-          onPositionChange={handlePositionChange}
-          onSendReady={(send) => { sendRef.current = send; }}
-        />
 
-        <TrackingDashboard
-          stationId={station.id}
-          objectId={selectedObject}
-          position={position}
-          wsStatus={wsStatus}
-          isFiring={isFiring}
-          onFire={handleFire}
-          onStop={handleStop}
-          onFullscreen={toggleFullscreen}
+      {/* ── 3D viewport ── */}
+      <div className="relative flex-1 min-h-0 overflow-hidden bg-[#050505]">
+        <Scene
+          targetPosVec={targetPosVec}
+          observationSets={sets}       
         />
 
         {isFullscreen && (
           <div className="absolute top-4 left-4 text-[10px] font-mono text-text-muted bg-surface/70 border border-border px-2 py-1 rounded-md backdrop-blur-sm">
-            ESC за изход
+            ESC to exit fullscreen
           </div>
         )}
+
+        <button
+          onClick={toggleFullscreen}
+          title="Fullscreen"
+          className="absolute top-3 right-3 pointer-events-auto rounded-lg border border-border text-text-muted hover:text-text hover:border-border-hi transition-colors bg-surface/80 backdrop-blur-sm p-2"
+        >
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M8 3H5a2 2 0 00-2 2v3M16 3h3a2 2 0 012 2v3M21 16v3a2 2 0 01-2 2h-3M8 21H5a2 2 0 01-2-2v-3"/>
+          </svg>
+        </button>
       </div>
+
+      {/* ── Sidebar ── */}
+      <aside className="w-72 shrink-0 flex flex-col gap-5 border-l border-border bg-surface p-5 overflow-y-auto">
+
+        <div className="flex flex-col gap-0.5">
+          <span className="font-semibold text-sm text-text">{station.name}</span>
+          <span className="font-mono text-[11px] text-text-muted">{station.location}</span>
+          <span className="font-mono text-[11px] text-text-muted mt-0.5">{station.hardware}</span>
+        </div>
+
+        <div className="h-px bg-border" />
+
+        <SidebarRow label="Status">
+          <StatusBadge state={state} />
+        </SidebarRow>
+
+        <ObjectSelector
+          objects={station.objects}
+          selected={selectedObject}
+          onSelect={setSelectedObject}
+        />
+
+        <PositionDisplay state={state} />
+
+        {/* ← НОВО: панелът е вътре в return */}
+        <ObservationSetPanel
+          sets={sets}
+          activeSetId={activeSetId}
+          onSelect={setActiveSetId}
+          onAdd={addSet}
+          onRemove={removeSet}
+          onUpdate={updateSet}
+          onClear={clearSet}
+        />
+
+        <FireControls state={state} onFire={handleFire} onStop={handleStop} />
+
+      </aside>
     </div>
   );
 }

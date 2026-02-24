@@ -11,3 +11,37 @@ export const TIME_PRESETS: TimePreset[] = [
 ];
 
 export const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
+
+import { Vector3 } from "three";
+
+export interface ObsSet {
+  id:      string;
+  label:   string;
+  points:  Vector3[];
+  color:   string | null; 
+  visible: boolean;
+}
+
+export const PRESET_COLORS = [
+  "#00e5ff", // cyan
+  "#69ff47", // green
+  "#ff4444", // red
+  "#ff9800", // orange
+  "#c084fc", // purple
+  "#ffffff",  // white
+] as const;
+
+export function nextColor(sets: ObsSet[]): string {
+  return PRESET_COLORS[sets.length % PRESET_COLORS.length];
+}
+
+export function createSet(sets: ObsSet[], label?: string): ObsSet {
+  const n = sets.length + 1;
+  return {
+    id:      crypto.randomUUID(),
+    label:   label ?? `Set ${n}`,
+    points:  [],
+    color:   nextColor(sets),
+    visible: true,
+  };
+}

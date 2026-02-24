@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* Hide the navbar whenever anything on the page enters fullscreen */
+:fullscreen header          { display: none; }
+:-webkit-full-screen header { display: none; }
+:-moz-full-screen header    { display: none; }
+
 @layer base {
   html, body {
     margin: 0;

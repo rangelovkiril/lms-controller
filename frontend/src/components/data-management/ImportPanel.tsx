@@ -1,37 +1,29 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { StatusBar, Dropdown } from "../ui/Dropdown";
-import { Spinner } from "../ui/Spinner";
-import { Label } from "../ui/Label";
+import { StatusBar } from "../ui/StatusBar";
+import { Spinner }   from "../ui/Spinner";
+import { Label }     from "../ui/Label";
+import { inputBase } from "../ui/inputStyles";
 
 type UploadStatus = "idle" | "uploading";
 
 interface Props {
-  stations:        string[];
-  station:         string;
-  objects:         string[];
-  object:          string;
-  loadingStations: boolean;
-  loadingObjects:  boolean;
-  onStationChange: (v: string) => void;
-  onObjectChange:  (v: string) => void;
-  onSend:          (file: File, station: string, object: string) => Promise<void>;
+  onSend:    (file: File, observationSet: string) => Promise<void>;
+  onOverlay: (file: File, observationSet: string) => void;
 }
 
-export default function ImportPanel({
-  stations, station, objects, object,
-  loadingStations, loadingObjects,
-  onStationChange, onObjectChange, onSend,
-}: Props) {
-  const [file,       setFile]       = useState<File | null>(null);
-  const [status,     setStatus]     = useState<UploadStatus>("idle");
-  const [error,      setError]      = useState("");
-  const [lastUpload, setLastUpload] = useState<{ label: string; time: string } | null>(null);
-  const [dragging,   setDragging]   = useState(false);
+export default function ImportPanel({ onSend, onOverlay }: Props) {
+  const [file,           setFile]           = useState<File | null>(null);
+  const [observationSet, setObservationSet] = useState("");
+  const [status,         setStatus]         = useState<UploadStatus>("idle");
+  const [error,          setError]          = useState("");
+  const [lastUpload,     setLastUpload]     = useState<{ label: string; time: string } | null>(null);
+  const [dragging,       setDragging]       = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const canSend = !!(file && station && object && status === "idle");
+  const canSend    = !!(file && observationSet.trim() && status === "idle");
+  const canOverlay = !!(file && status === "idle");
 
   function handleFiles(files: FileList | null) {
     if (!files?.length) return;
@@ -57,9 +49,9 @@ export default function ImportPanel({
     setLastUpload(null);
     setStatus("uploading");
     try {
-      await onSend(file!, station, object);
+      await onSend(file!, observationSet.trim());
       setLastUpload({
-        label: `${file!.name} → ${station}/${object}`,
+        label: `${file!.name} → ${observationSet.trim()}`,
         time:  new Date().toLocaleTimeString("bg-BG"),
       });
       setFile(null);
@@ -70,9 +62,15 @@ export default function ImportPanel({
     }
   }
 
+  function handleOverlay() {
+    if (!canOverlay) return;
+    onOverlay(file!, observationSet.trim());
+  }
+
   return (
     <div className="bg-surface border border-border rounded-[14px] overflow-hidden flex flex-col h-full">
 
+      {/* Header */}
       <div className="px-6 py-4 border-b border-border flex items-center gap-3">
         <div className="w-7 h-7 rounded-lg bg-blue-dim border border-blue/20 flex items-center justify-center text-blue">
           <UploadIcon />
@@ -85,30 +83,20 @@ export default function ImportPanel({
 
       <div className="p-6 flex flex-col gap-5 flex-1">
 
-        <div className="grid grid-cols-2 gap-4">
-          <div className="flex flex-col gap-1.5">
-            <Label>Станция</Label>
-            <Dropdown
-              value={station}
-              options={stations}
-              onChange={onStationChange}
-              loading={loadingStations}
-              placeholder="Избери станция"
-            />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label>Обект</Label>
-            <Dropdown
-              value={object}
-              options={objects}
-              onChange={onObjectChange}
-              disabled={!station}
-              loading={loadingObjects}
-              placeholder="Избери обект"
-            />
-          </div>
+        {/* Observation set name */}
+        <div className="flex flex-col gap-1.5">
+          <Label>Observation set</Label>
+          <input
+            type="text"
+            value={observationSet}
+            onChange={e => setObservationSet(e.target.value)}
+            placeholder="напр. ISS-pass-2026-03-01"
+            className={inputBase}
+            spellCheck={false}
+          />
         </div>
 
+        {/* File drop zone */}
         <div className="flex flex-col gap-1.5">
           <Label>Файл с траектория</Label>
           <div
@@ -118,11 +106,9 @@ export default function ImportPanel({
             onDrop={handleDrop}
             className={[
               "relative flex flex-col items-center justify-center gap-3 p-8 rounded-lg border-2 border-dashed cursor-pointer transition-all duration-150",
-              dragging
-                ? "border-blue bg-blue/5 scale-[1.01]"
-                : file
-                ? "border-accent/40 bg-accent-dim"
-                : "border-border hover:border-border-hi hover:bg-surface-hi",
+              dragging ? "border-blue bg-blue/5 scale-[1.01]"
+              : file   ? "border-accent/40 bg-accent-dim"
+              : "border-border hover:border-border-hi hover:bg-surface-hi",
             ].join(" ")}
           >
             <input
@@ -170,17 +156,16 @@ export default function ImportPanel({
           </div>
         </div>
 
-        <div className="mt-auto pt-1">
+        {/* Actions */}
+        <div className="flex flex-col gap-2 mt-auto pt-1">
+
           <button
-            disabled={!canSend}
-            onClick={handleSend}
-            className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-md text-[13px] font-medium bg-blue text-white transition-all duration-150 disabled:opacity-35 disabled:cursor-not-allowed hover:enabled:bg-[#1a80ff] hover:enabled:shadow-[0_0_20px_#0070f340] cursor-pointer"
+            disabled={!canOverlay}
+            onClick={handleOverlay}
+            className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-md text-[13px] font-medium border border-accent/30 text-accent bg-accent-dim transition-all duration-150 disabled:opacity-35 disabled:cursor-not-allowed hover:enabled:bg-accent/20 hover:enabled:border-accent/50 cursor-pointer"
           >
-            {status === "uploading" ? (
-              <><Spinner />Изпраща се…</>
-            ) : (
-              <><SendIcon />Изпрати към станцията</>
-            )}
+            <OverlayIcon />
+            Наложи траектория
           </button>
         </div>
       </div>
@@ -190,8 +175,8 @@ export default function ImportPanel({
         error={error}
         lastAction={lastUpload}
         idleLabel="Готов за импорт"
-        station={station}
-        object={object}
+        station={observationSet || undefined}
+        object={undefined}
       />
     </div>
   );
@@ -206,7 +191,6 @@ function UploadIcon() {
     </svg>
   );
 }
-
 function FileIcon() {
   return (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -215,12 +199,19 @@ function FileIcon() {
     </svg>
   );
 }
-
 function SendIcon() {
   return (
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
       <line x1="22" y1="2" x2="11" y2="13"/>
       <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+    </svg>
+  );
+}
+function OverlayIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+      <path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/>
+      <path d="M13 13l6 6"/>
     </svg>
   );
 }

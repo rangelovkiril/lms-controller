@@ -1,53 +1,75 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback } from "react";
 import { Vector3 } from "three";
 import { useWebSocket } from "@/hooks/useWebSocket";
-import { buildTrackingTopic, parseTrackingMessage, type TrackingPosition } from "@/lib/ws/tracking";
+import {
+  buildTrackingTopic,
+  parseTrackingMessage,
+  type TrackingPosition,
+  type TrackingEvent,
+} from "@/lib/ws/tracking";
+
+// ─── State union ─────────────────────────────────────────────────────────────
+
+export type TrackingState =
+  | { kind: "disconnected" }
+  | { kind: "connected" }                              // ws open, waiting for first frame
+  | { kind: "tracking"; position: TrackingPosition }  // live position data
+  | { kind: "event"; event: TrackingEvent }            // named event from server
+
+// ─── Hook ────────────────────────────────────────────────────────────────────
+
+export interface UseTrackingResult {
+  state:        TrackingState;
+  targetPosVec: React.RefObject<Vector3>;
+  send:         (data: object) => void;
+}
 
 export function useTracking(
-  wsUrl: string,
+  wsUrl:     string,
   stationId: string,
-  objectId: string,
-  onStatusChange: (status: "CONNECTED" | "DISCONNECTED") => void,
-  onPositionChange: (pos: TrackingPosition | null) => void,
-  onSendReady: (send: (data: object) => void) => void
-) {
-  const [isFiring, setIsFiring] = useState(false);
-  const targetPosVec = useRef(new Vector3(0, 0, 0));
+  objectId:  string,
+): UseTrackingResult {
+  const [state, setState] = useState<TrackingState>({ kind: "disconnected" });
+
+  // Mutable vector updated every frame — avoids React re-renders in the 3D loop
+  const targetPosVec = useRef(new Vector3());
+
   const topic = buildTrackingTopic(stationId, objectId);
 
   const onOpen = useCallback((socket: WebSocket) => {
-    onStatusChange("CONNECTED");
+    setState({ kind: "connected" });
     socket.send(JSON.stringify({ action: "subscribe", topic }));
-  }, [topic, onStatusChange]);
+  }, [topic]);
 
   const onMessage = useCallback((ev: MessageEvent) => {
-    const pos = parseTrackingMessage(ev);
-    if (!pos) {
-      setIsFiring(false);
-      onPositionChange(null);
-      return;
+    const msg = parseTrackingMessage(ev);
+    if (!msg) return;
+
+    if (msg.type === "position") {
+      const { x, y, z } = msg.position;
+      targetPosVec.current.set(x, y, z);
+      setState({ kind: "tracking", position: msg.position });
+    } else {
+      // Named event — surface it as state; position display will freeze at last known
+      setState({ kind: "event", event: msg.event });
     }
-    targetPosVec.current.set(pos.x, pos.y, pos.z);
-    onPositionChange(pos);
-    setIsFiring(true);
-  }, [onPositionChange]);
+  }, []);
 
   const onClose = useCallback(() => {
-    onStatusChange("DISCONNECTED");
-    setIsFiring(false);
-    onPositionChange(null);
-  }, [onStatusChange, onPositionChange]);
+    setState({ kind: "disconnected" });
+  }, []);
 
   const { send } = useWebSocket(wsUrl, {
-    onOpen: onOpen,
-    onMessage: onMessage,
-    onClose: onClose,
+    onOpen,
+    onMessage,
+    onClose,
     onError: (ev) => console.error("WebSocket error:", ev),
   });
 
-  useEffect(() => {
-    onSendReady(send);
-  }, [send, onSendReady]);
+  const wrappedSend = useCallback(
+    (data: object) => send(data),
+    [send]
+  );
 
-  return { isFiring, targetPosVec };
+  return { state, targetPosVec, send: wrappedSend };
 }
