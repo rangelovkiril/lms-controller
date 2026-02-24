@@ -89,6 +89,33 @@ export const influx = (config: InfluxConfig) => {
       query: (fluxQuery: string): Promise<unknown[]> => {
         return queryApi.collectRows(fluxQuery)
       },
+      async getStations() {
+        const rows = await queryApi.collectRows(`
+          import "influxdata/influxdb/schema"
+          buckets() |> filter(fn: (r) => not r.name =~ /^_/) |> keep(columns: ["name"])
+        `) as any[];
+        return rows.map(r => r.name);
+      },
+
+      async getObjects(station: string) {
+        const rows = await queryApi.collectRows(`
+          import "influxdata/influxdb/schema"
+          schema.measurements(bucket: "${station}")
+        `) as any[];
+        return rows.map(r => r._value);
+      },
+
+      async getExportData(station: string, object: string, start: string, stop?: string) {
+        const stopClause = stop ? `, stop: ${stop}` : "";
+        const flux = `
+          from(bucket: "${station}")
+            |> range(start: ${start}${stopClause})
+            |> filter(fn: (r) => r._measurement == "${object}")
+            |> pivot(rowKey: ["_time"], columnKey: ["_field"], valueColumn: "_value")
+            |> sort(columns: ["_time"])
+        `;
+        return queryApi.collectRows(flux);
+      },
       Point,
       org: config.org,
     })

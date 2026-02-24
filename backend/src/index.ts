@@ -40,28 +40,29 @@ const app = new Elysia()
 
   .get("/", () => ({ status: "ok" }))
 
-  .get("/stations", ({ influx }) =>
-    getStations(influx)
+  .group("/api", (app) => app
+    
+    .get("/stations", ({ influx }) => influx.getStations())
+
+    .get("/objects", ({ influx, query }) => {
+      if (!query.station) throw new Error("Station is required");
+      return influx.getObjects(query.station);
+    }, {
+      query: t.Object({ station: t.String() })
+    })
+
+    .get("/data", async ({ influx, query }) => {
+      const { station, object, start, stop } = query;
+      return influx.getExportData(station, object, start, stop);
+    }, {
+      query: t.Object({
+        station: t.String(),
+        object:  t.String(),
+        start:   t.String(), // e.g., "-1h" or "2026-02-25T00:00:00Z"
+        stop:    t.Optional(t.String())
+      })
+    })
   )
-
-  .get("/objects", ({ influx, query }) =>
-    getObjects(influx, query.station),
-  {
-    query: t.Object({
-      station: t.String(),
-    }),
-  })
-
-  .get("/data", ({ influx, query }) =>
-    getData(influx, query),
-  {
-    query: t.Object({
-      station: t.String(),
-      object:  t.String(),
-      start:   t.Optional(t.String()),
-      stop:    t.Optional(t.String()),
-    }),
-  })
 
   .listen(PORT)
 

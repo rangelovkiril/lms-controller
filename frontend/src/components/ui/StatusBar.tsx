@@ -5,7 +5,7 @@ interface StatusBarProps {
   status:     string;
   error:      string;
   lastAction: { label: string; time: string } | null;
-  idleLabel:  string;
+  idleLabel?:  string;
   station:    string;
   object:     string;
 }

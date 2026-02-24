@@ -10,7 +10,7 @@ export const TIME_PRESETS: TimePreset[] = [
   { label: "Custom", value: "custom", flux: ""      },
 ];
 
-export const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
+export const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000/api";
 
 import { Vector3 } from "three";
 
