@@ -1,12 +1,91 @@
 {
-  "overlay": {
-    "station": "Станция",
-    "object": "Обект",
-    "noInfo": "Няма информация",
-    "start": "Старт",
-    "stop": "Стоп",
-    "live": "НА ЖИВО",
-    "offline": "ОФЛАЙН",
-    "position": "Картезианска позиция"
+  "nav": {
+    "stations":     "Станции",
+    "trajectories": "Траектории",
+    "about":        "Относно"
+  },
+  "stations": {
+    "title":    "Станции",
+    "summary":  "{active} активни · {total} общо",
+    "objects":  "{count} обекта",
+    "open":     "Отвори →",
+    "offline":  "Извън мрежата",
+    "status": {
+      "online":   "ОНЛАЙН",
+      "tracking": "ПРОСЛЕДЯВАНЕ",
+      "offline":  "ОФЛАЙН"
+    }
+  },
+  "station": {
+    "visualizationLoading": "Зареждане на визуализацията",
+    "exitFullscreen":       "ESC за изход от цял екран",
+    "status": {
+      "label":        "Статус",
+      "disconnected": "Офлайн",
+      "connected":    "Свързан",
+      "tracking":     "Проследяване",
+      "event":        "Събитие"
+    },
+    "events": {
+      "no_object":  "Обектът не е намерен",
+      "track_lost": "Изгубено проследяване",
+      "acquire":    "Повторно прихващане",
+      "error":      "Сървърна грешка"
+    },
+    "position": "Декартови координати",
+    "object":   "Обект",
+    "fire":     "▶ Старт",
+    "stop":     "■ Стоп"
+  },
+  "export": {
+    "title":      "Експортиране",
+    "subtitle":   "API: /data",
+    "station":    "Станция",
+    "object":     "Обект",
+    "timeWindow": "Времеви интервал",
+    "exporting":  "Експортиране...",
+    "rows":       "{rows} реда · {format}"
+  },
+  "import": {
+    "title":          "Импортиране на наблюдения",
+    "subtitle":       "Набор от наблюдения",
+    "sessionLabel":   "Име на сесията (Набор наблюдения)",
+    "placeholder":    "напр. ISS-pass-2026-03-01",
+    "filesCount":     "{count} файла",
+    "dropZone":       "Плъзнете файлове тук или",
+    "browse":         "разгледайте",
+    "formatHint":     ".json (x,y,z или az,el,dist)",
+    "clickToAddMore": "Кликнете за добавяне на още",
+    "uploading":      "Качване...",
+    "uploadButton":   "Качване в базата данни",
+    "overlayButton":  "Показване върху сцената",
+    "successLabel":   "{count} файла → {set}"
+  },
+  "trajectories": {
+    "title":    "Траектории",
+    "subtitle": "Експортиране и импортиране на траектории към станция"
+  },
+  "observationSets": {
+    "title":       "Набори от наблюдения",
+    "newSet":      "+ Нов набор",
+    "speed":       "Скорост",
+    "clearPoints": "Изчистване на точките",
+    "deleteSet":   "Изтриване на набора",
+    "renameHint":  "Двоен клик за преименуване",
+    "options":     "Опции",
+    "hide":        "Скриване",
+    "show":        "Показване"
+  },
+  "ui": {
+    "placeholder":    "—",
+    "loading":        "Зареждане...",
+    "noOptions":      "Няма опции",
+    "querying":       "Заявка към {station}/{object}…"
+  },
+  "errors": {
+    "fetchData":    "Грешка при извличане на данните",
+    "noData":       "Няма данни за избрания период",
+    "loadObjects":  "Грешка при зареждане на обектите",
+    "httpError":    "Грешка {status}: {statusText}"
   }
 }

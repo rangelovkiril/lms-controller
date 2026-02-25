@@ -41,32 +41,66 @@ export function useExport(stations: string[], loadingStations: boolean) {
     return () => controller.abort();
   }, [state.station]);
 
-  const download = async (format: "csv" | "json") => {
-    patch({ status: "exporting", error: "", lastExport: null });
-    try {
-      const flux = TIME_PRESETS.find(p => p.value === state.preset)?.flux;
-      const params = new URLSearchParams({ station: state.station, object: state.object });
-      
-      if (state.preset === "custom") {
-        params.set("start", new Date(state.customStart).toISOString());
-        if (state.customStop) params.set("stop", new Date(state.customStop).toISOString());
-      } else {
-        params.set("start", flux || "");
-      }
-
-      const res = await fetch(`${API_BASE}/data?${params}`);
-      if (!res.ok) throw new Error("Fetch failed");
-      
-      const rows = await res.json();
-      
-      patch({
-        status: "idle",
-        lastExport: { rows: rows.length, format: format.toUpperCase(), time: new Date().toLocaleTimeString("bg-BG") }
-      });
-    } catch (e: any) {
-      patch({ status: "idle", error: e.message });
+const download = async (format: "csv" | "json") => {
+  patch({ status: "exporting", error: "", lastExport: null });
+  try {
+    const fluxPreset = TIME_PRESETS.find(p => p.value === state.preset)?.flux;
+    const params = new URLSearchParams({ 
+      station: state.station, 
+      object: state.object 
+    });
+    
+    if (state.preset === "custom") {
+      params.set("start", new Date(state.customStart).toISOString());
+      if (state.customStop) params.set("stop", new Date(state.customStop).toISOString());
+    } else {
+      params.set("start", fluxPreset || "-1h");
     }
-  };
+
+    const res = await fetch(`${API_BASE}/data?${params}`);
+    if (!res.ok) throw new Error("Грешка при извличане на данни");
+    
+    const rows = await res.json(); 
+    if (!rows.length) throw new Error("Няма данни за избрания период");
+
+    let blob: Blob;
+    
+    if (format === "json") {
+      blob = new Blob([JSON.stringify(rows, null, 2)], { type: "application/json" });
+    } else {
+      const headers = Object.keys(rows[0]);
+      const csvContent = [
+        headers.join(","), 
+        ...rows.map((row: any) => 
+          headers.map(fieldName => JSON.stringify(row[fieldName] || "")).join(",")
+        )
+      ].join("\r\n");
+      
+      blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    }
+
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `${state.object}_${new Date().getTime()}.${format}`);
+    document.body.appendChild(link);
+    link.click();
+    
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+
+    patch({
+      status: "idle",
+      lastExport: { 
+        rows: rows.length, 
+        format: format.toUpperCase(), 
+        time: new Date().toLocaleTimeString("bg-BG") 
+      }
+    });
+  } catch (e: any) {
+    patch({ status: "idle", error: e.message });
+  }
+};
 
   return { ...state, patch, download };
 }

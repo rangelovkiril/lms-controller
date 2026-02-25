@@ -1,66 +1,46 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { API_BASE } from "@/types";
 
-export function useImport(stations: string[], loadingStations: boolean) {
-  const [station,        setStation]        = useState("");
-  const [objects,        setObjects]        = useState<string[]>([]);
-  const [object,         setObject]         = useState("");
-  const [loadingObjects, setLoadingObjects] = useState(false);
+export function useImport() {
+  const [state, setState] = useState({
+    status: "idle" as "idle" | "uploading",
+    error: "",
+    lastUpload: null as { label: string; time: string } | null,
+  });
 
-  // Initialise station once station list is loaded
-  useEffect(() => {
-    if (!loadingStations && stations.length && !station) {
-      setStation(stations[0]);
-    }
-  }, [stations, loadingStations, station]);
+  const patch = (v: Partial<typeof state>) => setState(s => ({ ...s, ...v }));
 
-  // Fetch objects whenever selected station changes
-  useEffect(() => {
-    if (!station) return;
-    let cancelled = false;
-
-    async function load() {
-      setLoadingObjects(true);
-      setObjects([]);
-      setObject("");
-      try {
-        const res  = await fetch(`${API_BASE}/objects?station=${encodeURIComponent(station)}`);
-        const data: string[] = await res.json();
-        if (!cancelled) {
-          setObjects(data);
-          if (data.length) setObject(data[0]);
-        }
-      } catch {
-        if (!cancelled) {
-          setObjects(["position"]);
-          setObject("position");
-        }
-      } finally {
-        if (!cancelled) setLoadingObjects(false);
-      }
-    }
-
-    load();
-    return () => { cancelled = true; };
-  }, [station]);
-
-  async function send(file: File): Promise<void> {
+  async function upload(files: File[], observationSet: string) {
+    patch({ status: "uploading", error: "" });
+    
     const formData = new FormData();
-    formData.append("file",    file);
-    formData.append("station", station);
-    formData.append("object",  object);
+    files.forEach((file) => formData.append("files", file) )
+    formData.append("observationSet", observationSet);
 
-    const res = await fetch(`${API_BASE}/trajectory/upload`, {
-      method: "POST",
-      body:   formData,
-    });
-    if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+    try {
+      const res = await fetch(`${API_BASE}/observations/upload`, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody.message || `Грешка ${res.status}: ${res.statusText}`);
+      }
+
+      patch({
+        status: "idle",
+        lastUpload: {
+          label: `${files.length} файла → ${observationSet}`,
+          time: new Date().toLocaleTimeString("bg-BG"),
+        }
+      });
+    } catch (e: any) {
+      const message = e instanceof Error ? e.message : String(e);
+      patch({ status: "idle", error: message });
+      throw e; 
+    }
   }
 
-  return {
-    station, setStation,
-    objects, object, setObject,
-    loadingObjects,
-    send,
-  };
+  return { ...state, upload, patch };
 }
