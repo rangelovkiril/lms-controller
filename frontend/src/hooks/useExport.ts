@@ -1,17 +1,20 @@
 import { useState, useEffect } from "react";
+import { useTranslations }     from "next-intl";
 import { API_BASE, TIME_PRESETS } from "@/types";
 
 export function useExport(stations: string[], loadingStations: boolean) {
+  const t = useTranslations("errors");
+
   const [state, setState] = useState({
-    station: "",
-    object: "",
-    objects: [] as string[],
-    preset: "1h",
+    station:     "",
+    object:      "",
+    objects:     [] as string[],
+    preset:      "1h",
     customStart: "",
-    customStop: "",
-    status: "idle" as "idle" | "loading-objects" | "exporting",
-    error: "",
-    lastExport: null as { rows: number; format: string; time: string } | null,
+    customStop:  "",
+    status:      "idle" as "idle" | "loading-objects" | "exporting",
+    error:       "",
+    lastExport:  null as { rows: number; format: string; time: string } | null,
   });
 
   const patch = (val: Partial<typeof state>) => setState(prev => ({ ...prev, ...val }));
@@ -29,11 +32,11 @@ export function useExport(stations: string[], loadingStations: boolean) {
     const loadObjects = async () => {
       patch({ status: "loading-objects", objects: [], object: "" });
       try {
-        const res = await fetch(`${API_BASE}/objects?station=${state.station}`, { signal: controller.signal });
+        const res  = await fetch(`${API_BASE}/objects?station=${state.station}`, { signal: controller.signal });
         const data = await res.json();
         patch({ objects: data, object: data[0] || "", status: "idle" });
       } catch (e: any) {
-        if (e.name !== "AbortError") patch({ status: "idle", error: "Failed to load objects" });
+        if (e.name !== "AbortError") patch({ status: "idle", error: t("loadObjects") });
       }
     };
 
@@ -41,66 +44,54 @@ export function useExport(stations: string[], loadingStations: boolean) {
     return () => controller.abort();
   }, [state.station]);
 
-const download = async (format: "csv" | "json") => {
-  patch({ status: "exporting", error: "", lastExport: null });
-  try {
-    const fluxPreset = TIME_PRESETS.find(p => p.value === state.preset)?.flux;
-    const params = new URLSearchParams({ 
-      station: state.station, 
-      object: state.object 
-    });
-    
-    if (state.preset === "custom") {
-      params.set("start", new Date(state.customStart).toISOString());
-      if (state.customStop) params.set("stop", new Date(state.customStop).toISOString());
-    } else {
-      params.set("start", fluxPreset || "-1h");
-    }
+  const download = async (format: "csv" | "json") => {
+    patch({ status: "exporting", error: "", lastExport: null });
+    try {
+      const fluxPreset = TIME_PRESETS.find(p => p.value === state.preset)?.flux;
+      const params     = new URLSearchParams({ station: state.station, object: state.object });
 
-    const res = await fetch(`${API_BASE}/data?${params}`);
-    if (!res.ok) throw new Error("Грешка при извличане на данни");
-    
-    const rows = await res.json(); 
-    if (!rows.length) throw new Error("Няма данни за избрания период");
-
-    let blob: Blob;
-    
-    if (format === "json") {
-      blob = new Blob([JSON.stringify(rows, null, 2)], { type: "application/json" });
-    } else {
-      const headers = Object.keys(rows[0]);
-      const csvContent = [
-        headers.join(","), 
-        ...rows.map((row: any) => 
-          headers.map(fieldName => JSON.stringify(row[fieldName] || "")).join(",")
-        )
-      ].join("\r\n");
-      
-      blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    }
-
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", `${state.object}_${new Date().getTime()}.${format}`);
-    document.body.appendChild(link);
-    link.click();
-    
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
-
-    patch({
-      status: "idle",
-      lastExport: { 
-        rows: rows.length, 
-        format: format.toUpperCase(), 
-        time: new Date().toLocaleTimeString("bg-BG") 
+      if (state.preset === "custom") {
+        params.set("start", new Date(state.customStart).toISOString());
+        if (state.customStop) params.set("stop", new Date(state.customStop).toISOString());
+      } else {
+        params.set("start", fluxPreset || "-1h");
       }
-    });
-  } catch (e: any) {
-    patch({ status: "idle", error: e.message });
-  }
-};
+
+      const res = await fetch(`${API_BASE}/data?${params}`);
+      if (!res.ok) throw new Error(t("fetchData"));
+
+      const rows = await res.json();
+      if (!rows.length) throw new Error(t("noData"));
+
+      let blob: Blob;
+      if (format === "json") {
+        blob = new Blob([JSON.stringify(rows, null, 2)], { type: "application/json" });
+      } else {
+        const headers    = Object.keys(rows[0]);
+        const csvContent = [
+          headers.join(","),
+          ...rows.map((row: any) => headers.map(f => JSON.stringify(row[f] || "")).join(",")),
+        ].join("\r\n");
+        blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      }
+
+      const url  = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href  = url;
+      link.setAttribute("download", `${state.object}_${new Date().getTime()}.${format}`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      patch({
+        status:     "idle",
+        lastExport: { rows: rows.length, format: format.toUpperCase(), time: new Date().toLocaleTimeString() },
+      });
+    } catch (e: any) {
+      patch({ status: "idle", error: e.message });
+    }
+  };
 
   return { ...state, patch, download };
 }

@@ -1,12 +1,12 @@
 "use client";
 import { useState, useCallback, useEffect } from "react";
-import dynamic from "next/dynamic";
-import type { Station }    from "@/lib/data/stations";
-import { useTracking, type TrackingState } from "@/hooks/useTracking";
-import ObservationSetPanel from "@/components/visualization/objects/ObservationSetPanel";
-import { useObservationSets } from "@/hooks/useObservationSets";
-import type { ObsSet } from "@/types";
-import { generateTrajectory } from "@/components/visualization/objects/mockTrajectory";
+import { useTranslations }                  from "next-intl";
+import dynamic                              from "next/dynamic";
+import type { Station }                     from "@/lib/data/stations";
+import { useTracking, type TrackingState }  from "@/hooks/useTracking";
+import ObservationSetPanel                  from "@/components/visualization/objects/ObservationSetPanel";
+import { useObservationSets }               from "@/hooks/useObservationSets";
+import type { ObsSet }                      from "@/types";
 
 const Scene = dynamic(() => import("@/components/visualization/Scene"), {
   ssr:     false,
@@ -14,36 +14,16 @@ const Scene = dynamic(() => import("@/components/visualization/Scene"), {
 });
 
 function SceneLoader() {
+  const t = useTranslations("station");
   return (
     <div className="w-full h-full flex items-center justify-center bg-[#050505]">
       <div className="flex flex-col items-center gap-3 text-text-muted">
         <div className="w-5 h-5 border-[1.5px] border-border border-t-accent rounded-full animate-spin" />
-        <span className="text-xs font-mono">Visualization loading</span>
+        <span className="text-xs font-mono">{t("visualizationLoading")}</span>
       </div>
     </div>
   );
 }
-
-const STATUS_LABEL: Record<TrackingState["kind"], string> = {
-  disconnected: "Offline",
-  connected:    "Connected",
-  tracking:     "Tracking",
-  event:        "Event",
-};
-
-const STATUS_COLOR: Record<TrackingState["kind"], string> = {
-  disconnected: "text-text-muted",
-  connected:    "text-blue",
-  tracking:     "text-accent",
-  event:        "text-yellow-400",
-};
-
-const EVENT_LABEL: Record<string, string> = {
-  no_object:  "Object not found",
-  track_lost: "Track lost",
-  acquire:    "Re-acquired",
-  error:      "Server error",
-};
 
 function SidebarRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -55,9 +35,10 @@ function SidebarRow({ label, children }: { label: string; children: React.ReactN
 }
 
 function PositionDisplay({ state }: { state: TrackingState }) {
+  const t   = useTranslations("station");
   const pos = state.kind === "tracking" ? state.position : null;
   return (
-    <SidebarRow label="Cartesian position">
+    <SidebarRow label={t("position")}>
       <div className="grid grid-cols-3 gap-1.5">
         {(["x", "y", "z"] as const).map((axis) => (
           <div key={axis} className="flex flex-col rounded-md border border-border bg-bg px-2 py-1.5">
@@ -73,6 +54,15 @@ function PositionDisplay({ state }: { state: TrackingState }) {
 }
 
 function StatusBadge({ state }: { state: TrackingState }) {
+  const t = useTranslations("station");
+
+  const STATUS_COLOR: Record<TrackingState["kind"], string> = {
+    disconnected: "text-text-muted",
+    connected:    "text-blue",
+    tracking:     "text-accent",
+    event:        "text-yellow-400",
+  };
+
   const isLive = state.kind === "tracking";
   return (
     <div className="flex items-center gap-2">
@@ -83,8 +73,8 @@ function StatusBadge({ state }: { state: TrackingState }) {
                                      "bg-border-hi",
       ].join(" ")} />
       <span className={`font-mono text-[11px] ${STATUS_COLOR[state.kind]}`}>
-        {STATUS_LABEL[state.kind]}
-        {state.kind === "event" && ` — ${EVENT_LABEL[state.event] ?? state.event}`}
+        {t(`status.${state.kind}`)}
+        {state.kind === "event" && ` — ${t(`events.${state.event}`, { defaultValue: state.event })}`}
       </span>
     </div>
   );
@@ -97,8 +87,9 @@ function ObjectSelector({
   selected: string;
   onSelect: (id: string) => void;
 }) {
+  const t = useTranslations("station");
   return (
-    <SidebarRow label="Object">
+    <SidebarRow label={t("object")}>
       <div className="flex flex-col gap-1">
         {objects.map((id) => (
           <button
@@ -126,6 +117,7 @@ function FireControls({
   onFire: () => void;
   onStop: () => void;
 }) {
+  const t           = useTranslations("station");
   const canInteract = state.kind !== "disconnected";
   return (
     <div className="mt-auto pt-4 border-t border-border flex flex-col gap-2">
@@ -135,7 +127,7 @@ function FireControls({
           disabled={!canInteract}
           className="w-full font-medium font-mono bg-danger/20 border border-danger/40 text-danger hover:bg-danger/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed rounded-lg py-2.5 text-[12px]"
         >
-          ■ Stop
+          {t("stop")}
         </button>
       ) : (
         <button
@@ -143,7 +135,7 @@ function FireControls({
           disabled={!canInteract}
           className="w-full font-medium font-mono bg-accent-dim border border-accent-glow text-accent hover:bg-accent/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed rounded-lg py-2.5 text-[12px]"
         >
-          ▶ Fire
+          {t("fire")}
         </button>
       )}
     </div>
@@ -153,10 +145,9 @@ function FireControls({
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function StationClient({ station }: { station: Station }) {
+  const t = useTranslations("station");
   const [selectedObject, setSelectedObject] = useState(station.objects[0]);
   const [isFullscreen,   setIsFullscreen]   = useState(false);
-
-
 
   const { state, targetPosVec, send } = useTracking(
     station.wsUrl,
@@ -194,14 +185,11 @@ export default function StationClient({ station }: { station: Station }) {
 
       {/* ── 3D viewport ── */}
       <div className="relative flex-1 min-h-0 overflow-hidden bg-[#050505]">
-        <Scene
-          targetPosVec={targetPosVec}
-          observationSets={sets}       
-        />
+        <Scene targetPosVec={targetPosVec} observationSets={sets} />
 
         {isFullscreen && (
           <div className="absolute top-4 left-4 text-[10px] font-mono text-text-muted bg-surface/70 border border-border px-2 py-1 rounded-md backdrop-blur-sm">
-            ESC to exit fullscreen
+            {t("exitFullscreen")}
           </div>
         )}
 
@@ -227,7 +215,7 @@ export default function StationClient({ station }: { station: Station }) {
 
         <div className="h-px bg-border" />
 
-        <SidebarRow label="Status">
+        <SidebarRow label={t("status.label")}>
           <StatusBadge state={state} />
         </SidebarRow>
 
@@ -239,7 +227,6 @@ export default function StationClient({ station }: { station: Station }) {
 
         <PositionDisplay state={state} />
 
-        {/* ← НОВО: панелът е вътре в return */}
         <ObservationSetPanel
           sets={sets}
           activeSetId={activeSetId}

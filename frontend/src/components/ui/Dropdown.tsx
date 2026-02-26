@@ -1,6 +1,7 @@
+"use client";
 import { useState, useRef, useEffect } from "react";
-
-import { Spinner } from "./Spinner";
+import { useTranslations }             from "next-intl";
+import { Spinner }                     from "./Spinner";
 
 interface DropdownProps {
   value:         string;
@@ -19,12 +20,13 @@ export function Dropdown({
   onChange,
   disabled,
   loading,
-  placeholder  = "—",
-  loadingLabel = "Loading…",
-  emptyLabel   = "No options",
+  placeholder,
+  loadingLabel,
+  emptyLabel,
 }: DropdownProps) {
+  const t    = useTranslations("ui");
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const ref  = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function handler(e: MouseEvent) {
@@ -34,8 +36,11 @@ export function Dropdown({
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const isDisabled = disabled || loading;
-  const label      = loading ? loadingLabel : (value || placeholder);
+  const isDisabled  = disabled || loading;
+  const resolvedPlaceholder  = placeholder  ?? t("placeholder");
+  const resolvedLoadingLabel = loadingLabel ?? t("loading");
+  const resolvedEmptyLabel   = emptyLabel   ?? t("noOptions");
+  const label       = loading ? resolvedLoadingLabel : (value || resolvedPlaceholder);
 
   return (
     <div ref={ref} className="relative">
@@ -66,7 +71,7 @@ export function Dropdown({
       {open && (
         <div className="absolute z-50 mt-1 w-full bg-surface border border-border rounded-md shadow-[0_8px_24px_#00000080] overflow-hidden animate-fade-in">
           {options.length === 0 ? (
-            <div className="px-3 py-2 text-[12px] font-mono text-text-muted">{emptyLabel}</div>
+            <div className="px-3 py-2 text-[12px] font-mono text-text-muted">{resolvedEmptyLabel}</div>
           ) : (
             options.map((opt) => (
               <button

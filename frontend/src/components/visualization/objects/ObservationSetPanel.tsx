@@ -1,6 +1,7 @@
 "use client";
 import { useRef, useState, useEffect } from "react";
-import { ObsSet, PRESET_COLORS } from "@/types";
+import { useTranslations }             from "next-intl";
+import { ObsSet, PRESET_COLORS }       from "@/types";
 
 interface Props {
   sets:        ObsSet[];
@@ -13,6 +14,7 @@ interface Props {
 }
 
 function EditableLabel({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const t = useTranslations("observationSets");
   const [editing, setEditing] = useState(false);
   const [draft,   setDraft]   = useState(value);
 
@@ -39,30 +41,26 @@ function EditableLabel({ value, onChange }: { value: string; onChange: (v: strin
     <span
       className="flex-1 truncate"
       onDoubleClick={(e) => { e.stopPropagation(); setDraft(value); setEditing(true); }}
-      title="Double-click to rename"
+      title={t("renameHint")}
     >
       {value}
     </span>
   );
 }
 
-// ─── Three-dot context menu ───────────────────────────────────────────────────
-
 function SetMenu({
-  set,
-  onUpdate,
-  onRemove,
-  onClear,
+  set, onUpdate, onRemove, onClear,
 }: {
   set:      ObsSet;
   onUpdate: <K extends keyof ObsSet>(id: string, key: K, val: ObsSet[K]) => void;
   onRemove: (id: string) => void;
   onClear:  (id: string) => void;
 }) {
+  const t   = useTranslations("observationSets");
   const [open, setOpen] = useState(false);
   const ref             = useRef<HTMLDivElement>(null);
 
-  // Затвори при клик извън менюто
+  // Close on outside click
   useEffect(() => {
     if (!open) return;
     const handler = (e: MouseEvent) => {
@@ -74,10 +72,9 @@ function SetMenu({
 
   return (
     <div ref={ref} className="relative shrink-0">
-      {/* Trigger */}
       <button
         onClick={(e) => { e.stopPropagation(); setOpen((v) => !v); }}
-        title="Options"
+        title={t("options")}
         className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:text-text text-text-muted"
       >
         <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
@@ -87,15 +84,12 @@ function SetMenu({
         </svg>
       </button>
 
-      {/* Dropdown */}
       {open && (
         <div
           className="absolute right-0 top-full mt-1 z-50 w-44 rounded-lg border border-border bg-surface shadow-xl flex flex-col py-1"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Color presets */}
           <div className="px-3 py-1.5 flex items-center gap-1.5 flex-wrap border-b border-border">
-            {/* Speed */}
             <button
               onClick={() => { onUpdate(set.id, "color", null); setOpen(false); }}
               className={[
@@ -105,7 +99,7 @@ function SetMenu({
                   : "border-border text-text-muted hover:text-text",
               ].join(" ")}
             >
-              Speed
+              {t("speed")}
             </button>
 
             {PRESET_COLORS.map((hex) => (
@@ -120,7 +114,6 @@ function SetMenu({
               />
             ))}
 
-            {/* Custom */}
             <label className="w-4 h-4 rounded-sm border border-dashed border-border flex items-center justify-center cursor-pointer hover:border-border-hi relative" title="Custom">
               <span className="font-mono text-[9px] text-text-muted leading-none">+</span>
               <input
@@ -132,18 +125,17 @@ function SetMenu({
             </label>
           </div>
 
-          {/* Actions */}
           <button
             onClick={() => { onClear(set.id); setOpen(false); }}
             className="w-full text-left px-3 py-1.5 font-mono text-[11px] text-text-muted hover:text-text hover:bg-white/5 transition-colors"
           >
-            Clear points
+            {t("clearPoints")}
           </button>
           <button
             onClick={() => { onRemove(set.id); setOpen(false); }}
             className="w-full text-left px-3 py-1.5 font-mono text-[11px] text-red-400/60 hover:text-red-400 hover:bg-white/5 transition-colors"
           >
-            Delete set
+            {t("deleteSet")}
           </button>
         </div>
       )}
@@ -151,28 +143,25 @@ function SetMenu({
   );
 }
 
-// ─── Main panel ──────────────────────────────────────────────────────────────
-
 export default function ObservationSetPanel({
   sets, activeSetId, onSelect, onAdd, onRemove, onUpdate, onClear,
 }: Props) {
+  const t = useTranslations("observationSets");
+
   return (
     <div className="flex flex-col gap-3">
-
-      {/* Header */}
       <div className="flex items-center justify-between">
         <span className="text-[10px] font-mono uppercase tracking-widest text-text-muted">
-          Observation Sets
+          {t("title")}
         </span>
         <button
           onClick={onAdd}
           className="font-mono text-[10px] px-2 py-0.5 rounded border border-border text-text-muted hover:border-border-hi hover:text-text transition-colors"
         >
-          + New Set
+          {t("newSet")}
         </button>
       </div>
 
-      {/* Set list */}
       <div className="flex flex-col gap-1">
         {sets.map((s) => (
           <div
@@ -185,7 +174,6 @@ export default function ObservationSetPanel({
                 : "border-border text-text-muted hover:border-border-hi hover:text-text",
             ].join(" ")}
           >
-            {/* Color dot */}
             <span
               className="w-2 h-2 rounded-full shrink-0 ring-1 ring-white/10"
               style={{
@@ -194,19 +182,14 @@ export default function ObservationSetPanel({
               }}
             />
 
-            {/* Editable label */}
             <EditableLabel
               value={s.label}
               onChange={(v) => onUpdate(s.id, "label", v)}
             />
 
-            {/* Hidden badge — вместо point count когато е скрит */}
-            
-
-            {/* Visible toggle — на мястото на старото oko */}
             <button
               onClick={(e) => { e.stopPropagation(); onUpdate(s.id, "visible", !s.visible); }}
-              title={s.visible ? "Hide" : "Show"}
+              title={s.visible ? t("hide") : t("show")}
               className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity text-text-muted hover:text-text"
             >
               <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -217,17 +200,10 @@ export default function ObservationSetPanel({
               </svg>
             </button>
 
-            {/* Three-dot menu */}
-            <SetMenu
-              set={s}
-              onUpdate={onUpdate}
-              onRemove={onRemove}
-              onClear={onClear}
-            />
+            <SetMenu set={s} onUpdate={onUpdate} onRemove={onRemove} onClear={onClear} />
           </div>
         ))}
       </div>
-
     </div>
   );
 }

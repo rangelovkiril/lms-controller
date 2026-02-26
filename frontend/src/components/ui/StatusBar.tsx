@@ -1,17 +1,21 @@
-import { Spinner } from "./Spinner";
-import { StatusDot } from "./StatusDot";
+"use client";
+import { useTranslations } from "next-intl";
+import { Spinner }         from "./Spinner";
+import { StatusDot }       from "./StatusDot";
 
 interface StatusBarProps {
   status:     string;
   error:      string;
   lastAction: { label: string; time: string } | null;
-  idleLabel?:  string;
+  idleLabel?: string;
   station:    string;
   object:     string;
 }
 
 export function StatusBar({ status, error, lastAction, idleLabel, station, object }: StatusBarProps) {
+  const t        = useTranslations("ui");
   const isLoading = status === "exporting" || status === "uploading";
+
   return (
     <div
       className={[
@@ -21,7 +25,7 @@ export function StatusBar({ status, error, lastAction, idleLabel, station, objec
       ].join(" ")}
     >
       {isLoading ? (
-        <><Spinner />Заявка към {station}/{object}…</>
+        <><Spinner />{t("querying", { station, object })}</>
       ) : error ? (
         <><StatusDot variant="error" />{error}</>
       ) : lastAction ? (

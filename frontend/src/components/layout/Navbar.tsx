@@ -1,12 +1,15 @@
-import Link from "next/link";
+import Link             from "next/link";
+import { getTranslations } from "next-intl/server";
 
-const NAV_LINKS = [
-  { href: "/stations",     label: "Станции"    },
-  { href: "/trajectories", label: "Траектории" },
-  { href: "/about",        label: "За нас"     },
-];
+export default async function Navbar() {
+  const t = await getTranslations("nav");
 
-export default function Navbar() {
+  const NAV_LINKS = [
+    { href: "/stations",     label: t("stations")     },
+    { href: "/trajectories", label: t("trajectories") },
+    { href: "/about",        label: t("about")        },
+  ];
+
   return (
     <header className="h-14 shrink-0 flex items-center gap-6 px-6 border-b border-border bg-bg z-50">
       <Link href="/" className="flex items-center gap-2.5 no-underline">
