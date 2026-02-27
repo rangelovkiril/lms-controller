@@ -110,7 +110,7 @@ export default function ImportPanel({ onOverlay }: { onOverlay: (files: File[], 
           >
             <input
               ref={inputRef}
-              accept="application/json"
+              accept=".json"
               type="file"
               multiple
               className="hidden"

@@ -1,36 +1,38 @@
 "use client";
 
-import { useState, useEffect }  from "react";
-import { useTranslations }      from "next-intl";
-import { API_BASE }             from "@/types";
-import ExportPanel              from "./ExportPanel";
-import ImportPanel              from "./ImportPanel";
+import { useState, useEffect } from "react";
+import { useTranslations }     from "next-intl";
+import { API_BASE }            from "@/types";
+import { useObservationSets }  from "@/hooks/useObservationSets";
+import { ParseError }          from "@/lib/parseObservationFile";
+import ExportPanel             from "./ExportPanel";
+import ImportPanel             from "./ImportPanel";
 
 export default function Trajectories() {
   const t = useTranslations("trajectories");
 
   const [stations,        setStations]        = useState<string[]>([]);
   const [loadingStations, setLoadingStations] = useState(true);
+  const [overlayError,    setOverlayError]    = useState("");
+
+  const { addSetFromFiles } = useObservationSets();
 
   useEffect(() => {
-    async function load() {
-      setLoadingStations(true);
-      try {
-        const res  = await fetch(`${API_BASE}/stations`);
-        const data: string[] = await res.json();
-        setStations(data);
-      } catch {
-        setStations([]);
-      } finally {
-        setLoadingStations(false);
-      }
-    }
-    load();
+    setLoadingStations(true);
+    fetch(`${API_BASE}/stations`)
+      .then((r) => r.json())
+      .then(setStations)
+      .catch(() => setStations([]))
+      .finally(() => setLoadingStations(false));
   }, []);
 
-  function handleOverlay(files: File[], observationSet: string) {
-    // TODO: parse & push to 3D overlay
-    console.warn("Overlay not yet implemented", files, observationSet);
+  async function handleOverlay(files: File[], label: string) {
+    setOverlayError("");
+    try {
+      await addSetFromFiles(files, label);
+    } catch (e) {
+      setOverlayError(e instanceof ParseError ? e.message : t("overlayError"));
+    }
   }
 
   return (
@@ -41,6 +43,12 @@ export default function Trajectories() {
           <h1 className="text-xl font-semibold tracking-tight">{t("title")}</h1>
           <p className="text-xs font-mono text-text-muted">{t("subtitle")}</p>
         </div>
+
+        {overlayError && (
+          <div className="px-4 py-2.5 rounded-lg border border-danger/40 bg-danger/10 font-mono text-[12px] text-danger">
+            {overlayError}
+          </div>
+        )}
 
         <div className="grid grid-cols-2 gap-4 items-start">
           <ExportPanel stations={stations} loadingStations={loadingStations} />

@@ -1,23 +1,26 @@
-import Navbar from '@/components/layout/Navbar';
-import { NextIntlClientProvider } from 'next-intl';
-import { getMessages } from 'next-intl/server';
+import Navbar                      from "@/components/layout/Navbar";
+import { NextIntlClientProvider }  from "next-intl";
+import { getMessages }             from "next-intl/server";
+import { ObservationSetsProvider } from "@/lib/observationSetContext";
 
 export default async function LocaleLayout({
   children,
-  params
+  params,
 }: {
   children: React.ReactNode;
-  params: Promise<{ locale: string }>;
+  params:   Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  const messages = await getMessages();
+  const messages   = await getMessages();
 
   return (
     <NextIntlClientProvider messages={messages} locale={locale}>
-      <Navbar />
-      <main className="flex-1 overflow-hidden min-h-0">
-        {children}
-      </main>
+      <ObservationSetsProvider>
+        <Navbar />
+        <main className="flex-1 overflow-hidden min-h-0">
+          {children}
+        </main>
+      </ObservationSetsProvider>
     </NextIntlClientProvider>
   );
 }

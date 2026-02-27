@@ -1,91 +1,94 @@
 {
   "nav": {
-    "stations":     "Stations",
+    "stations": "Stations",
     "trajectories": "Trajectories",
-    "about":        "About"
+    "about": "About"
   },
   "stations": {
-    "title":    "Stations",
-    "summary":  "{active} active · {total} total",
-    "objects":  "{count} objects",
-    "open":     "Open →",
-    "offline":  "Offline",
+    "title": "Stations",
+    "summary": "{active} active · {total} total",
+    "objects": "{count} objects",
+    "open": "Open →",
+    "offline": "Offline",
     "status": {
-      "online":   "ONLINE",
+      "online": "ONLINE",
       "tracking": "TRACKING",
-      "offline":  "OFFLINE"
+      "offline": "OFFLINE"
     }
   },
   "station": {
     "visualizationLoading": "Visualization loading",
-    "exitFullscreen":       "ESC to exit fullscreen",
+    "exitFullscreen": "ESC to exit fullscreen",
     "status": {
-      "label":        "Status",
+      "label": "Status",
       "disconnected": "Offline",
-      "connected":    "Connected",
-      "tracking":     "Tracking",
-      "event":        "Event"
+      "connected": "Connected",
+      "tracking": "Tracking",
+      "event": "Event"
     },
     "events": {
-      "no_object":  "Object not found",
+      "no_object": "Object not found",
       "track_lost": "Track lost",
-      "acquire":    "Re-acquired",
-      "error":      "Server error"
+      "acquire": "Re-acquired",
+      "error": "Server error"
     },
     "position": "Cartesian position",
-    "object":   "Object",
-    "fire":     "▶ Fire",
-    "stop":     "■ Stop"
+    "object": "Object",
+    "fire": "▶ Fire",
+    "stop": "■ Stop"
   },
   "export": {
-    "title":      "Export",
-    "subtitle":   "API: /data",
-    "station":    "Station",
-    "object":     "Object",
+    "title": "Export",
+    "subtitle": "API: /data",
+    "station": "Station",
+    "object": "Object",
     "timeWindow": "Time window",
-    "exporting":  "Exporting...",
-    "rows":       "{rows} rows · {format}"
+    "exporting": "Exporting...",
+    "rows": "{rows} rows · {format}"
   },
   "import": {
-    "title":          "Import observations",
-    "subtitle":       "Observation Set",
-    "sessionLabel":   "Session name (Observation set)",
-    "placeholder":    "e.g. ISS-pass-2026-03-01",
-    "filesCount":     "{count} files",
-    "dropZone":       "Drop files here or",
-    "browse":         "browse",
-    "formatHint":     ".json (x,y,z or az,el,dist)",
+    "title": "Import observations",
+    "subtitle": "Observation Set",
+    "sessionLabel": "Session name (Observation set)",
+    "placeholder": "e.g. ISS-pass-2026-03-01",
+    "filesCount": "{count} files",
+    "dropZone": "Drop files here or",
+    "browse": "browse",
+    "formatHint": ".json (x,y,z or az,el,dist)",
     "clickToAddMore": "Click to add more",
-    "uploading":      "Uploading...",
-    "uploadButton":   "Upload to database",
-    "overlayButton":  "Overlay on scene",
-    "successLabel":   "{count} files → {set}"
+    "uploading": "Uploading...",
+    "uploadButton": "Upload to database",
+    "overlayButton": "Overlay on scene",
+    "successLabel": "{count} files → {set}"
   },
   "trajectories": {
-    "title":    "Trajectories",
-    "subtitle": "Export and import trajectories to a station"
+    "title": "Trajectories",
+    "subtitle": "Export and import trajectories to a station",
+    "overlayError": "Failed to parse file"
   },
   "observationSets": {
-    "title":       "Observation Sets",
-    "newSet":      "+ New Set",
-    "speed":       "Speed",
+    "title": "Observation Sets",
+    "newSet": "+ New Set",
+    "speed": "Speed",
     "clearPoints": "Clear points",
-    "deleteSet":   "Delete set",
-    "renameHint":  "Double-click to rename",
-    "options":     "Options",
-    "hide":        "Hide",
-    "show":        "Show"
+    "deleteSet": "Delete set",
+    "renameHint": "Double-click to rename",
+    "options": "Options",
+    "hide": "Hide",
+    "show": "Show",
+    "empty": "No sets — load a file or add one manually",
+    "loadFile": "Load file"
   },
   "ui": {
-    "placeholder":    "—",
-    "loading":        "Loading…",
-    "noOptions":      "No options",
-    "querying":       "Querying {station}/{object}…"
+    "placeholder": "—",
+    "loading": "Loading…",
+    "noOptions": "No options",
+    "querying": "Querying {station}/{object}…"
   },
   "errors": {
-    "fetchData":    "Failed to fetch data",
-    "noData":       "No data for the selected period",
-    "loadObjects":  "Failed to load objects",
-    "httpError":    "Error {status}: {statusText}"
+    "fetchData": "Failed to fetch data",
+    "noData": "No data for the selected period",
+    "loadObjects": "Failed to load objects",
+    "httpError": "Error {status}: {statusText}"
   }
 }

@@ -4,9 +4,8 @@ import { useTranslations }                  from "next-intl";
 import dynamic                              from "next/dynamic";
 import type { Station }                     from "@/lib/data/stations";
 import { useTracking, type TrackingState }  from "@/hooks/useTracking";
-import ObservationSetPanel                  from "@/components/visualization/objects/ObservationSetPanel";
 import { useObservationSets }               from "@/hooks/useObservationSets";
-import type { ObsSet }                      from "@/types";
+import ObservationSetPanel                  from "@/components/visualization/objects/ObservationSetPanel";
 
 const Scene = dynamic(() => import("@/components/visualization/Scene"), {
   ssr:     false,
@@ -55,14 +54,12 @@ function PositionDisplay({ state }: { state: TrackingState }) {
 
 function StatusBadge({ state }: { state: TrackingState }) {
   const t = useTranslations("station");
-
   const STATUS_COLOR: Record<TrackingState["kind"], string> = {
     disconnected: "text-text-muted",
     connected:    "text-blue",
     tracking:     "text-accent",
     event:        "text-yellow-400",
   };
-
   const isLive = state.kind === "tracking";
   return (
     <div className="flex items-center gap-2">
@@ -80,9 +77,7 @@ function StatusBadge({ state }: { state: TrackingState }) {
   );
 }
 
-function ObjectSelector({
-  objects, selected, onSelect,
-}: {
+function ObjectSelector({ objects, selected, onSelect }: {
   objects:  string[];
   selected: string;
   onSelect: (id: string) => void;
@@ -110,9 +105,7 @@ function ObjectSelector({
   );
 }
 
-function FireControls({
-  state, onFire, onStop,
-}: {
+function FireControls({ state, onFire, onStop }: {
   state:  TrackingState;
   onFire: () => void;
   onStop: () => void;
@@ -122,17 +115,13 @@ function FireControls({
   return (
     <div className="mt-auto pt-4 border-t border-border flex flex-col gap-2">
       {state.kind === "tracking" ? (
-        <button
-          onClick={onStop}
-          disabled={!canInteract}
+        <button onClick={onStop} disabled={!canInteract}
           className="w-full font-medium font-mono bg-danger/20 border border-danger/40 text-danger hover:bg-danger/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed rounded-lg py-2.5 text-[12px]"
         >
           {t("stop")}
         </button>
       ) : (
-        <button
-          onClick={onFire}
-          disabled={!canInteract}
+        <button onClick={onFire} disabled={!canInteract}
           className="w-full font-medium font-mono bg-accent-dim border border-accent-glow text-accent hover:bg-accent/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed rounded-lg py-2.5 text-[12px]"
         >
           {t("fire")}
@@ -156,7 +145,7 @@ export default function StationClient({ station }: { station: Station }) {
   );
 
   const { sets, activeSetId, setActiveSetId, addSet, removeSet, updateSet, clearSet } =
-    useObservationSets(targetPosVec);
+    useObservationSets();
 
   const toggleFullscreen = useCallback(async () => {
     if (!document.fullscreenElement) {
@@ -183,7 +172,6 @@ export default function StationClient({ station }: { station: Station }) {
   return (
     <div className="flex h-full min-h-0">
 
-      {/* ── 3D viewport ── */}
       <div className="relative flex-1 min-h-0 overflow-hidden bg-[#050505]">
         <Scene targetPosVec={targetPosVec} observationSets={sets} />
 
@@ -204,7 +192,7 @@ export default function StationClient({ station }: { station: Station }) {
         </button>
       </div>
 
-      {/* ── Sidebar ── */}
+      {/* Sidebar */}
       <aside className="w-72 shrink-0 flex flex-col gap-5 border-l border-border bg-surface p-5 overflow-y-auto">
 
         <div className="flex flex-col gap-0.5">
@@ -219,11 +207,7 @@ export default function StationClient({ station }: { station: Station }) {
           <StatusBadge state={state} />
         </SidebarRow>
 
-        <ObjectSelector
-          objects={station.objects}
-          selected={selectedObject}
-          onSelect={setSelectedObject}
-        />
+        <ObjectSelector objects={station.objects} selected={selectedObject} onSelect={setSelectedObject} />
 
         <PositionDisplay state={state} />
 

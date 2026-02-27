@@ -1,17 +1,16 @@
 "use client";
-import { useRef, Suspense } from "react";
-import { Canvas }           from "@react-three/fiber";
-import { OrbitControls, Grid, Stars } from "@react-three/drei";
-import { Group, Vector3 }   from "three";
-
+import { useRef, Suspense }                   from "react";
+import { Canvas }                             from "@react-three/fiber";
+import { OrbitControls, Grid, Stars }         from "@react-three/drei";
+import { Group, Vector3 }                     from "three";
 import { SceneContent, type TrajectoryConfig } from "./SceneContent";
-import ObservationSet from "./objects/ObservationSet";
-import type { ObsSet } from "@/types";
+import ObservationSet                          from "./objects/ObservationSet";
+import type { ObsSet }                         from "@/types";
 
 const BG = "#0a0f1a";
 
 const TRAJECTORY_DEFAULTS: Required<TrajectoryConfig> = {
-  maxArcLength: 1000000,
+  maxArcLength: 60,
   minSpeed:     0,
   maxSpeed:     0.5,
   opacity:      0.85,
@@ -21,15 +20,15 @@ const TRAJECTORY_DEFAULTS: Required<TrajectoryConfig> = {
 export interface SceneProps {
   targetPosVec:     React.RefObject<Vector3>;
   trajectory?:      TrajectoryConfig;
-  observationSets?: ObsSet[];          // ← НОВО
+  observationSets?: ObsSet[];
 }
 
 export default function Scene({
   targetPosVec,
-  trajectory = {},
-  observationSets = [],                // ← НОВО
+  trajectory      = {},
+  observationSets = [],
 }: SceneProps) {
-  const groupRef           = useRef<Group>(null!);
+  const targetRef          = useRef<Group>(null!);
   const resolvedTrajectory = { ...TRAJECTORY_DEFAULTS, ...trajectory };
 
   return (
@@ -52,7 +51,6 @@ export default function Scene({
           fadeStrength={1}
         />
 
-        {/* ← НОВО: рендерирай реалните sets */}
         {observationSets
           .filter((s) => s.visible && s.points.length > 1)
           .map((s) => (
@@ -75,18 +73,13 @@ export default function Scene({
         <Stars radius={120} depth={60} count={8000} factor={5} saturation={0.3} fade speed={0.3} />
 
         <SceneContent
-          groupRef={groupRef}
+          targetRef={targetRef}
           targetPosVec={targetPosVec}
           trajectory={resolvedTrajectory}
         />
       </Suspense>
 
-      <OrbitControls
-        maxPolarAngle={Math.PI}
-        makeDefault
-        zoomSpeed={0.6}
-        rotateSpeed={0.5}
-      />
+      <OrbitControls maxPolarAngle={Math.PI} makeDefault zoomSpeed={0.6} rotateSpeed={0.5} />
     </Canvas>
   );
 }

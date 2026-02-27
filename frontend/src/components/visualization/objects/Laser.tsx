@@ -1,29 +1,24 @@
 "use client";
 import { useRef, useMemo, useEffect } from "react";
-import { useFrame }        from "@react-three/fiber";
+import { useFrame }                   from "@react-three/fiber";
 import {
-  BufferGeometry,
-  BufferAttribute,
-  DynamicDrawUsage,
-  Group,
-  Line,
-  LineBasicMaterial,
-  Color,
+  BufferGeometry, BufferAttribute, DynamicDrawUsage,
+  Group, Line, LineBasicMaterial, Color,
 } from "three";
 
 const BLINK_ON  = 0.08;
 const BLINK_OFF = 0.04;
 
 interface LaserProps {
-  renderedGroupRef: React.RefObject<Group>;
+  targetRef: React.RefObject<Group>;
 }
 
-export default function Laser({ renderedGroupRef }: LaserProps) {
+export default function Laser({ targetRef }: LaserProps) {
   const blinkTimer = useRef(0);
   const visible    = useRef(true);
 
   const { line, posAttr } = useMemo(() => {
-    const arr     = new Float32Array([0, 0, 0, 0, 0, 0]);
+    const arr    = new Float32Array([0, 0, 0, 0, 0, 0]);
     const posAttr = new BufferAttribute(arr, 3);
     posAttr.setUsage(DynamicDrawUsage);
 
@@ -42,9 +37,9 @@ export default function Laser({ renderedGroupRef }: LaserProps) {
   }, [line]);
 
   useFrame((_, delta) => {
-    if (!renderedGroupRef.current) return;
+    if (!targetRef.current) return;
 
-    const { x, y, z } = renderedGroupRef.current.position;
+    const { x, y, z } = targetRef.current.position;
     posAttr.setXYZ(1, x, y, z);
     posAttr.needsUpdate = true;
 
