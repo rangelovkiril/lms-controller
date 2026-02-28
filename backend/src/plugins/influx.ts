@@ -1,31 +1,36 @@
 import { Elysia } from "elysia"
-import {
-  InfluxDB,
-  Point,
-  WriteApi,
-  QueryApi,
-} from "@influxdata/influxdb-client"
-import { BucketsAPI, OrgsAPI } from "@influxdata/influxdb-client-apis"
+import { InfluxDB, Point, WriteApi } from "@influxdata/influxdb-client"
+import { BucketsAPI, OrgsAPI, AuthorizationsAPI } from "@influxdata/influxdb-client-apis"
 
-interface InfluxConfig {
+export interface InfluxConfig {
   url: string
   token: string
   org: string
 }
 
-export const influx = (config: InfluxConfig) => {
-  const client = new InfluxDB({ url: config.url, token: config.token })
-  const queryApi = client.getQueryApi(config.org)
-  const bucketsApi = new BucketsAPI(client)
-  const orgsApi = new OrgsAPI(client)
-  const writeApis = new Map<string, WriteApi>()
+export interface InfluxClient {
+  org: string
+  writePoint: (point: Point, bucket: string) => Promise<void>
+  query: <T = any>(flux: string) => Promise<T[]>
+  ensureBucket: (bucket: string) => Promise<void>
+  getOrgId: () => Promise<string>
+  bucketsApi: BucketsAPI
+  authApi: AuthorizationsAPI
+}
 
-  // Cache на вече потвърдени bucket-и — не питаме InfluxDB всеки път
+export const influx = (config: InfluxConfig) => {
+  const client     = new InfluxDB({ url: config.url, token: config.token })
+  const queryApi   = client.getQueryApi(config.org)
+  const bucketsApi = new BucketsAPI(client)
+  const orgsApi    = new OrgsAPI(client)
+  const authApi    = new AuthorizationsAPI(client)
+  const writeApis  = new Map<string, WriteApi>()
+
   const confirmedBuckets = new Set<string>()
 
   const getOrgId = async (): Promise<string> => {
     const orgs = await orgsApi.getOrgs({ org: config.org })
-    const org = orgs.orgs?.find((o) => o.name === config.org)
+    const org  = orgs.orgs?.find((o) => o.name === config.org)
     if (!org?.id) throw new Error(`Org "${config.org}" not found`)
     return org.id
   }
@@ -33,22 +38,15 @@ export const influx = (config: InfluxConfig) => {
   const ensureBucket = async (bucket: string): Promise<void> => {
     if (confirmedBuckets.has(bucket)) return
 
-    // getBuckets хвърля 404 на InfluxDB OSS когато bucket-ът не съществува
-    // вместо да върне { buckets: [] } — трябва да различим 404 от реална грешка
     let exists = false
     try {
       const res = await bucketsApi.getBuckets({ name: bucket, org: config.org })
       exists = (res.buckets?.length ?? 0) > 0
     } catch (err: any) {
       if (err?.statusCode !== 404) {
-        // Реална грешка (auth, мрежа и т.н.) — спираме
-        console.error(
-          `[InfluxDB] Error checking bucket "${bucket}":`,
-          err?.json ?? err?.body ?? err,
-        )
+        console.error(`[InfluxDB] Error checking bucket "${bucket}":`, err?.json ?? err)
         return
       }
-      // 404 = не съществува → продължаваме към създаване
     }
 
     if (exists) {
@@ -59,19 +57,12 @@ export const influx = (config: InfluxConfig) => {
     try {
       const orgId = await getOrgId()
       await bucketsApi.postBuckets({
-        body: {
-          name: bucket,
-          orgID: orgId,
-          retentionRules: [], 
-        },
+        body: { name: bucket, orgID: orgId, retentionRules: [] },
       })
       confirmedBuckets.add(bucket)
       console.log(`[InfluxDB] Created bucket "${bucket}"`)
     } catch (err: any) {
-      console.error(
-        `[InfluxDB] Could not create bucket "${bucket}":`,
-        err?.json ?? err?.body ?? err,
-      )
+      console.error(`[InfluxDB] Could not create bucket "${bucket}":`, err?.json ?? err)
     }
   }
 
@@ -82,70 +73,34 @@ export const influx = (config: InfluxConfig) => {
     return writeApis.get(bucket)!
   }
 
-  return new Elysia({ name: "influx" })
-    .decorate("influx", {
-      writePoint: async (point: Point, bucket: string): Promise<void> => {
-        await ensureBucket(bucket)
-        try {
-          getWriteApi(bucket).writePoint(point)
-        } catch (err) {
-          console.error(`[InfluxDB] Write error (bucket: ${bucket}):`, err)
-        }
-      },
-      query: (fluxQuery: string): Promise<unknown[]> => {
-        return queryApi.collectRows(fluxQuery)
-      },
-      async getStations() {
-        const rows = (await queryApi.collectRows(`
-          import "influxdata/influxdb/schema"
-          buckets() |> filter(fn: (r) => not r.name =~ /^_/) |> keep(columns: ["name"])
-        `)) as any[]
-        return rows.map((r) => r.name)
-      },
+  const influxClient: InfluxClient = {
+    org: config.org,
 
-      async getObjects(station: string) {
-        const rows = (await queryApi.collectRows(`
-          import "influxdata/influxdb/schema"
-          schema.measurements(bucket: "${station}")
-        `)) as any[]
-        return rows.map((r) => r._value)
-      },
-
-async getExportData(station: string, object: string, start: string, stop?: string) {
-  const stopClause = stop ? `, stop: ${stop}` : "";
-  const flux = `
-    from(bucket: "${station}")
-      |> range(start: ${start}${stopClause})
-      |> filter(fn: (r) => r._measurement == "${object}")
-      |> pivot(rowKey: ["_time"], columnKey: ["_field"], valueColumn: "_value")
-  `;
-
-  const rows = await queryApi.collectRows(flux) as any[];
-
-  const blackList = ["result", "table", "_start", "_stop", "_measurement"];
-
-  return rows.map(row => {
-    const cleanRow: any = {};
-    Object.keys(row).forEach(key => {
-      if (!blackList.includes(key)) {
-        const finalKey = key === "_time" ? "timestamp" : key;
-        cleanRow[finalKey] = row[key];
+    writePoint: async (point: Point, bucket: string): Promise<void> => {
+      await ensureBucket(bucket)
+      try {
+        getWriteApi(bucket).writePoint(point)
+      } catch (err) {
+        console.error(`[InfluxDB] Write error (bucket: ${bucket}):`, err)
       }
-    });
-    return cleanRow;
-  });
-},
+    },
 
-      Point,
-      org: config.org,
-    })
+    query: <T = any>(flux: string): Promise<T[]> =>
+      queryApi.collectRows(flux) as Promise<T[]>,
+
+    ensureBucket,
+    getOrgId,
+    bucketsApi,
+    authApi,
+  }
+
+  return new Elysia({ name: "influx" })
+    .decorate("influx", influxClient)
     .onStop(async () => {
       const closers = [...writeApis.values()].map((api) =>
-        api
-          .close()
-          .catch((err) =>
-            console.error("[InfluxDB] Failed to flush on shutdown:", err),
-          ),
+        api.close().catch((err) =>
+          console.error("[InfluxDB] Failed to flush on shutdown:", err)
+        )
       )
       await Promise.all(closers)
       console.log(`[InfluxDB] Closed ${closers.length} write API(s)`)

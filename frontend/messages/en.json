@@ -20,11 +20,11 @@
     "visualizationLoading": "Visualization loading",
     "exitFullscreen": "ESC to exit fullscreen",
     "status": {
-      "label": "Status",
-      "disconnected": "Offline",
-      "connected": "Connected",
+      "label": "...",
+      "disconnected": "...",
+      "online": "Online",
       "tracking": "Tracking",
-      "event": "Event"
+      "offline": "Offline"
     },
     "events": {
       "no_object": "Object not found",

@@ -21,7 +21,7 @@ export default function Trajectories() {
     setLoadingStations(true);
     fetch(`${API_BASE}/stations`)
       .then((r) => r.json())
-      .then(setStations)
+      .then((data) => setStations(data.map((s: { stationId: string }) => s.stationId)))
       .catch(() => setStations([]))
       .finally(() => setLoadingStations(false));
   }, []);

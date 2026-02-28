@@ -7,16 +7,18 @@ import { ObsSet, createSet }                from "@/types";
 import { parseObservationFile, ParseError } from "./parseObservationFile";
 
 interface ObservationSetsContextValue {
-  sets:            ObsSet[];
-  activeSetId:     string;
-  setActiveSetId:  (id: string) => void;
-  addSet:          () => void;
-  addSetFromFiles: (files: File[], label: string) => Promise<void>;
-  removeSet:       (id: string) => void;
-  updateSet:       <K extends keyof ObsSet>(id: string, key: K, value: ObsSet[K]) => void;
-  clearSet:        (id: string) => void;
-  openFilePicker:  () => void;
-  fileInputRef:    React.RefObject<HTMLInputElement>;
+  sets:               ObsSet[];
+  activeSetId:        string;
+  setActiveSetId:     (id: string) => void;
+  addSet:             () => void;
+  addSetFromFiles:    (files: File[], label: string) => Promise<void>;
+  /** Create a set directly from an array of Vector3 points (e.g. a live recording). */
+  addSetFromPoints:   (label: string, points: Vector3[]) => void;
+  removeSet:          (id: string) => void;
+  updateSet:          <K extends keyof ObsSet>(id: string, key: K, value: ObsSet[K]) => void;
+  clearSet:           (id: string) => void;
+  openFilePicker:     () => void;
+  fileInputRef:       React.RefObject<HTMLInputElement>;
 }
 
 const Ctx = createContext<ObservationSetsContextValue | null>(null);
@@ -55,6 +57,21 @@ export function ObservationSetsProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  /**
+   * Save a completed live recording as a new ObservationSet.
+   * The set is always visible and does NOT become the active set
+   * (the user keeps working with whatever was active before).
+   */
+  const addSetFromPoints = useCallback((label: string, points: Vector3[]) => {
+    if (points.length === 0) return;
+    setSets((prev) => {
+      const fresh: ObsSet = { ...createSet(prev, label), points, visible: true };
+      console.debug("[context] recording saved:", fresh.id, fresh.label, "points:", points.length);
+      return [...prev, fresh];
+    });
+    // Intentionally does NOT call setActiveSetId — the user's active set is unchanged
+  }, []);
+
   const removeSet = useCallback((id: string) => {
     setSets((prev) => {
       const next = prev.filter((s) => s.id !== id);
@@ -83,7 +100,7 @@ export function ObservationSetsProvider({ children }: { children: ReactNode }) {
   return (
     <Ctx.Provider value={{
       sets, activeSetId, setActiveSetId,
-      addSet, addSetFromFiles,
+      addSet, addSetFromFiles, addSetFromPoints,
       removeSet, updateSet, clearSet,
       openFilePicker, fileInputRef,
     }}>

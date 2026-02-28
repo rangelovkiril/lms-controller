@@ -1,7 +1,13 @@
-// ─── Topic ───────────────────────────────────────────────────────────────────
+// ─── Subscribe ────────────────────────────────────────────────────────────────
 
-export const buildTrackingTopic = (stationId: string, objectId: string): string =>
-  `slr/${stationId}/tracking/${objectId}/pos`;
+/**
+ * Builds the JSON subscribe message for a station channel.
+ * Backend expects: { action: "subscribe" | "unsubscribe", station: string }
+ */
+export const buildSubscribeMessage = (
+  action: "subscribe" | "unsubscribe",
+  stationId: string
+): string => JSON.stringify({ action, station: stationId });
 
 // ─── Position ────────────────────────────────────────────────────────────────
 
@@ -11,24 +17,41 @@ export interface TrackingPosition {
   z: number;
 }
 
-// ─── Named events sent by the server ─────────────────────────────────────────
+// ─── Events sent by the server ────────────────────────────────────────────────
 
-export const TRACKING_EVENTS = [
-  "no_object",   // requested object is not known to the station
-  "track_lost",  // object was acquired but tracking dropped
-  "acquire",     // object re-acquired after a loss
-  "error",       // generic server-side error
-] as const;
+export const STATION_EVENTS = ["online", "offline", "tracking_start", "tracking_stop"] as const;
+export type  StationEvent   = (typeof STATION_EVENTS)[number];
 
-export type TrackingEvent = (typeof TRACKING_EVENTS)[number];
+// ─── State union ─────────────────────────────────────────────────────────────
+
+/**
+ * Reflects what the station is actually doing, as reported by the backend.
+ *
+ * "disconnected" – WebSocket not connected
+ * "online"       – station is up but not tracking anything
+ * "tracking"     – station is actively tracking an object (backend drives objId)
+ * "offline"      – station sent LWT / offline event
+ */
+export type TrackingState =
+  | { kind: "disconnected" }
+  | { kind: "online" }
+  | { kind: "tracking"; objId: string; position: TrackingPosition }
+  | { kind: "offline" }
 
 // ─── Parsed message discriminated union ──────────────────────────────────────
 
 export type TrackingMessage =
-  | { type: "position"; position: TrackingPosition }
-  | { type: "event";    event: TrackingEvent }
+  | { type: "position"; objId: string; position: TrackingPosition }
+  | { type: "event";    event: StationEvent; objId?: string };
 
-/** Parse a raw WebSocket MessageEvent into a typed TrackingMessage, or null. */
+/**
+ * Parse a raw WebSocket MessageEvent into a typed TrackingMessage, or null.
+ *
+ * Backend frame shapes:
+ *   Position  – { event: "position",       objId: string, value: { x, y, z } }
+ *   Status    – { event: "online" | "offline" }
+ *   Tracking  – { event: "tracking_start" | "tracking_stop", objId: string }
+ */
 export function parseTrackingMessage(ev: MessageEvent): TrackingMessage | null {
   let msg: Record<string, unknown>;
   try {
@@ -37,16 +60,31 @@ export function parseTrackingMessage(ev: MessageEvent): TrackingMessage | null {
     return null;
   }
 
-  // Named event frame  e.g. { "event": "track_lost" }
-  if (typeof msg.event === "string" && (TRACKING_EVENTS as readonly string[]).includes(msg.event)) {
-    return { type: "event", event: msg.event as TrackingEvent };
+  if (typeof msg.event !== "string") return null;
+
+  // Position frame
+  if (
+    msg.event === "position" &&
+    typeof msg.objId === "string" &&
+    msg.value !== null &&
+    typeof msg.value === "object"
+  ) {
+    const v = msg.value as Record<string, unknown>;
+    if (typeof v.x === "number" && typeof v.y === "number" && typeof v.z === "number") {
+      return {
+        type:     "position",
+        objId:    msg.objId,
+        position: { x: v.x, y: v.y, z: v.z },
+      };
+    }
   }
 
-  // Position frame  e.g. { "x": 1.2, "y": 3.4, "z": 5.6 }
-  if (typeof msg.x === "number" && typeof msg.y === "number" && typeof msg.z === "number") {
+  // Named event frame
+  if ((STATION_EVENTS as readonly string[]).includes(msg.event)) {
     return {
-      type: "position",
-      position: { x: msg.x, y: msg.y as number, z: msg.z as number },
+      type:  "event",
+      event: msg.event as StationEvent,
+      objId: typeof msg.objId === "string" ? msg.objId : undefined,
     };
   }
 

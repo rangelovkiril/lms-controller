@@ -1,45 +1,69 @@
 import { useState, useRef, useCallback } from "react";
-import { Vector3 } from "three";
-import { useWebSocket } from "@/hooks/useWebSocket";
+import { Vector3 }                        from "three";
+import { useWebSocket }                   from "@/hooks/useWebSocket";
 import {
-  buildTrackingTopic,
+  buildSubscribeMessage,
   parseTrackingMessage,
-  type TrackingPosition,
-  type TrackingEvent,
+  type TrackingState,
 } from "@/lib/ws/tracking";
 
-// ─── State union ─────────────────────────────────────────────────────────────
-
-export type TrackingState =
-  | { kind: "disconnected" }
-  | { kind: "connected" }                              // ws open, waiting for first frame
-  | { kind: "tracking"; position: TrackingPosition }  // live position data
-  | { kind: "event"; event: TrackingEvent }            // named event from server
+export type { TrackingState };
 
 // ─── Hook ────────────────────────────────────────────────────────────────────
 
 export interface UseTrackingResult {
+  /** Current station / tracking state — driven entirely by backend events. */
   state:        TrackingState;
+  /** Mutable ref updated on every position frame, safe to read in rAF loops. */
   targetPosVec: React.RefObject<Vector3>;
+  /** Send a raw action to the backend (e.g. fire / stop). */
   send:         (data: object) => void;
 }
 
+/**
+ * Connects to a station's WebSocket channel.
+ *
+ * The station decides which object it is tracking — the frontend has no
+ * control over object selection. When the tracked object changes or tracking
+ * stops, the accumulated positions are flushed via `onRecordingComplete` so
+ * the caller can persist them as an ObservationSet.
+ *
+ * @param wsUrl               WebSocket endpoint
+ * @param stationId           Station identifier (used for subscribe message)
+ * @param onRecordingComplete Called with (objId, points) when a recording ends.
+ *                            Triggered by: tracking_stop, tracking_start for a
+ *                            different object, or station going offline/disconnected.
+ */
 export function useTracking(
-  wsUrl:     string,
-  stationId: string,
-  objectId:  string,
+  wsUrl:               string,
+  stationId:           string,
+  onRecordingComplete: (objId: string, points: Vector3[]) => void,
 ): UseTrackingResult {
   const [state, setState] = useState<TrackingState>({ kind: "disconnected" });
 
-  // Mutable vector updated every frame — avoids React re-renders in the 3D loop
+  // Live position ref — avoids re-renders in the 3D animation loop
   const targetPosVec = useRef(new Vector3());
 
-  const topic = buildTrackingTopic(stationId, objectId);
+  // Accumulation buffer for the current recording
+  const recordingRef = useRef<{ objId: string; points: Vector3[] } | null>(null);
+
+  // Keep callback stable in message handler without causing re-subscriptions
+  const onRecordingCompleteRef = useRef(onRecordingComplete);
+  onRecordingCompleteRef.current = onRecordingComplete;
+
+  /** Flush the current recording buffer if it has any points. */
+  const flushRecording = useCallback(() => {
+    const rec = recordingRef.current;
+    if (rec && rec.points.length > 0) {
+      onRecordingCompleteRef.current(rec.objId, rec.points);
+    }
+    recordingRef.current = null;
+  }, []);
 
   const onOpen = useCallback((socket: WebSocket) => {
-    setState({ kind: "connected" });
-    socket.send(JSON.stringify({ action: "subscribe", topic }));
-  }, [topic]);
+    setState({ kind: "online" });
+    socket.send(buildSubscribeMessage("subscribe", stationId));
+  }, [stationId]);
 
   const onMessage = useCallback((ev: MessageEvent) => {
     const msg = parseTrackingMessage(ev);
@@ -48,16 +72,60 @@ export function useTracking(
     if (msg.type === "position") {
       const { x, y, z } = msg.position;
       targetPosVec.current.set(x, y, z);
-      setState({ kind: "tracking", position: msg.position });
-    } else {
-      // Named event — surface it as state; position display will freeze at last known
-      setState({ kind: "event", event: msg.event });
+
+      // Accumulate into current recording
+      const rec = recordingRef.current;
+      if (rec && rec.objId === msg.objId) {
+        rec.points.push(new Vector3(x, y, z));
+      }
+
+      setState({ kind: "tracking", objId: msg.objId, position: msg.position });
+      return;
     }
-  }, []);
+
+    // Named event
+    switch (msg.event) {
+      case "online":
+        setState({ kind: "online" });
+        break;
+
+      case "offline":
+        // Save whatever was being recorded before the station went dark
+        flushRecording();
+        setState({ kind: "offline" });
+        break;
+
+      case "tracking_start": {
+        const newObjId = msg.objId!;
+        const rec = recordingRef.current;
+
+        // Different object acquired — save the previous recording first
+        if (rec && rec.objId !== newObjId) {
+          flushRecording();
+        }
+
+        // Start fresh buffer for this object (idempotent if same objId)
+        if (!recordingRef.current) {
+          recordingRef.current = { objId: newObjId, points: [] };
+        }
+
+        // Stay in "online" until the first position frame arrives
+        setState({ kind: "online" });
+        break;
+      }
+
+      case "tracking_stop":
+        flushRecording();
+        setState({ kind: "online" });
+        break;
+    }
+  }, [flushRecording]);
 
   const onClose = useCallback(() => {
+    // WebSocket dropped — save any in-flight recording
+    flushRecording();
     setState({ kind: "disconnected" });
-  }, []);
+  }, [flushRecording]);
 
   const { send } = useWebSocket(wsUrl, {
     onOpen,
@@ -66,10 +134,7 @@ export function useTracking(
     onError: (ev) => console.error("WebSocket error:", ev),
   });
 
-  const wrappedSend = useCallback(
-    (data: object) => send(data),
-    [send]
-  );
+  const wrappedSend = useCallback((data: object) => send(data), [send]);
 
   return { state, targetPosVec, send: wrappedSend };
 }

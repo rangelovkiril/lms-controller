@@ -1,11 +1,12 @@
 "use client";
-import { useState, useCallback, useEffect } from "react";
-import { useTranslations }                  from "next-intl";
-import dynamic                              from "next/dynamic";
-import type { Station }                     from "@/lib/data/stations";
-import { useTracking, type TrackingState }  from "@/hooks/useTracking";
-import { useObservationSets }               from "@/hooks/useObservationSets";
-import ObservationSetPanel                  from "@/components/visualization/objects/ObservationSetPanel";
+import { useCallback, useEffect, useState } from "react";
+import { useTranslations }                   from "next-intl";
+import { Vector3 }                           from "three";
+import dynamic                               from "next/dynamic";
+import type { Station }                      from "@/lib/data/stations";
+import { useTracking, type TrackingState }   from "@/hooks/useTracking";
+import { useObservationSets }                from "@/hooks/useObservationSets";
+import ObservationSetPanel                   from "@/components/visualization/objects/ObservationSetPanel";
 
 const Scene = dynamic(() => import("@/components/visualization/Scene"), {
   ssr:     false,
@@ -54,52 +55,42 @@ function PositionDisplay({ state }: { state: TrackingState }) {
 
 function StatusBadge({ state }: { state: TrackingState }) {
   const t = useTranslations("station");
+
   const STATUS_COLOR: Record<TrackingState["kind"], string> = {
     disconnected: "text-text-muted",
-    connected:    "text-blue",
+    online:       "text-blue",
     tracking:     "text-accent",
-    event:        "text-yellow-400",
+    offline:      "text-yellow-400",
   };
+
   const isLive = state.kind === "tracking";
+
   return (
     <div className="flex items-center gap-2">
       <span className={[
         "w-2 h-2 rounded-full shrink-0",
-        isLive                     ? "bg-accent animate-pulse-dot" :
-        state.kind === "connected" ? "bg-blue animate-pulse-dot"   :
-                                     "bg-border-hi",
+        isLive                    ? "bg-accent animate-pulse-dot" :
+        state.kind === "online"   ? "bg-blue animate-pulse-dot"   :
+                                    "bg-border-hi",
       ].join(" ")} />
       <span className={`font-mono text-[11px] ${STATUS_COLOR[state.kind]}`}>
         {t(`status.${state.kind}`)}
-        {state.kind === "event" && ` — ${t(`events.${state.event}`, { defaultValue: state.event })}`}
       </span>
     </div>
   );
 }
 
-function ObjectSelector({ objects, selected, onSelect }: {
-  objects:  string[];
-  selected: string;
-  onSelect: (id: string) => void;
-}) {
-  const t = useTranslations("station");
+/**
+ * Shows the current tracked object — determined by the backend, not the user.
+ */
+function CurrentObject({ state }: { state: TrackingState }) {
+  const t     = useTranslations("station");
+  const objId = state.kind === "tracking" ? state.objId : null;
+
   return (
     <SidebarRow label={t("object")}>
-      <div className="flex flex-col gap-1">
-        {objects.map((id) => (
-          <button
-            key={id}
-            onClick={() => onSelect(id)}
-            className={[
-              "w-full text-left px-3 py-2 rounded-lg border font-mono text-[12px] transition-colors",
-              id === selected
-                ? "border-accent/50 bg-accent-dim text-accent"
-                : "border-border text-text-muted hover:border-border-hi hover:text-text",
-            ].join(" ")}
-          >
-            {id}
-          </button>
-        ))}
+      <div className="px-3 py-2 rounded-lg border border-border bg-bg font-mono text-[12px] text-text-muted">
+        {objId ?? "—"}
       </div>
     </SidebarRow>
   );
@@ -111,7 +102,7 @@ function FireControls({ state, onFire, onStop }: {
   onStop: () => void;
 }) {
   const t           = useTranslations("station");
-  const canInteract = state.kind !== "disconnected";
+  const canInteract = state.kind !== "disconnected" && state.kind !== "offline";
   return (
     <div className="mt-auto pt-4 border-t border-border flex flex-col gap-2">
       {state.kind === "tracking" ? (
@@ -135,17 +126,25 @@ function FireControls({ state, onFire, onStop }: {
 
 export default function StationClient({ station }: { station: Station }) {
   const t = useTranslations("station");
-  const [selectedObject, setSelectedObject] = useState(station.objects[0]);
-  const [isFullscreen,   setIsFullscreen]   = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const { sets, activeSetId, setActiveSetId, addSetFromPoints, addSet, removeSet, updateSet, clearSet } =
+    useObservationSets();
+
+  /**
+   * Called by useTracking when a tracking session ends (object changed,
+   * tracking_stop, offline, or WS disconnect). Saves the recording as a
+   * new ObservationSet that is immediately visible in the scene.
+   */
+  const handleRecordingComplete = useCallback((objId: string, points: Vector3[]) => {
+    addSetFromPoints(objId, points);
+  }, [addSetFromPoints]);
 
   const { state, targetPosVec, send } = useTracking(
     station.wsUrl,
     station.id,
-    selectedObject,
+    handleRecordingComplete,
   );
-
-  const { sets, activeSetId, setActiveSetId, addSet, removeSet, updateSet, clearSet } =
-    useObservationSets();
 
   const toggleFullscreen = useCallback(async () => {
     if (!document.fullscreenElement) {
@@ -162,12 +161,14 @@ export default function StationClient({ station }: { station: Station }) {
   }, []);
 
   const handleFire = useCallback(() => {
-    send({ action: "fire", stationId: station.id, objectId: selectedObject });
-  }, [send, station.id, selectedObject]);
+    if (state.kind !== "tracking") return;
+    send({ action: "fire", station: station.id, objId: state.objId });
+  }, [send, station.id, state]);
 
   const handleStop = useCallback(() => {
-    send({ action: "stop", stationId: station.id, objectId: selectedObject });
-  }, [send, station.id, selectedObject]);
+    if (state.kind !== "tracking") return;
+    send({ action: "stop", station: station.id, objId: state.objId });
+  }, [send, station.id, state]);
 
   return (
     <div className="flex h-full min-h-0">
@@ -207,7 +208,7 @@ export default function StationClient({ station }: { station: Station }) {
           <StatusBadge state={state} />
         </SidebarRow>
 
-        <ObjectSelector objects={station.objects} selected={selectedObject} onSelect={setSelectedObject} />
+        <CurrentObject state={state} />
 
         <PositionDisplay state={state} />
 

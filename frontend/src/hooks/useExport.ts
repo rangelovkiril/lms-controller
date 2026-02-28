@@ -32,7 +32,7 @@ export function useExport(stations: string[], loadingStations: boolean) {
     const loadObjects = async () => {
       patch({ status: "loading-objects", objects: [], object: "" });
       try {
-        const res  = await fetch(`${API_BASE}/objects?station=${state.station}`, { signal: controller.signal });
+        const res  = await fetch(`${API_BASE}/stations/${state.station}/objects`, { signal: controller.signal });
         const data = await res.json();
         patch({ objects: data, object: data[0] || "", status: "idle" });
       } catch (e: any) {

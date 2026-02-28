@@ -1,107 +1,147 @@
 import { Elysia, t } from "elysia"
 import { cors } from "@elysiajs/cors"
-import { websocket } from "./plugins/websocket"
+import { createWebsocket, publishToStation, type CommandHandlerRef } from "./plugins/websocket"
 import { mqttClient } from "./plugins/mqtt"
 import { influx } from "./plugins/influx"
 import { mockSensor } from "./test/mockMqtt"
-import { getStations, getObjects, getData } from "./services/slr.service"
-import { setupMqtt } from "./setupMqtt"
+import { registerMqttHandlers } from "./handlers/mqtt.handlers"
+import { getStations, getStationMeta, createStation, getObjects } from "./services/station.service"
+import { getLogs, getEnv, getExportData } from "./services/telemetry.service"
 import { ObservationService } from "./services/observation.service"
 
-const IS_DEV = Bun.env.NODE_ENV !== "production"
-const PORT = Number(Bun.env.PORT) || 3000
+const IS_DEV     = Bun.env.NODE_ENV !== "production"
+const PORT       = Number(Bun.env.PORT) || 3000
 const BROKER_URL = Bun.env.MQTT_BROKER_URL ?? "mqtt://localhost:1883"
 
+/**
+ * Mutable ref — filled in onStart once the MQTT client is ready.
+ * Forwards fire/stop WS commands → MQTT topic slr/{stationId}/cmd
+ */
+const cmdRef: CommandHandlerRef = {
+  handle: (_stationId, _action, _objId) => {
+    console.warn("[WS] Command received before MQTT ready — dropped")
+  },
+}
+
 const app = new Elysia()
-  .use(
-    cors({
-      origin: Bun.env.CORS_ORIGIN ?? "localhost:3001",
-      methods: ["GET", "POST", "OPTIONS"],
-      allowedHeaders: ["Content-Type", "Authorization"],
-      credentials: false,
-    }),
-  )
-  .use(websocket)
+  .use(cors({
+    origin:         Bun.env.CORS_ORIGIN ?? "localhost:3001",
+    methods:        ["GET", "POST", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials:    false,
+  }))
+  .use(createWebsocket(cmdRef))
   .use(mqttClient(BROKER_URL))
-  .use(
-    IS_DEV
-      ? mockSensor({ brokerUrl: BROKER_URL, stationId: "test", objId: "sat1" })
-      : new Elysia(),
+  .use(IS_DEV
+    ? mockSensor({ brokerUrl: BROKER_URL, stationId: "test", objId: "sat1" })
+    : new Elysia()
   )
-  .use(
-    influx({
-      url: Bun.env.INFLUX_URL ?? "http://localhost:8086",
-      token: Bun.env.INFLUX_TOKEN ?? "",
-      org: Bun.env.INFLUX_ORG ?? "LightMySatellite",
-    }),
-  )
+  .use(influx({
+    url:   Bun.env.INFLUX_URL   ?? "http://localhost:8086",
+    token: Bun.env.INFLUX_TOKEN ?? "",
+    org:   Bun.env.INFLUX_ORG   ?? "LightMySatellite",
+  }))
 
   .onStart(({ decorator: { mqtt, influx }, server }) => {
-    setupMqtt(mqtt, influx, (topic, payload) => {
-      server?.publish(topic, payload)
+    // Wire WS fire/stop commands → MQTT
+    cmdRef.handle = (stationId, action, objId) => {
+      mqtt.publish(
+        `slr/${stationId}/cmd`,
+        JSON.stringify({ action, objId }),
+      )
+      console.log(`[CMD] Published "${action}" for obj="${objId}" → slr/${stationId}/cmd`)
+    }
+
+    registerMqttHandlers(mqtt, influx, (stationId, event) => {
+      publishToStation(server!, stationId, event)
     })
   })
 
   .get("/", () => ({ status: "ok" }))
 
-  .group("/api", (app) =>
-    app
+  .group("/api", (app) => app
 
-      .get("/stations", ({ influx }) => influx.getStations())
+    // --- Stations ---
 
-      .get(
-        "/objects",
-        ({ influx, query }) => {
-          if (!query.station) throw new Error("Station is required")
-          return influx.getObjects(query.station)
-        },
-        {
-          query: t.Object({ station: t.String() }),
-        },
-      )
+    .get("/stations", async ({ influx }) => {
+      const ids  = await getStations(influx)
+      const meta = await Promise.all(ids.map((id) => getStationMeta(influx, id)))
+      return ids.map((id, i) => meta[i] ?? { stationId: id, name: id, lat: 0, lon: 0 })
+    })
 
-      .get(
-        "/data",
-        async ({ influx, query }) => {
-          const { station, object, start, stop } = query
-          return influx.getExportData(station, object, start, stop)
-        },
-        {
-          query: t.Object({
-            station: t.String(),
-            object: t.String(),
-            start: t.String(),
-            stop: t.Optional(t.String()),
-          }),
-        },
-      )
-      .post(
-        "/observations/upload",
-        async ({ influx, body }) => {
-          const { files, observationSet } = body
+    .post(
+      "/stations",
+      ({ influx, body }) => createStation(influx, body),
+      {
+        body: t.Object({
+          stationId:   t.String(),
+          name:        t.String(),
+          lat:         t.Number(),
+          lon:         t.Number(),
+          description: t.Optional(t.String()),
+        }),
+      }
+    )
 
-          const filesContent = await Promise.all(
-            files.map(async (file) => {
-              const text = await file.text()
-              return JSON.parse(text) 
-            }),
-          )
+    // --- Station data ---
 
-          const result = await ObservationService.createFromImport(
-            influx,
-            observationSet,
-            filesContent,
-          )
+    .get(
+      "/stations/:id/objects",
+      ({ influx, params }) => getObjects(influx, params.id),
+      { params: t.Object({ id: t.String() }) }
+    )
 
-          return result
-        },
-        {
-          body: t.Object({
-            files: t.Files(),
-            observationSet: t.String(),
-          }),
-        },
-      ),
+    .get(
+      "/stations/:id/logs",
+      ({ influx, params, query }) => getLogs(influx, params.id, query.limit),
+      {
+        params: t.Object({ id: t.String() }),
+        query:  t.Object({ limit: t.Optional(t.Number({ default: 100 })) }),
+      }
+    )
+
+    .get(
+      "/stations/:id/env",
+      ({ influx, params }) => getEnv(influx, params.id),
+      { params: t.Object({ id: t.String() }) }
+    )
+
+    // --- Export ---
+
+    .get(
+      "/data",
+      ({ influx, query }) => {
+        const { station, object, start, stop } = query
+        return getExportData(influx, station, object, start, stop)
+      },
+      {
+        query: t.Object({
+          station: t.String(),
+          object:  t.String(),
+          start:   t.String(),
+          stop:    t.Optional(t.String()),
+        }),
+      }
+    )
+
+    // --- Observations ---
+
+    .post(
+      "/observations/upload",
+      async ({ influx, body }) => {
+        const { files, observationSet } = body
+        const filesData = await Promise.all(
+          files.map(async (file) => JSON.parse(await file.text()))
+        )
+        return ObservationService.createFromImport(influx, observationSet, filesData)
+      },
+      {
+        body: t.Object({
+          files:          t.Files(),
+          observationSet: t.String(),
+        }),
+      }
+    )
   )
 
   .listen(PORT)
@@ -112,6 +152,4 @@ process.on("SIGINT", async () => {
   process.exit(0)
 })
 
-console.log(
-  `[Server] Running at http://${app.server?.hostname}:${app.server?.port}`,
-)
+console.log(`[Server] Running at http://${app.server?.hostname}:${app.server?.port}`)

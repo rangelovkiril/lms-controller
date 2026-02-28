@@ -4,8 +4,6 @@ type RouteMap = {
   [pattern: string]: Handler
 }
 
-const patternSegments = (pattern: string) => pattern.split("/")
-
 function match(patternSegs: string[], topicSegs: string[]): Record<string, string> | null {
   if (patternSegs.length !== topicSegs.length) return null
   const params: Record<string, string> = {}
@@ -20,7 +18,7 @@ function match(patternSegs: string[], topicSegs: string[]): Record<string, strin
 
 export function createDispatcher(routes: RouteMap) {
   const compiled = Object.entries(routes).map(([pattern, handler]) => ({
-    segments: patternSegments(pattern),
+    segments: pattern.split("/"),
     handler,
   }))
 
@@ -38,9 +36,8 @@ export function createDispatcher(routes: RouteMap) {
 }
 
 export const TOPICS = [
-  "slr/+/cmd",
+  "slr/+/status",
   "slr/+/tracking/+/pos",
   "slr/+/env",
-  "slr/+/system",
   "slr/+/log/+",
 ] as const
