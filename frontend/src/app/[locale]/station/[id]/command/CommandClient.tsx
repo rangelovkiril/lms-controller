@@ -1,10 +1,10 @@
-"use client";
+"use client"
 import {
-  useState, useEffect, useRef, useCallback,
-} from "react";
+  useState, useEffect, useRef, useCallback} from "react";
 import { useStation }  from "@/lib/stationContext";
 import { API_BASE }    from "@/types";
 import type { TrackingState } from "@/hooks/useTracking";
+import Link from "next/link";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -201,10 +201,11 @@ function ControlPanel({
   const canInteract = state.kind !== "disconnected" && state.kind !== "offline";
 
   const STATUS_MAP: Record<TrackingState["kind"], { label: string; color: string; pulse: boolean }> = {
-    disconnected: { label: "Disconnected", color: "text-text-muted", pulse: false },
-    online:       { label: "Online",       color: "text-blue",       pulse: true  },
-    tracking:     { label: "Tracking",     color: "text-accent",     pulse: true  },
-    offline:      { label: "Offline",      color: "text-yellow-400", pulse: false },
+    disconnected: { label: "Disconnected", color: "text-text-muted",   pulse: false },
+    online:       { label: "Online",       color: "text-blue",         pulse: true  },
+    locating:     { label: "Locating…",    color: "text-yellow-400",   pulse: true  },
+    tracking:     { label: "Tracking",     color: "text-accent",       pulse: true  },
+    offline:      { label: "Offline",      color: "text-text-muted",   pulse: false },
   };
 
   const { label, color, pulse } = STATUS_MAP[state.kind];
@@ -217,9 +218,10 @@ function ControlPanel({
       <div className="flex items-center gap-2 mb-4">
         <span className={[
           "w-2 h-2 rounded-full shrink-0",
-          state.kind === "tracking"  ? "bg-accent" :
-          state.kind === "online"    ? "bg-blue"   :
-          state.kind === "offline"   ? "bg-yellow-400" : "bg-border-hi",
+          state.kind === "tracking" ? "bg-accent" :
+          state.kind === "locating" ? "bg-yellow-400" :
+          state.kind === "online"   ? "bg-blue" :
+          state.kind === "offline"  ? "bg-border-hi" : "bg-border-hi",
           pulse ? "animate-pulse-dot" : "",
         ].join(" ")} />
         <span className={`font-mono text-[12px] ${color}`}>{label}</span>
@@ -246,14 +248,14 @@ function ControlPanel({
       <div className="grid grid-cols-2 gap-2">
         <button
           onClick={fire}
-          disabled={!canInteract || state.kind === "tracking"}
+          disabled={state.kind !== "online"}
           className="py-2.5 rounded-lg border font-mono text-[12px] font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed bg-accent-dim border-accent/40 text-accent hover:bg-accent/20"
         >
-          ▶ Fire
+          ▶ Track
         </button>
         <button
           onClick={stop}
-          disabled={!canInteract || state.kind !== "tracking"}
+          disabled={state.kind !== "locating" && state.kind !== "tracking"}
           className="py-2.5 rounded-lg border font-mono text-[12px] font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed bg-danger/10 border-danger/40 text-danger hover:bg-danger/20"
         >
           ■ Stop
@@ -539,7 +541,7 @@ export default function CommandClient() {
 
       {/* Breadcrumb */}
       <div className="shrink-0 flex items-center gap-1.5 px-5 py-2.5 border-b border-border font-mono text-[11px] text-text-muted">
-        <a href="/stations" className="hover:text-text transition-colors no-underline">Stations</a>
+        <Link href="/stations" className="hover:text-text transition-colors no-underline">Stations</Link>
         <span className="text-border-hi">/</span>
         <span className="text-text">{station.name}</span>
         <span className="text-border-hi">/</span>

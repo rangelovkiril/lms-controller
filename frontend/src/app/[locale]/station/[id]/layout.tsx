@@ -9,11 +9,11 @@ interface Props {
 
 export default async function StationLayout({ children, params }: Props) {
   const { id }  = await params;
-  const station = getStation(id);
+  const station = await getStation(id);
   if (!station) notFound();
 
   return (
-    <StationProvider station={station}>
+    <StationProvider key={station.id} station={station}>
       {children}
     </StationProvider>
   );

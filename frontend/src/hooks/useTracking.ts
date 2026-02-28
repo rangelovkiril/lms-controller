@@ -95,21 +95,26 @@ export function useTracking(
         setState({ kind: "offline" });
         break;
 
+      case "locate_start":
+        setState({ kind: "locating" });
+        break;
+
+      case "locate_stop":
+        setState({ kind: "online" });
+        break;
+
       case "tracking_start": {
         const newObjId = msg.objId!;
         const rec = recordingRef.current;
 
-        // Different object acquired — save the previous recording first
         if (rec && rec.objId !== newObjId) {
           flushRecording();
         }
 
-        // Start fresh buffer for this object (idempotent if same objId)
         if (!recordingRef.current) {
           recordingRef.current = { objId: newObjId, points: [] };
         }
 
-        // Stay in "online" until the first position frame arrives
         setState({ kind: "online" });
         break;
       }

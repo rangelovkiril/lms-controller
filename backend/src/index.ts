@@ -6,7 +6,7 @@ import { influx } from "./plugins/influx"
 import { mockSensor } from "./test/mockMqtt"
 import { registerMqttHandlers } from "./handlers/mqtt.handlers"
 import {
-  getStations, getStationMeta, createStation, updateStation,
+  getStations, getStationMeta, createStation, updateStation, deleteStation,
   getObjects, getEnvHistory,
 } from "./services/station.service"
 import { getLogs, getEnv, getExportData } from "./services/telemetry.service"
@@ -25,7 +25,7 @@ const cmdRef: CommandHandlerRef = {
 const app = new Elysia()
   .use(cors({
     origin:         Bun.env.CORS_ORIGIN ?? "localhost:3001",
-    methods:        ["GET", "POST", "PATCH", "OPTIONS"],
+    methods:        ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials:    false,
   }))
@@ -43,13 +43,9 @@ const app = new Elysia()
 
   .onStart(({ decorator: { mqtt, influx }, server }) => {
     cmdRef.handle = (stationId, action, objId) => {
-      mqtt.publish(
-        `slr/${stationId}/cmd`,
-        JSON.stringify({ action, objId }),
-      )
+      mqtt.publish(`slr/${stationId}/cmd`, JSON.stringify({ action, objId }))
       console.log(`[CMD] Published "${action}" for obj="${objId}" → slr/${stationId}/cmd`)
     }
-
     registerMqttHandlers(mqtt, influx, (stationId, event) => {
       publishToStation(server!, stationId, event)
     })
@@ -59,7 +55,7 @@ const app = new Elysia()
 
   .group("/api", (app) => app
 
-    // ── Stations ────────────────────────────────────────────────────────────
+    // ── Stations ──────────────────────────────────────────────────────────────
 
     .get("/stations", async ({ influx }) => {
       const ids  = await getStations(influx)
@@ -72,20 +68,22 @@ const app = new Elysia()
       ({ influx, body }) => createStation(influx, body),
       {
         body: t.Object({
-          stationId:   t.String(),
-          name:        t.String(),
-          lat:         t.Number(),
-          lon:         t.Number(),
+          stationId:   t.String({ minLength: 1 }),
+          name:        t.String({ minLength: 1 }),
+          lat:         t.Number({ minimum: -90,  maximum: 90  }),
+          lon:         t.Number({ minimum: -180, maximum: 180 }),
           description: t.Optional(t.String()),
+          wsUrl:       t.Optional(t.String()),
+          hardware:    t.Optional(t.String()),
         }),
       }
     )
 
     .get(
       "/stations/:id",
-      async ({ influx, params }) => {
+      async ({ influx, params, error }) => {
         const meta = await getStationMeta(influx, params.id)
-        if (!meta) throw new Error(`Station "${params.id}" not found`)
+        if (!meta) return error(404, { message: `Station "${params.id}" not found` })
         return meta
       },
       { params: t.Object({ id: t.String() }) }
@@ -101,14 +99,29 @@ const app = new Elysia()
         params: t.Object({ id: t.String() }),
         body: t.Object({
           name:        t.Optional(t.String()),
-          lat:         t.Optional(t.Number()),
-          lon:         t.Optional(t.Number()),
+          lat:         t.Optional(t.Number({ minimum: -90,  maximum: 90  })),
+          lon:         t.Optional(t.Number({ minimum: -180, maximum: 180 })),
           description: t.Optional(t.String()),
+          wsUrl:       t.Optional(t.String()),
+          hardware:    t.Optional(t.String()),
         }),
       }
     )
 
-    // ── Station data ─────────────────────────────────────────────────────────
+    .delete(
+      "/stations/:id",
+      async ({ influx, params, error }) => {
+        try {
+          await deleteStation(influx, params.id)
+          return { ok: true }
+        } catch (e: any) {
+          return error(404, { message: e.message })
+        }
+      },
+      { params: t.Object({ id: t.String() }) }
+    )
+
+    // ── Station data ──────────────────────────────────────────────────────────
 
     .get(
       "/stations/:id/objects",
@@ -145,14 +158,12 @@ const app = new Elysia()
       }
     )
 
-    // ── Export ───────────────────────────────────────────────────────────────
+    // ── Export ────────────────────────────────────────────────────────────────
 
     .get(
       "/data",
-      ({ influx, query }) => {
-        const { station, object, start, stop } = query
-        return getExportData(influx, station, object, start, stop)
-      },
+      ({ influx, query }) =>
+        getExportData(influx, query.station, query.object, query.start, query.stop),
       {
         query: t.Object({
           station: t.String(),
@@ -163,7 +174,7 @@ const app = new Elysia()
       }
     )
 
-    // ── Observations ─────────────────────────────────────────────────────────
+    // ── Observations ──────────────────────────────────────────────────────────
 
     .post(
       "/observations/upload",

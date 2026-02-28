@@ -10,7 +10,9 @@ export interface InfluxConfig {
 
 export interface InfluxClient {
   org: string
+  url: string
   writePoint: (point: Point, bucket: string) => Promise<void>
+  writePointWithToken: (point: Point, bucket: string, token: string) => Promise<void>
   query: <T = any>(flux: string) => Promise<T[]>
   ensureBucket: (bucket: string) => Promise<void>
   getOrgId: () => Promise<string>
@@ -24,7 +26,12 @@ export const influx = (config: InfluxConfig) => {
   const bucketsApi = new BucketsAPI(client)
   const orgsApi    = new OrgsAPI(client)
   const authApi    = new AuthorizationsAPI(client)
-  const writeApis  = new Map<string, WriteApi>()
+
+  // Admin write APIs – keyed by bucket, use backend's admin token
+  const writeApis = new Map<string, WriteApi>()
+
+  // Per-station write APIs – keyed by token, use station's fine-grained token
+  const stationWriteApis = new Map<string, WriteApi>()
 
   const confirmedBuckets = new Set<string>()
 
@@ -73,15 +80,36 @@ export const influx = (config: InfluxConfig) => {
     return writeApis.get(bucket)!
   }
 
+  // Separate write API per station token – cached so we don't recreate on every message
+  const getStationWriteApi = (bucket: string, token: string): WriteApi => {
+    const key = `${bucket}::${token}`
+    if (!stationWriteApis.has(key)) {
+      const stationClient = new InfluxDB({ url: config.url, token })
+      stationWriteApis.set(key, stationClient.getWriteApi(config.org, bucket, "ns"))
+    }
+    return stationWriteApis.get(key)!
+  }
+
   const influxClient: InfluxClient = {
     org: config.org,
+    url: config.url,
 
+    // Admin write – used for env, logs, metadata (backend token)
     writePoint: async (point: Point, bucket: string): Promise<void> => {
       await ensureBucket(bucket)
       try {
         getWriteApi(bucket).writePoint(point)
       } catch (err) {
         console.error(`[InfluxDB] Write error (bucket: ${bucket}):`, err)
+      }
+    },
+
+    // Station write – used for position data (station's fine-grained token)
+    writePointWithToken: async (point: Point, bucket: string, token: string): Promise<void> => {
+      try {
+        getStationWriteApi(bucket, token).writePoint(point)
+      } catch (err) {
+        console.error(`[InfluxDB] Station write error (bucket: ${bucket}):`, err)
       }
     },
 
@@ -97,7 +125,8 @@ export const influx = (config: InfluxConfig) => {
   return new Elysia({ name: "influx" })
     .decorate("influx", influxClient)
     .onStop(async () => {
-      const closers = [...writeApis.values()].map((api) =>
+      const allApis = [...writeApis.values(), ...stationWriteApis.values()]
+      const closers = allApis.map((api) =>
         api.close().catch((err) =>
           console.error("[InfluxDB] Failed to flush on shutdown:", err)
         )

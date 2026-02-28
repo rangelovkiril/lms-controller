@@ -39,13 +39,13 @@ export function StationProvider({
   );
 
   const fire = useCallback(() => {
-    if (state.kind !== "tracking") return;
-    send({ action: "fire", station: station.id, objId: state.objId });
+    if (state.kind !== "online") return;
+    send({ action: "track", station: station.id });
   }, [send, station.id, state]);
 
   const stop = useCallback(() => {
-    if (state.kind !== "tracking") return;
-    send({ action: "stop", station: station.id, objId: state.objId });
+    if (state.kind !== "locating" && state.kind !== "tracking") return;
+    send({ action: "stop", station: station.id });
   }, [send, station.id, state]);
 
   return (

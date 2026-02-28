@@ -8,7 +8,7 @@ interface PageProps {
 
 export default async function StationPage({ params }: PageProps) {
   const { id }    = await params;
-  const station   = getStation(id);
+  const station   = await getStation(id);
 
   if (!station) notFound();
 

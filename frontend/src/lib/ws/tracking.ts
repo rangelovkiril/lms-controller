@@ -1,15 +1,7 @@
-// ─── Subscribe ────────────────────────────────────────────────────────────────
-
-/**
- * Builds the JSON subscribe message for a station channel.
- * Backend expects: { action: "subscribe" | "unsubscribe", station: string }
- */
 export const buildSubscribeMessage = (
   action: "subscribe" | "unsubscribe",
   stationId: string
 ): string => JSON.stringify({ action, station: stationId });
-
-// ─── Position ────────────────────────────────────────────────────────────────
 
 export interface TrackingPosition {
   x: number;
@@ -17,41 +9,31 @@ export interface TrackingPosition {
   z: number;
 }
 
-// ─── Events sent by the server ────────────────────────────────────────────────
-
-export const STATION_EVENTS = ["online", "offline", "tracking_start", "tracking_stop"] as const;
-export type  StationEvent   = (typeof STATION_EVENTS)[number];
-
-// ─── State union ─────────────────────────────────────────────────────────────
+export const STATION_EVENTS = [
+  "online", "offline",
+  "locate_start", "locate_stop",
+  "tracking_start", "tracking_stop",
+] as const;
+export type StationEvent = (typeof STATION_EVENTS)[number];
 
 /**
- * Reflects what the station is actually doing, as reported by the backend.
- *
  * "disconnected" – WebSocket not connected
- * "online"       – station is up but not tracking anything
- * "tracking"     – station is actively tracking an object (backend drives objId)
- * "offline"      – station sent LWT / offline event
+ * "online"       – station is up, idle
+ * "locating"     – running locate scan (searching for target)
+ * "tracking"     – actively tracking an object
+ * "offline"      – station sent offline event
  */
 export type TrackingState =
   | { kind: "disconnected" }
   | { kind: "online" }
+  | { kind: "locating" }
   | { kind: "tracking"; objId: string; position: TrackingPosition }
   | { kind: "offline" }
-
-// ─── Parsed message discriminated union ──────────────────────────────────────
 
 export type TrackingMessage =
   | { type: "position"; objId: string; position: TrackingPosition }
   | { type: "event";    event: StationEvent; objId?: string };
 
-/**
- * Parse a raw WebSocket MessageEvent into a typed TrackingMessage, or null.
- *
- * Backend frame shapes:
- *   Position  – { event: "position",       objId: string, value: { x, y, z } }
- *   Status    – { event: "online" | "offline" }
- *   Tracking  – { event: "tracking_start" | "tracking_stop", objId: string }
- */
 export function parseTrackingMessage(ev: MessageEvent): TrackingMessage | null {
   let msg: Record<string, unknown>;
   try {
@@ -62,7 +44,6 @@ export function parseTrackingMessage(ev: MessageEvent): TrackingMessage | null {
 
   if (typeof msg.event !== "string") return null;
 
-  // Position frame
   if (
     msg.event === "position" &&
     typeof msg.objId === "string" &&
@@ -79,7 +60,6 @@ export function parseTrackingMessage(ev: MessageEvent): TrackingMessage | null {
     }
   }
 
-  // Named event frame
   if ((STATION_EVENTS as readonly string[]).includes(msg.event)) {
     return {
       type:  "event",

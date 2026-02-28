@@ -3,16 +3,18 @@ import { WsEvent } from "../types"
 
 export type CommandHandler = (
   stationId: string,
-  action:    "fire" | "stop",
-  objId:     string,
+  action:    "track" | "stop",
 ) => void
 
-/**
- * Mutable container so the command handler can be injected after
- * the MQTT client is ready (in onStart), without circular dependencies.
- */
 export interface CommandHandlerRef {
   handle: CommandHandler
+}
+
+// In-memory last-known status per station, so new subscribers get immediate feedback
+const stationStatus = new Map<string, WsEvent>()
+
+export function setStationStatus(stationId: string, event: WsEvent): void {
+  stationStatus.set(stationId, event)
 }
 
 export function createWebsocket(cmdRef: CommandHandlerRef) {
@@ -37,8 +39,10 @@ export function createWebsocket(cmdRef: CommandHandlerRef) {
             }
             if (action === "subscribe") {
               ws.subscribe(station)
-              ws.send(JSON.stringify({ status: `Subscribed to ${station}` }))
               console.log(`[WS] Subscribed to station "${station}"`)
+              // Replay last known status so the client doesn't have to wait
+              const last = stationStatus.get(station)
+              if (last) ws.send(JSON.stringify(last))
             } else {
               ws.unsubscribe(station)
               console.log(`[WS] Unsubscribed from station "${station}"`)
@@ -47,18 +51,15 @@ export function createWebsocket(cmdRef: CommandHandlerRef) {
           }
 
           // ── Fire / Stop ───────────────────────────────────────────────────
-          if (action === "fire" || action === "stop") {
-            const { objId } = parsed
+          if (action === "track" || action === "stop") {
+
             if (!station || typeof station !== "string") {
               ws.send(JSON.stringify({ error: "Missing station" }))
               return
             }
-            if (!objId || typeof objId !== "string") {
-              ws.send(JSON.stringify({ error: "Missing objId" }))
-              return
-            }
-            console.log(`[WS] Command "${action}" → station="${station}" obj="${objId}"`)
-            cmdRef.handle(station, action, objId)
+            
+            console.log(`[WS] Command "${action}" → station="${station}"`)
+            cmdRef.handle(station, action)
             return
           }
 
@@ -75,9 +76,6 @@ export function createWebsocket(cmdRef: CommandHandlerRef) {
     })
 }
 
-/**
- * Publish a WsEvent to all clients subscribed to a station channel.
- */
 export function publishToStation(
   server:    { publish: (topic: string, data: string) => void },
   stationId: string,

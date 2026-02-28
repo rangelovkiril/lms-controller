@@ -23,6 +23,7 @@
       "label": "...",
       "disconnected": "...",
       "online": "Online",
+      "locating": "Locating",
       "tracking": "Tracking",
       "offline": "Offline"
     },

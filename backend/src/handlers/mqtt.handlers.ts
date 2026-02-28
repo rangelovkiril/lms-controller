@@ -3,6 +3,7 @@ import { createDispatcher, TOPICS } from "../services/dispatch.service"
 import { writePosition } from "../services/slr.service"
 import { toCartesian } from "../utils/coordinates"
 import { InfluxDecorator, MqttDecorator, MqttStatusPayload, PositionPayload, WsEvent } from "../types"
+import { setStationStatus } from "../plugins/websocket"
 
 export function registerMqttHandlers(
   mqtt: MqttDecorator,
@@ -15,13 +16,15 @@ export function registerMqttHandlers(
     "slr/:stationId/status": ({ stationId }, payload) => {
       let data: MqttStatusPayload
 
-      try { data = JSON.parse(payload)} 
+      try { data = JSON.parse(payload) }
       catch {
         console.error(`[MQTT] Invalid status payload for ${stationId}:`, payload)
         return
       }
-      
-      publish(stationId, data as WsEvent)
+
+      const event = data as WsEvent
+      setStationStatus(stationId, event)
+      publish(stationId, event)
     },
 
     "slr/:stationId/tracking/:objId/pos": ({ stationId, objId }, payload) => {

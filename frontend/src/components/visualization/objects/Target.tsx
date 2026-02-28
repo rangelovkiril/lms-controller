@@ -8,7 +8,7 @@ const FOLLOW_SPEED = 8;
 
 interface TargetProps {
   targetPosVec: React.RefObject<Vector3>;
-  readyRef:     React.RefObject<boolean>; // set true when model loaded + teleported
+  readyRef:     React.RefObject<boolean>;
 }
 
 const Target = forwardRef<Group, TargetProps>(function Target({ targetPosVec, readyRef }, ref) {
@@ -18,7 +18,6 @@ const Target = forwardRef<Group, TargetProps>(function Target({ targetPosVec, re
   useImperativeHandle(ref, () => groupRef.current, []);
 
   const handleModelLoad = useCallback(() => {
-    // Model is loaded — teleport to current position and mark ready
     if (groupRef.current && targetPosVec.current) {
       groupRef.current.position.copy(targetPosVec.current);
     }

@@ -1,10 +1,7 @@
 import { Point } from "@influxdata/influxdb-client"
 import { InfluxDecorator, PositionPayload } from "../types"
 
-/**
- * Записва позиция в сферични координати (az, el, dist) в InfluxDB.
- * Bucket = stationId, measurement = objId
- */
+
 export async function writePosition(
   influx: InfluxDecorator,
   stationId: string,
@@ -19,7 +16,7 @@ export async function writePosition(
     return
   }
 
-  const { az, el, dist } = data
+  const { az, el, dist, influx_token } = data
   if (az == null || el == null || dist == null) {
     console.error(`[SLR] Missing az/el/dist in payload:`, data)
     return
@@ -30,5 +27,12 @@ export async function writePosition(
     .floatField("el",   el)
     .floatField("dist", dist)
 
-  await influx.writePoint(point, stationId)
+  if (influx_token) {
+    // Пише с fine-grained токена на станцията – само write права за нейния bucket
+    await influx.writePointWithToken(point, stationId, influx_token)
+  } else {
+    // Fallback към admin токена на бекенда
+    console.warn(`[SLR] No influx_token in payload for ${stationId}/${objId} – using admin token`)
+    await influx.writePoint(point, stationId)
+  }
 }
