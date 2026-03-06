@@ -17,7 +17,7 @@ const PORT       = Number(Bun.env.PORT) || 3000
 const BROKER_URL = Bun.env.MQTT_BROKER_URL ?? "mqtt://localhost:1883"
 
 const cmdRef: CommandHandlerRef = {
-  handle: (_stationId, _action, _objId) => {
+  handle: (_stationId, _action) => {
     console.warn("[WS] Command received before MQTT ready — dropped")
   },
 }
@@ -54,8 +54,6 @@ const app = new Elysia()
   .get("/", () => ({ status: "ok" }))
 
   .group("/api", (app) => app
-
-    // ── Stations ──────────────────────────────────────────────────────────────
 
     .get("/stations", async ({ influx }) => {
       const ids  = await getStations(influx)
@@ -121,8 +119,6 @@ const app = new Elysia()
       { params: t.Object({ id: t.String() }) }
     )
 
-    // ── Station data ──────────────────────────────────────────────────────────
-
     .get(
       "/stations/:id/objects",
       ({ influx, params }) => getObjects(influx, params.id),
@@ -158,8 +154,6 @@ const app = new Elysia()
       }
     )
 
-    // ── Export ────────────────────────────────────────────────────────────────
-
     .get(
       "/data",
       ({ influx, query }) =>
@@ -173,8 +167,6 @@ const app = new Elysia()
         }),
       }
     )
-
-    // ── Observations ──────────────────────────────────────────────────────────
 
     .post(
       "/observations/upload",

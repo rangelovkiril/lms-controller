@@ -21,15 +21,23 @@ const Target = forwardRef<Group, TargetProps>(function Target({ targetPosVec, re
     if (groupRef.current && targetPosVec.current) {
       groupRef.current.position.copy(targetPosVec.current);
     }
-    initialized.current  = true;
-    readyRef.current     = true;
+    initialized.current = true;
+    readyRef.current    = true;
   }, [targetPosVec, readyRef]);
 
   useFrame((_, delta) => {
     if (!groupRef.current || !targetPosVec.current || !initialized.current) return;
-    const dist  = groupRef.current.position.distanceTo(targetPosVec.current);
+
+    const target = targetPosVec.current;
+
+    // Скриваме модела когато няма позиция (нула вектор = не се тракира)
+    const hasPosition = target.lengthSq() > 0.001;
+    groupRef.current.visible = hasPosition;
+    if (!hasPosition) return;
+
+    const dist  = groupRef.current.position.distanceTo(target);
     const alpha = Math.min(1, dist * FOLLOW_SPEED * delta);
-    groupRef.current.position.lerp(targetPosVec.current, alpha);
+    groupRef.current.position.lerp(target, alpha);
   });
 
   return (

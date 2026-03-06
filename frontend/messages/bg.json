@@ -1,91 +1,124 @@
 {
   "nav": {
-    "stations":     "Станции",
+    "stations": "Станции",
     "trajectories": "Траектории",
-    "about":        "Относно"
+    "info": "Информация"
   },
   "stations": {
-    "title":    "Станции",
-    "summary":  "{active} активни · {total} общо",
-    "objects":  "{count} обекта",
-    "open":     "Отвори →",
-    "offline":  "Извън мрежата",
+    "title": "Станции",
+    "summary": "{active} активни · {total} общо",
+    "objects": "{count} обекта",
+    "open": "Отвори →",
+    "offline": "Извън мрежата",
+    "new": "+ Нова станция",
+    "empty": "Няма регистрирани станции",
+    "registered": "{count} регистрирани",
     "status": {
-      "online":   "ОНЛАЙН",
+      "online": "ОНЛАЙН",
       "tracking": "ПРОСЛЕДЯВАНЕ",
-      "offline":  "ОФЛАЙН"
+      "offline": "ОФЛАЙН"
     }
   },
   "station": {
     "visualizationLoading": "Зареждане на визуализацията",
-    "exitFullscreen":       "ESC за изход от цял екран",
+    "exitFullscreen": "ESC за изход от цял екран",
     "status": {
-      "label":        "Статус",
-      "disconnected": "Офлайн",
-      "connected":    "Свързан",
-      "tracking":     "Проследяване",
-      "event":        "Събитие"
+      "label": "Статус",
+      "disconnected": "Изключен",
+      "online": "Онлайн",
+      "locating": "Локализиране",
+      "tracking": "Проследяване",
+      "offline": "Офлайн"
     },
     "events": {
-      "no_object":  "Обектът не е намерен",
+      "no_object": "Обектът не е намерен",
       "track_lost": "Изгубено проследяване",
-      "acquire":    "Повторно прихващане",
-      "error":      "Сървърна грешка"
+      "acquire": "Повторно прихващане",
+      "error": "Сървърна грешка"
     },
     "position": "Декартови координати",
-    "object":   "Обект",
-    "fire":     "▶ Старт",
-    "stop":     "■ Стоп"
+    "object": "Обект",
+    "fire": "▶ Старт",
+    "stop": "■ Стоп"
   },
   "export": {
-    "title":      "Експортиране",
-    "subtitle":   "API: /data",
-    "station":    "Станция",
-    "object":     "Обект",
+    "title": "Експортиране",
+    "station": "Станция",
+    "object": "Обект",
     "timeWindow": "Времеви интервал",
-    "exporting":  "Експортиране...",
-    "rows":       "{rows} реда · {format}"
+    "exporting": "Експортиране...",
+    "rows": "{rows} реда · {format}"
   },
   "import": {
-    "title":          "Импортиране на наблюдения",
-    "subtitle":       "Набор от наблюдения",
-    "sessionLabel":   "Име на сесията (Набор наблюдения)",
-    "placeholder":    "напр. ISS-pass-2026-03-01",
-    "filesCount":     "{count} файла",
-    "dropZone":       "Плъзнете файлове тук или",
-    "browse":         "разгледайте",
-    "formatHint":     ".json (x,y,z или az,el,dist)",
+    "title": "Импортиране на наблюдения",
+    "subtitle": "Набор от наблюдения",
+    "sessionLabel": "Ime на сесията (Набор наблюдения)",
+    "placeholder": "напр. ISS-pass-2026-03-01",
+    "filesCount": "{count} файла",
+    "dropZone": "Плъзнете файлове тук или",
+    "browse": "разгледайте",
+    "formatHint": ".json (x,y,z или az,el,dist)",
     "clickToAddMore": "Кликнете за добавяне на още",
-    "uploading":      "Качване...",
-    "uploadButton":   "Качване в базата данни",
-    "overlayButton":  "Показване върху сцената",
-    "successLabel":   "{count} файла → {set}"
+    "uploading": "Качване...",
+    "uploadButton": "Качване в базата данни",
+    "overlayButton": "Показване върху сцената",
+    "successLabel": "{count} файла → {set}"
   },
   "trajectories": {
-    "title":    "Траектории",
-    "subtitle": "Експортиране и импортиране на траектории към станция"
+    "title": "Траектории",
+    "subtitle": "Експортиране и импортиране на траектории към станция",
+    "overlayError": "Грешка при четене на файла"
   },
   "observationSets": {
-    "title":       "Набори от наблюдения",
-    "newSet":      "+ Нов набор",
-    "speed":       "Скорост",
+    "title": "Набори от наблюдения",
+    "newSet": "+ Нов набор",
+    "speed": "Скорост",
     "clearPoints": "Изчистване на точките",
-    "deleteSet":   "Изтриване на набора",
-    "renameHint":  "Двоен клик за преименуване",
-    "options":     "Опции",
-    "hide":        "Скриване",
-    "show":        "Показване"
+    "deleteSet": "Изтриване на набора",
+    "renameHint": "Двоен клик за преименуване",
+    "options": "Опции",
+    "hide": "Скриване",
+    "show": "Показване",
+    "empty": "Няма набори — заредете файл или добавете ръчно",
+    "loadFile": "Зареди файл"
   },
   "ui": {
-    "placeholder":    "—",
-    "loading":        "Зареждане...",
-    "noOptions":      "Няма опции",
-    "querying":       "Заявка към {station}/{object}…"
+    "placeholder": "—",
+    "loading": "Зареждане...",
+    "noOptions": "Няма опции",
+    "querying": "Заявка към {station}/{object}…"
   },
   "errors": {
-    "fetchData":    "Грешка при извличане на данните",
-    "noData":       "Няма данни за избрания период",
-    "loadObjects":  "Грешка при зареждане на обектите",
-    "httpError":    "Грешка {status}: {statusText}"
+    "fetchData": "Грешка при извличане на данните",
+    "noData": "Няма данни за избрания период",
+    "loadObjects": "Грешка при зареждане на обектите",
+    "httpError": "Грешка {status}: {statusText}"
+  },
+  "info": {
+    "title": "Информация за системата",
+    "subtitle": "LMS – Laser Management System",
+    "description": "Система за управление и мониторинг на лазерни станции за спътниково лазерно разстояниемерване (SLR). Поддържа множество станции, реално проследяване и запис на наблюдения.",
+    "architecture": {
+      "title": "Архитектура",
+      "backend": "Backend (Bun / Elysia) — REST API и WebSocket сървър",
+      "broker": "MQTT брокер — real-time телеметрия от хардуера",
+      "db": "InfluxDB — съхранение на позиции, логове и метеоданни",
+      "frontend": "Frontend (Next.js) — уеб интерфейс с 3D визуализация"
+    },
+    "quickstart": {
+      "title": "Бърз старт",
+      "step1": "Регистрирайте станция от страницата Станции",
+      "step2": "Запазете write токена и го конфигурирайте в хардуера (INFLUX_TOKEN)",
+      "step3": "Стартирайте хардуерния клиент с правилните env променливи",
+      "step4": "Отворете станцията и изпратете команда ▶ Track"
+    },
+    "topics": {
+      "title": "MQTT топици",
+      "status": "slr/{id}/status — online / offline / tracking_start / tracking_stop",
+      "pos": "slr/{id}/tracking/{obj}/pos — { az, el, dist, influx_token }",
+      "env": "slr/{id}/env — метеорологични данни",
+      "log": "slr/{id}/log/{LEVEL} — лог съобщения",
+      "cmd": "slr/{id}/cmd — команди от сървъра"
+    }
   }
 }

@@ -1,12 +1,11 @@
 import { Point } from "@influxdata/influxdb-client"
 import { InfluxDecorator, PositionPayload } from "../types"
 
-
 export async function writePosition(
-  influx: InfluxDecorator,
+  influx:    InfluxDecorator,
   stationId: string,
-  objId: string,
-  payload: string
+  objId:     string,
+  payload:   string
 ): Promise<void> {
   let data: PositionPayload
   try {
@@ -28,11 +27,9 @@ export async function writePosition(
     .floatField("dist", dist)
 
   if (influx_token) {
-    // Пише с fine-grained токена на станцията – само write права за нейния bucket
     await influx.writePointWithToken(point, stationId, influx_token)
   } else {
-    // Fallback към admin токена на бекенда
-    console.warn(`[SLR] No influx_token in payload for ${stationId}/${objId} – using admin token`)
+    console.warn(`[SLR] No influx_token for ${stationId}/${objId} – using admin token`)
     await influx.writePoint(point, stationId)
   }
 }

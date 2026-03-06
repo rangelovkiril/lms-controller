@@ -1,6 +1,6 @@
 import { notFound }        from "next/navigation";
-import { getStation }      from "@/lib/data/stations";
-import { StationProvider } from "@/lib/stationContext";
+import { getStation }      from "@/lib/stations";
+import { StationProvider } from "@/contexts/stationContext";
 
 interface Props {
   children: React.ReactNode;

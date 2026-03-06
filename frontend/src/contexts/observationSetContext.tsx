@@ -4,21 +4,20 @@ import {
 } from "react";
 import { Vector3 }                          from "three";
 import { ObsSet, createSet }                from "@/types";
-import { parseObservationFile, ParseError } from "./parseObservationFile";
+import { parseObservationFile, ParseError } from "@/lib/parseObservationFile";
 
 interface ObservationSetsContextValue {
-  sets:               ObsSet[];
-  activeSetId:        string;
-  setActiveSetId:     (id: string) => void;
-  addSet:             () => void;
-  addSetFromFiles:    (files: File[], label: string) => Promise<void>;
-  /** Create a set directly from an array of Vector3 points (e.g. a live recording). */
-  addSetFromPoints:   (label: string, points: Vector3[]) => void;
-  removeSet:          (id: string) => void;
-  updateSet:          <K extends keyof ObsSet>(id: string, key: K, value: ObsSet[K]) => void;
-  clearSet:           (id: string) => void;
-  openFilePicker:     () => void;
-  fileInputRef:       React.RefObject<HTMLInputElement>;
+  sets:             ObsSet[];
+  activeSetId:      string;
+  setActiveSetId:   (id: string) => void;
+  addSet:           () => void;
+  addSetFromFiles:  (files: File[], label: string) => Promise<void>;
+  addSetFromPoints: (label: string, points: Vector3[]) => void;
+  removeSet:        (id: string) => void;
+  updateSet:        <K extends keyof ObsSet>(id: string, key: K, value: ObsSet[K]) => void;
+  clearSet:         (id: string) => void;
+  openFilePicker:   () => void;
+  fileInputRef:     React.RefObject<HTMLInputElement>;
 }
 
 const Ctx = createContext<ObservationSetsContextValue | null>(null);
@@ -37,39 +36,26 @@ export function ObservationSetsProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const addSetFromFiles = useCallback(async (files: File[], label: string) => {
-    console.debug("[context] addSetFromFiles called, files:", files.map(f => f.name), "label:", label);
-
     const points: Vector3[] = [];
     for (const file of files) {
       const parsed = await parseObservationFile(file);
-      console.debug("[context] parsed", parsed.length, "points from", file.name);
       points.push(...parsed);
     }
-
-    console.debug("[context] total points:", points.length);
     if (points.length === 0) throw new ParseError("No valid points found in files");
 
     setSets((prev) => {
       const fresh = { ...createSet(prev, label || undefined), points };
-      console.debug("[context] adding set:", fresh.id, fresh.label, "points:", fresh.points.length);
       setActiveSetId(fresh.id);
       return [...prev, fresh];
     });
   }, []);
 
-  /**
-   * Save a completed live recording as a new ObservationSet.
-   * The set is always visible and does NOT become the active set
-   * (the user keeps working with whatever was active before).
-   */
   const addSetFromPoints = useCallback((label: string, points: Vector3[]) => {
     if (points.length === 0) return;
     setSets((prev) => {
       const fresh: ObsSet = { ...createSet(prev, label), points, visible: true };
-      console.debug("[context] recording saved:", fresh.id, fresh.label, "points:", points.length);
       return [...prev, fresh];
     });
-    // Intentionally does NOT call setActiveSetId — the user's active set is unchanged
   }, []);
 
   const removeSet = useCallback((id: string) => {
@@ -93,7 +79,6 @@ export function ObservationSetsProvider({ children }: { children: ReactNode }) {
   );
 
   const openFilePicker = useCallback(() => {
-    console.debug("[context] openFilePicker called, ref:", fileInputRef.current);
     fileInputRef.current?.click();
   }, []);
 
@@ -112,7 +97,6 @@ export function ObservationSetsProvider({ children }: { children: ReactNode }) {
         className="hidden"
         onChange={async (e) => {
           const files = Array.from(e.target.files ?? []);
-          console.debug("[context] file input onChange, files:", files.map(f => f.name));
           e.target.value = "";
           if (!files.length) return;
           const label = files[0].name.replace(/\.[^/.]+$/, "");

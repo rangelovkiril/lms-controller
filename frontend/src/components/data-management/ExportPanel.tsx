@@ -12,7 +12,7 @@ export default function ExportPanel({
   stations,
   loadingStations,
 }: {
-  stations: string[];
+  stations:        string[];
   loadingStations: boolean;
 }) {
   const t = useTranslations("export");
@@ -21,14 +21,14 @@ export default function ExportPanel({
     customStart, customStop, patch, download,
   } = useExport(stations, loadingStations);
 
-  const isCustom   = preset === "custom";
-  const canExport  = !!(station && object && (isCustom ? !!customStart : true) && status === "idle");
+  const isCustom  = preset === "custom";
+  const canExport = !!(station && object && (isCustom ? !!customStart : true) && status === "idle");
 
-  const renderDownloadButton = (format: "csv" | "json", label: string, colorClass: string) => (
+  const DownloadButton = ({ format, label, cls }: { format: "csv" | "json"; label: string; cls: string }) => (
     <button
       disabled={!canExport}
       onClick={() => download(format)}
-      className={`flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-md text-[13px] font-medium transition-all duration-150 disabled:opacity-35 disabled:cursor-not-allowed cursor-pointer ${colorClass}`}
+      className={`flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-md text-[13px] font-medium transition-all duration-150 disabled:opacity-35 disabled:cursor-not-allowed cursor-pointer ${cls}`}
     >
       {status === "exporting" ? <><Spinner /> {t("exporting")}</> : label}
     </button>
@@ -36,9 +36,8 @@ export default function ExportPanel({
 
   return (
     <div className="bg-surface border border-border rounded-[14px] overflow-hidden flex flex-col h-full">
-      <div className="px-6 py-4 border-b border-border flex flex-col">
+      <div className="px-6 py-4 border-b border-border">
         <div className="text-sm font-semibold text-text">{t("title")}</div>
-        <div className="text-[11px] font-mono text-text-muted">{t("subtitle")}</div>
       </div>
 
       <div className="p-6 flex flex-col gap-5 flex-1">
@@ -89,8 +88,8 @@ export default function ExportPanel({
         )}
 
         <div className="flex gap-2 mt-auto">
-          {renderDownloadButton("csv",  "CSV",  "bg-accent text-black hover:bg-[#00f090]")}
-          {renderDownloadButton("json", "JSON", "bg-blue text-white hover:bg-[#1a80ff]")}
+          <DownloadButton format="csv"  label="CSV"  cls="bg-accent text-black hover:bg-[#00f090]" />
+          <DownloadButton format="json" label="JSON" cls="bg-blue text-white hover:bg-[#1a80ff]" />
         </div>
       </div>
 

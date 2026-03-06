@@ -10,7 +10,6 @@ export interface CommandHandlerRef {
   handle: CommandHandler
 }
 
-// In-memory last-known status per station, so new subscribers get immediate feedback
 const stationStatus = new Map<string, WsEvent>()
 
 export function setStationStatus(stationId: string, event: WsEvent): void {
@@ -31,7 +30,6 @@ export function createWebsocket(cmdRef: CommandHandlerRef) {
 
           const { action, station } = parsed
 
-          // ── Subscribe / Unsubscribe ───────────────────────────────────────
           if (action === "subscribe" || action === "unsubscribe") {
             if (!station || typeof station !== "string") {
               ws.send(JSON.stringify({ error: "Missing station" }))
@@ -40,7 +38,6 @@ export function createWebsocket(cmdRef: CommandHandlerRef) {
             if (action === "subscribe") {
               ws.subscribe(station)
               console.log(`[WS] Subscribed to station "${station}"`)
-              // Replay last known status so the client doesn't have to wait
               const last = stationStatus.get(station)
               if (last) ws.send(JSON.stringify(last))
             } else {
@@ -50,14 +47,11 @@ export function createWebsocket(cmdRef: CommandHandlerRef) {
             return
           }
 
-          // ── Fire / Stop ───────────────────────────────────────────────────
           if (action === "track" || action === "stop") {
-
             if (!station || typeof station !== "string") {
               ws.send(JSON.stringify({ error: "Missing station" }))
               return
             }
-            
             console.log(`[WS] Command "${action}" → station="${station}"`)
             cmdRef.handle(station, action)
             return

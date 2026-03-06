@@ -71,10 +71,6 @@ export async function updateStation(
   await writeMetaPoint(influx, { ...current, stationId: station, ...patch } as StationMeta)
 }
 
-/**
- * Writes _meta for the mock station only if it doesn't exist yet.
- * Assumes the bucket already exists (created via createStation or manually).
- */
 export async function writeMetaIfMissing(
   influx: InfluxDecorator,
   meta:   StationMeta
@@ -85,7 +81,6 @@ export async function writeMetaIfMissing(
   console.log(`[Station] Wrote _meta for mock station "${meta.stationId}"`)
 }
 
-/** Shared helper — writes all _meta fields as a single InfluxDB point */
 function writeMetaPoint(influx: InfluxDecorator, meta: StationMeta): Promise<void> {
   const point = new Point("_meta")
     .stringField("name", meta.name)
@@ -139,8 +134,8 @@ export async function deleteStation(
   influx:  InfluxDecorator,
   station: string
 ): Promise<void> {
-  const orgId = await influx.getOrgId()
-  const res   = await influx.bucketsApi.getBuckets({ name: station, org: influx.org })
+  const orgId  = await influx.getOrgId()
+  const res    = await influx.bucketsApi.getBuckets({ name: station, org: influx.org })
   const bucket = res.buckets?.[0]
   if (!bucket?.id) throw new Error(`Bucket "${station}" not found`)
   await influx.bucketsApi.deleteBucketsID({ bucketID: bucket.id })

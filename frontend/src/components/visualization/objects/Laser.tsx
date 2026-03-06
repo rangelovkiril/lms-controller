@@ -5,6 +5,7 @@ import {
   BufferGeometry, BufferAttribute, DynamicDrawUsage,
   Group, Line, LineBasicMaterial, Color,
 } from "three";
+import { DOME_APEX_Y } from "./StationModel";
 
 const BLINK_ON  = 0.08;
 const BLINK_OFF = 0.04;
@@ -15,14 +16,14 @@ interface LaserProps {
 
 export default function Laser({ targetRef }: LaserProps) {
   const blinkTimer = useRef(0);
-  const visible    = useRef(true);
+  const blinkOn    = useRef(true);
 
   const { line, posAttr } = useMemo(() => {
-    const arr    = new Float32Array([0, 0, 0, 0, 0, 0]);
+    const arr     = new Float32Array([0, DOME_APEX_Y, 0, 0, DOME_APEX_Y, 0]);
     const posAttr = new BufferAttribute(arr, 3);
     posAttr.setUsage(DynamicDrawUsage);
 
-    const geo = new BufferGeometry();
+    const geo  = new BufferGeometry();
     geo.setAttribute("position", posAttr);
 
     const mat  = new LineBasicMaterial({ color: new Color("#00dc82"), toneMapped: false });
@@ -40,16 +41,24 @@ export default function Laser({ targetRef }: LaserProps) {
     if (!targetRef.current) return;
 
     const { x, y, z } = targetRef.current.position;
+
+    // Скриваме лазера когато Target е скрит (нула позиция)
+    const hasTarget = targetRef.current.visible;
+    if (!hasTarget) {
+      line.visible = false;
+      return;
+    }
+
     posAttr.setXYZ(1, x, y, z);
     posAttr.needsUpdate = true;
 
     blinkTimer.current += delta;
-    const interval = visible.current ? BLINK_ON : BLINK_OFF;
+    const interval = blinkOn.current ? BLINK_ON : BLINK_OFF;
     if (blinkTimer.current >= interval) {
       blinkTimer.current = 0;
-      visible.current    = !visible.current;
+      blinkOn.current    = !blinkOn.current;
     }
-    line.visible = visible.current;
+    line.visible = blinkOn.current;
   });
 
   return <primitive object={line} />;

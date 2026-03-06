@@ -1,7 +1,7 @@
 import Navbar                      from "@/components/layout/Navbar";
 import { NextIntlClientProvider }  from "next-intl";
 import { getMessages }             from "next-intl/server";
-import { ObservationSetsProvider } from "@/lib/observationSetContext";
+import { ObservationSetsProvider } from "@/contexts/observationSetContext";
 
 export default async function LocaleLayout({
   children,

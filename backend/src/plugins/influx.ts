@@ -3,21 +3,21 @@ import { InfluxDB, Point, WriteApi } from "@influxdata/influxdb-client"
 import { BucketsAPI, OrgsAPI, AuthorizationsAPI } from "@influxdata/influxdb-client-apis"
 
 export interface InfluxConfig {
-  url: string
+  url:   string
   token: string
-  org: string
+  org:   string
 }
 
 export interface InfluxClient {
-  org: string
-  url: string
-  writePoint: (point: Point, bucket: string) => Promise<void>
+  org:                 string
+  url:                 string
+  writePoint:          (point: Point, bucket: string) => Promise<void>
   writePointWithToken: (point: Point, bucket: string, token: string) => Promise<void>
-  query: <T = any>(flux: string) => Promise<T[]>
-  ensureBucket: (bucket: string) => Promise<void>
-  getOrgId: () => Promise<string>
-  bucketsApi: BucketsAPI
-  authApi: AuthorizationsAPI
+  query:               <T = any>(flux: string) => Promise<T[]>
+  ensureBucket:        (bucket: string) => Promise<void>
+  getOrgId:            () => Promise<string>
+  bucketsApi:          BucketsAPI
+  authApi:             AuthorizationsAPI
 }
 
 export const influx = (config: InfluxConfig) => {
@@ -27,12 +27,8 @@ export const influx = (config: InfluxConfig) => {
   const orgsApi    = new OrgsAPI(client)
   const authApi    = new AuthorizationsAPI(client)
 
-  // Admin write APIs – keyed by bucket, use backend's admin token
-  const writeApis = new Map<string, WriteApi>()
-
-  // Per-station write APIs – keyed by token, use station's fine-grained token
+  const writeApis        = new Map<string, WriteApi>()
   const stationWriteApis = new Map<string, WriteApi>()
-
   const confirmedBuckets = new Set<string>()
 
   const getOrgId = async (): Promise<string> => {
@@ -80,7 +76,6 @@ export const influx = (config: InfluxConfig) => {
     return writeApis.get(bucket)!
   }
 
-  // Separate write API per station token – cached so we don't recreate on every message
   const getStationWriteApi = (bucket: string, token: string): WriteApi => {
     const key = `${bucket}::${token}`
     if (!stationWriteApis.has(key)) {
@@ -94,7 +89,6 @@ export const influx = (config: InfluxConfig) => {
     org: config.org,
     url: config.url,
 
-    // Admin write – used for env, logs, metadata (backend token)
     writePoint: async (point: Point, bucket: string): Promise<void> => {
       await ensureBucket(bucket)
       try {
@@ -104,7 +98,6 @@ export const influx = (config: InfluxConfig) => {
       }
     },
 
-    // Station write – used for position data (station's fine-grained token)
     writePointWithToken: async (point: Point, bucket: string, token: string): Promise<void> => {
       try {
         getStationWriteApi(bucket, token).writePoint(point)
@@ -113,9 +106,8 @@ export const influx = (config: InfluxConfig) => {
       }
     },
 
-    query: <T = any>(flux: string): Promise<T[]> =>
-      queryApi.collectRows(flux) as Promise<T[]>,
-
+    query:        <T = any>(flux: string): Promise<T[]> =>
+                    queryApi.collectRows(flux) as Promise<T[]>,
     ensureBucket,
     getOrgId,
     bucketsApi,

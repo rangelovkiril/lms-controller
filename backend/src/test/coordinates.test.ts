@@ -41,20 +41,7 @@ describe("toCartesian (degrees)", () => {
   })
 })
 
-describe("mock sensor round-trip: cartesian → spherical → toCartesian", () => {
-  // Replicate exactly what mockMqtt does
-  const RAD2DEG = 180 / Math.PI
-
-  function mockCartesianToSpherical(x: number, y: number, z: number) {
-    const dist = Math.hypot(x, y, z)
-    if (dist === 0) return { az: 0, el: 0, dist: 0 }
-    return {
-      az:   Math.atan2(y, x) * RAD2DEG,
-      el:   Math.acos(z / dist) * RAD2DEG,
-      dist,
-    }
-  }
-
+describe("round-trip: toSpherical → toCartesian", () => {
   const CASES: [string, number, number, number][] = [
     ["on x-axis",       10,  0,  0],
     ["on y-axis",        0, 10,  0],
@@ -66,7 +53,7 @@ describe("mock sensor round-trip: cartesian → spherical → toCartesian", () =
 
   for (const [label, cx, cy, cz] of CASES) {
     it(`round-trips ${label} (${cx}, ${cy}, ${cz})`, () => {
-      const { az, el, dist } = mockCartesianToSpherical(cx, cy, cz)
+      const { az, el, dist } = toSpherical(cx, cy, cz)
       const back = toCartesian(dist, az, el, true)
       expect(close(back.x, cx, 1e-4)).toBe(true)
       expect(close(back.y, cy, 1e-4)).toBe(true)
@@ -75,7 +62,7 @@ describe("mock sensor round-trip: cartesian → spherical → toCartesian", () =
   }
 
   it("zero vector stays zero", () => {
-    const s = mockCartesianToSpherical(0, 0, 0)
+    const s = toSpherical(0, 0, 0)
     expect(s.dist).toBe(0)
     expect(s.az).toBe(0)
     expect(s.el).toBe(0)

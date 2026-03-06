@@ -2,7 +2,7 @@
 import { useRef, useState, useEffect } from "react";
 import { useTranslations }             from "next-intl";
 import { ObsSet, PRESET_COLORS }       from "@/types";
-import { useObservationSets }          from "@/hooks/useObservationSets";
+import { useObservationSets }          from "@/contexts/observationSetContext";
 
 interface Props {
   sets:        ObsSet[];
@@ -134,41 +134,32 @@ function SetMenu({ set, onUpdate, onRemove, onClear }: {
 export default function ObservationSetPanel({
   sets, activeSetId, onSelect, onAdd, onRemove, onUpdate, onClear,
 }: Props) {
-  const t               = useTranslations("observationSets");
+  const t                  = useTranslations("observationSets");
   const { openFilePicker } = useObservationSets();
 
   return (
     <div className="flex flex-col gap-3">
 
-      {/* Header */}
       <div className="flex items-center justify-between">
         <span className="text-[10px] font-mono uppercase tracking-widest text-text-muted">
           {t("title")}
         </span>
-        <div className="flex items-center gap-1">
-          {/* Load file shortcut */}
-          <button
-            onClick={openFilePicker}
-            title={t("loadFile")}
-            className="font-mono text-[10px] px-1.5 py-0.5 rounded border border-border text-text-muted hover:border-border-hi hover:text-text transition-colors"
-          >
-            ↑
-          </button>
-          {/* New empty set */}
-          <button
-            onClick={onAdd}
-            className="font-mono text-[10px] px-2 py-0.5 rounded border border-border text-text-muted hover:border-border-hi hover:text-text transition-colors"
-          >
-            {t("newSet")}
-          </button>
-        </div>
+        {/* Един бутон с dropdown: зареди файл | нов празен набор */}
+        <AddSetMenu onLoadFile={openFilePicker} onAddEmpty={onAdd} />
       </div>
 
-      {/* Empty state */}
       {sets.length === 0 ? (
-        <p className="text-[11px] font-mono text-text-muted/50 text-center py-3">
-          {t("empty")}
-        </p>
+        <button
+          onClick={openFilePicker}
+          className="w-full flex flex-col items-center justify-center gap-1.5 py-4 rounded-lg border border-dashed border-border text-text-muted/50 hover:text-text-muted hover:border-border-hi transition-colors"
+        >
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+          <span className="font-mono text-[10px]">{t("loadFile")}</span>
+        </button>
       ) : (
         <div className="flex flex-col gap-1">
           {sets.map((s) => (
@@ -209,6 +200,57 @@ export default function ObservationSetPanel({
               <SetMenu set={s} onUpdate={onUpdate} onRemove={onRemove} onClear={onClear} />
             </div>
           ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function AddSetMenu({ onLoadFile, onAddEmpty }: { onLoadFile: () => void; onAddEmpty: () => void }) {
+  const t               = useTranslations("observationSets");
+  const [open, setOpen] = useState(false);
+  const ref             = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const h = (e: MouseEvent) => { if (!ref.current?.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener("mousedown", h);
+    return () => document.removeEventListener("mousedown", h);
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="font-mono text-[10px] px-2 py-0.5 rounded border border-border text-text-muted hover:border-border-hi hover:text-text transition-colors flex items-center gap-1"
+      >
+        + <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <path d="M6 9l6 6 6-6"/>
+          </svg>
+      </button>
+
+      {open && (
+        <div className="absolute right-0 top-full mt-1 z-50 w-40 rounded-lg border border-border bg-surface shadow-xl flex flex-col py-1">
+          <button
+            onClick={() => { onLoadFile(); setOpen(false); }}
+            className="w-full text-left px-3 py-1.5 font-mono text-[11px] text-text-muted hover:text-text hover:bg-white/5 transition-colors flex items-center gap-2"
+          >
+            <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            {t("loadFile")}
+          </button>
+          <button
+            onClick={() => { onAddEmpty(); setOpen(false); }}
+            className="w-full text-left px-3 py-1.5 font-mono text-[11px] text-text-muted hover:text-text hover:bg-white/5 transition-colors flex items-center gap-2"
+          >
+            <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            {t("newSet")}
+          </button>
         </div>
       )}
     </div>

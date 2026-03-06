@@ -14,8 +14,8 @@ export function toCartesian(r: number, theta: number, phi: number, useDegrees: b
   const p = useDegrees ? phi   * (Math.PI / 180) : phi
 
   return {
-    x: r * Math.sin(p) * Math.cos(t),
-    y: r * Math.sin(p) * Math.sin(t),
-    z: r * Math.cos(p),
+    x: r * Math.cos(p) * Math.cos(t),
+    y: r * Math.cos(p) * Math.sin(t),
+    z: r * Math.sin(p),
   }
 }

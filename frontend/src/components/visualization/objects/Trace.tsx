@@ -7,7 +7,7 @@ import {
   Vector3, Group, CatmullRomCurve3,
 } from "three";
 
-import { hueToRGB, speedToHue } from "./trajectoryUtils";
+import { hueToRGB, speedToHue } from "../trajectoryUtils";
 
 const MAX_CTRL_PTS = 400;
 

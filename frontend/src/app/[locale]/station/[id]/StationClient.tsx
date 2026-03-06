@@ -2,8 +2,8 @@
 import { useState, useCallback, useEffect } from "react";
 import { useTranslations }                  from "next-intl";
 import dynamic                              from "next/dynamic";
-import { useStation }                       from "@/lib/stationContext";
-import { useObservationSets }               from "@/hooks/useObservationSets";
+import { useStation }                       from "@/contexts/stationContext";
+import { useObservationSets }               from "@/contexts/observationSetContext";
 import ObservationSetPanel                  from "@/components/visualization/objects/ObservationSetPanel";
 import type { TrackingState }               from "@/hooks/useTracking";
 

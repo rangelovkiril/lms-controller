@@ -6,25 +6,23 @@ type MqttPlugin = ReturnType<typeof mqttClient>
 export type MqttDecorator   = MqttPlugin["decorator"]["mqtt"]
 export type InfluxDecorator = InfluxClient
 
-// --- Station Meta ---
 export interface StationMeta {
   stationId:    string
   name:         string
   lat:          number
   lon:          number
   description?: string
-  wsUrl?:       string   // WebSocket endpoint for this station's backend
-  hardware?:    string   // Hardware description e.g. "Nd:YAG 532nm · 10Hz"
+  wsUrl?:       string
+  hardware?:    string
 }
 
-// --- Spherical position payload from MQTT ---
 export interface PositionPayload {
-  az:   number
-  el:   number
-  dist: number
+  az:           number
+  el:           number
+  dist:         number
+  influx_token: string
 }
 
-// --- WebSocket events (Server → Client) ---
 export type WsStatusEvent =
   | { event: "online" }
   | { event: "offline" }
@@ -41,7 +39,6 @@ export type WsPositionEvent = {
 
 export type WsEvent = WsStatusEvent | WsPositionEvent
 
-// --- MQTT Status payload ---
 export type MqttStatusPayload =
   | { event: "online" }
   | { event: "offline" }

@@ -4,8 +4,8 @@ import {
 } from "react";
 import { Vector3 }           from "three";
 import { useTracking, type TrackingState } from "@/hooks/useTracking";
-import { useObservationSets }              from "@/hooks/useObservationSets";
-import type { Station }                    from "@/lib/data/stations";
+import { useObservationSets }              from "@/contexts/observationSetContext";
+import type { Station }                    from "@/lib/stations";
 
 interface StationContextValue {
   station:      Station;
@@ -27,7 +27,7 @@ export function StationProvider({
 }) {
   const { addSetFromPoints } = useObservationSets();
 
-  const handleRecordingComplete = useCallback(
+  const onRecordingComplete = useCallback(
     (objId: string, points: Vector3[]) => addSetFromPoints(objId, points),
     [addSetFromPoints],
   );
@@ -35,7 +35,7 @@ export function StationProvider({
   const { state, targetPosVec, send } = useTracking(
     station.wsUrl,
     station.id,
-    handleRecordingComplete,
+    onRecordingComplete,
   );
 
   const fire = useCallback(() => {

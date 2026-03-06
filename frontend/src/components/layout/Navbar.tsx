@@ -6,14 +6,14 @@ export default async function Navbar() {
   const t = await getTranslations("nav");
 
   const NAV_LINKS = [
-    { href: "/stations",     label: t("stations")     },
+    { href: "/stations",    label: t("stations")    },
     { href: "/trajectories", label: t("trajectories") },
+    { href: "/info",        label: t("info")        },
   ];
 
   return (
     <header className="h-12 shrink-0 flex items-center gap-0 px-4 border-b border-border bg-bg z-50">
 
-      {/* Logo */}
       <Link href="/" className="flex items-center gap-2 no-underline mr-4">
         <div className="w-6 h-6 rounded-md flex items-center justify-center bg-gradient-to-br from-accent to-[#00a86b]">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2.5">
@@ -27,7 +27,6 @@ export default async function Navbar() {
 
       <div className="w-px h-5 bg-border mr-4" />
 
-      {/* Nav links */}
       <nav className="flex items-center gap-0.5">
         {NAV_LINKS.map(({ href, label }) => (
           <Link
@@ -40,7 +39,6 @@ export default async function Navbar() {
         ))}
       </nav>
 
-      {/* Right — live station count */}
       <div className="ml-auto">
         <NavClient />
       </div>

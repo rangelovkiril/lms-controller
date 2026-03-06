@@ -1,7 +1,7 @@
 "use client";
 import { useMemo } from "react";
 import { BufferGeometry, BufferAttribute, Vector3, Color } from "three";
-import { speedToColor, speedT } from "./trajectoryUtils";
+import { speedToColor, speedT } from "../trajectoryUtils";
 
 interface Props {
   points:     Vector3[];

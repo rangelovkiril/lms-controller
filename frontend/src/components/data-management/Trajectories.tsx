@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useTranslations }     from "next-intl";
 import { API_BASE }            from "@/types";
-import { useObservationSets }  from "@/hooks/useObservationSets";
+import { useObservationSets }  from "@/contexts/observationSetContext";
 import { ParseError }          from "@/lib/parseObservationFile";
 import ExportPanel             from "./ExportPanel";
 import ImportPanel             from "./ImportPanel";

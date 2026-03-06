@@ -6,7 +6,7 @@ import { API_BASE } from "@/types";
 import {
   buildSubscribeMessage,
   parseTrackingMessage,
-} from "@/lib/ws/tracking";
+} from "@/lib/tracking";
 
 interface StationMeta {
   stationId:    string;
@@ -17,11 +17,25 @@ interface StationMeta {
   wsUrl?:       string;
 }
 
-type OnlineStatus = "connecting" | "online" | "offline" | "disconnected";
+type ConnectionStatus = "connecting" | "online" | "offline" | "disconnected";
 
 const WS_FALLBACK =
   (typeof process !== "undefined" && process.env.NEXT_PUBLIC_WS_URL) ??
   "ws://localhost:3000/ws";
+
+const STATUS_DOT: Record<ConnectionStatus, string> = {
+  online:       "bg-accent animate-pulse-dot",
+  offline:      "bg-red-500",
+  connecting:   "bg-yellow-400 animate-pulse",
+  disconnected: "bg-text-muted opacity-40",
+};
+
+const STATUS_LABEL: Record<ConnectionStatus, string> = {
+  online:       "Online",
+  offline:      "Offline",
+  connecting:   "Connecting…",
+  disconnected: "Disconnected",
+};
 
 export function StationCard({
   station,
@@ -33,9 +47,9 @@ export function StationCard({
   const initials = station.stationId.slice(0, 2).toUpperCase();
   const wsUrl    = station.wsUrl ?? WS_FALLBACK;
 
-  const [status,    setStatus]    = useState<OnlineStatus>("connecting");
-  const [deleting,  setDeleting]  = useState(false);
-  const [confirmDel,setConfirmDel]= useState(false);
+  const [status,     setStatus]     = useState<ConnectionStatus>("connecting");
+  const [deleting,   setDeleting]   = useState(false);
+  const [confirmDel, setConfirmDel] = useState(false);
   const socketRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
@@ -58,16 +72,10 @@ export function StationCard({
         const msg = parseTrackingMessage(ev);
         if (!msg) return;
         if (msg.type === "event") {
-          if (msg.event === "online" || msg.event === "tracking_start") {
-            setStatus("online");
-          } else if (msg.event === "offline") {
-            setStatus("offline");
-          }
+          if (msg.event === "online" || msg.event === "tracking_start") setStatus("online");
+          else if (msg.event === "offline") setStatus("offline");
         }
-        // Any position frame means the station is alive
-        if (msg.type === "position") {
-          setStatus("online");
-        }
+        if (msg.type === "position") setStatus("online");
       };
 
       ws.onclose = () => {
@@ -104,25 +112,9 @@ export function StationCard({
     }
   };
 
-  const dotStyle =
-    status === "online"
-      ? "bg-accent animate-pulse-dot"
-      : status === "offline"
-      ? "bg-red-500"
-      : status === "connecting"
-      ? "bg-yellow-400 animate-pulse"
-      : "bg-text-muted opacity-40";
-
-  const dotTitle =
-    status === "online"       ? "Онлайн"
-    : status === "offline"    ? "Офлайн"
-    : status === "connecting" ? "Свързване…"
-    : "Без връзка";
-
   return (
     <div className="bg-surface border border-border rounded-xl overflow-hidden hover:border-border-hi transition-colors group">
 
-      {/* Header */}
       <div className="px-4 pt-4 pb-3 flex items-start gap-3">
         <div className="w-9 h-9 shrink-0 rounded-lg bg-surface-hi border border-border flex items-center justify-center font-mono text-[11px] font-bold text-text-dim">
           {initials}
@@ -131,8 +123,8 @@ export function StationCard({
           <div className="flex items-center gap-2">
             <span className="font-semibold text-[13px] text-text truncate">{station.name}</span>
             <span
-              className={`w-1.5 h-1.5 rounded-full shrink-0 ${dotStyle}`}
-              title={dotTitle}
+              className={`w-1.5 h-1.5 rounded-full shrink-0 ${STATUS_DOT[status]}`}
+              title={STATUS_LABEL[status]}
             />
           </div>
           <div className="font-mono text-[10.5px] text-text-muted mt-0.5 truncate">
@@ -140,7 +132,6 @@ export function StationCard({
           </div>
         </div>
 
-        {/* Delete button */}
         <button
           onClick={handleDelete}
           disabled={deleting}
@@ -167,20 +158,18 @@ export function StationCard({
         </button>
       </div>
 
-      {/* Confirm delete banner */}
       {confirmDel && !deleting && (
         <div className="mx-4 mb-3 px-3 py-2 rounded-lg border border-red-500/30 bg-red-500/5 flex items-center justify-between gap-2">
-          <span className="font-mono text-[10.5px] text-red-400">Изтрий станцията и всички данни?</span>
+          <span className="font-mono text-[10.5px] text-red-400">Delete station and all data?</span>
           <button
             onClick={() => setConfirmDel(false)}
             className="font-mono text-[10.5px] text-text-muted hover:text-text transition-colors"
           >
-            Откажи
+            Cancel
           </button>
         </div>
       )}
 
-      {/* Coords */}
       <div className="px-4 pb-3 flex gap-3 font-mono text-[10.5px] text-text-muted">
         <span>{station.lat.toFixed(3)}°N</span>
         <span className="text-border-hi">·</span>
@@ -193,7 +182,6 @@ export function StationCard({
         )}
       </div>
 
-      {/* Actions */}
       <div className="border-t border-border grid grid-cols-2">
         <Link
           href={`/station/${station.stationId}/command`}

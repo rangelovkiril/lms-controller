@@ -2,7 +2,7 @@
   "nav": {
     "stations": "Stations",
     "trajectories": "Trajectories",
-    "about": "About"
+    "info": "Info"
   },
   "stations": {
     "title": "Stations",
@@ -10,6 +10,9 @@
     "objects": "{count} objects",
     "open": "Open →",
     "offline": "Offline",
+    "new": "+ New Station",
+    "empty": "No registered stations",
+    "registered": "{count} registered",
     "status": {
       "online": "ONLINE",
       "tracking": "TRACKING",
@@ -20,8 +23,8 @@
     "visualizationLoading": "Visualization loading",
     "exitFullscreen": "ESC to exit fullscreen",
     "status": {
-      "label": "...",
-      "disconnected": "...",
+      "label": "Status",
+      "disconnected": "Disconnected",
       "online": "Online",
       "locating": "Locating",
       "tracking": "Tracking",
@@ -40,7 +43,6 @@
   },
   "export": {
     "title": "Export",
-    "subtitle": "API: /data",
     "station": "Station",
     "object": "Object",
     "timeWindow": "Time window",
@@ -91,5 +93,32 @@
     "noData": "No data for the selected period",
     "loadObjects": "Failed to load objects",
     "httpError": "Error {status}: {statusText}"
+  },
+  "info": {
+    "title": "System Information",
+    "subtitle": "LMS – Laser Management System",
+    "description": "A management and monitoring system for laser ranging stations (SLR). Supports multiple stations, real-time tracking, and observation recording.",
+    "architecture": {
+      "title": "Architecture",
+      "backend": "Backend (Bun / Elysia) — REST API and WebSocket server",
+      "broker": "MQTT broker — real-time telemetry from hardware",
+      "db": "InfluxDB — storage for positions, logs, and environmental data",
+      "frontend": "Frontend (Next.js) — web interface with 3D visualization"
+    },
+    "quickstart": {
+      "title": "Quick Start",
+      "step1": "Register a station from the Stations page",
+      "step2": "Save the write token and configure it on the hardware (INFLUX_TOKEN)",
+      "step3": "Start the hardware client with the correct env variables",
+      "step4": "Open the station and send a ▶ Track command"
+    },
+    "topics": {
+      "title": "MQTT Topics",
+      "status": "slr/{id}/status — online / offline / tracking_start / tracking_stop",
+      "pos": "slr/{id}/tracking/{obj}/pos — { az, el, dist, influx_token }",
+      "env": "slr/{id}/env — environmental sensor data",
+      "log": "slr/{id}/log/{LEVEL} — log messages",
+      "cmd": "slr/{id}/cmd — server commands"
+    }
   }
 }
