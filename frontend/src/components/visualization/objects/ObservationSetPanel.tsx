@@ -2,7 +2,7 @@
 import { useRef, useState, useEffect } from "react";
 import { useTranslations }             from "next-intl";
 import { ObsSet, PRESET_COLORS }       from "@/types";
-import { useObservationSets }          from "@/contexts/observationSetContext";
+import { useObservationSets } from "@/contexts/observationSetContext";
 
 interface Props {
   sets:        ObsSet[];
@@ -31,13 +31,13 @@ function EditableLabel({ value, onChange }: { value: string; onChange: (v: strin
           if (e.key === "Escape") { setDraft(value); setEditing(false); }
         }}
         onClick={(e) => e.stopPropagation()}
-        className="flex-1 bg-transparent border-b border-accent outline-none font-mono text-[11px] text-accent"
+        className="flex-1 min-w-0 bg-transparent border-b border-accent outline-none font-mono text-[11px] text-accent"
       />
     );
   }
   return (
     <span
-      className="flex-1 truncate"
+      className="flex-1 min-w-0 truncate"
       onDoubleClick={(e) => { e.stopPropagation(); setDraft(value); setEditing(true); }}
       title={t("renameHint")}
     >
@@ -46,11 +46,9 @@ function EditableLabel({ value, onChange }: { value: string; onChange: (v: strin
   );
 }
 
-function SetMenu({ set, onUpdate, onRemove, onClear }: {
+function ColorDot({ set, onUpdate }: {
   set:      ObsSet;
   onUpdate: <K extends keyof ObsSet>(id: string, key: K, val: ObsSet[K]) => void;
-  onRemove: (id: string) => void;
-  onClear:  (id: string) => void;
 }) {
   const t               = useTranslations("observationSets");
   const [open, setOpen] = useState(false);
@@ -65,66 +63,48 @@ function SetMenu({ set, onUpdate, onRemove, onClear }: {
 
   return (
     <div ref={ref} className="relative shrink-0">
-      <button
-        onClick={(e) => { e.stopPropagation(); setOpen((v) => !v); }}
-        title={t("options")}
-        className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:text-text text-text-muted"
-      >
-        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
-          <circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/>
-        </svg>
-      </button>
+      <span
+        className="block w-2 h-2 rounded-full ring-1 ring-white/10 cursor-pointer"
+        style={{ background: set.color ?? "linear-gradient(135deg,#00e5ff 0%,#69ff47 50%,#ff4444 100%)" }}
+        onDoubleClick={(e) => { e.stopPropagation(); setOpen((v) => !v); }}
+      />
 
       {open && (
         <div
-          className="absolute right-0 top-full mt-1 z-50 w-44 rounded-lg border border-border bg-surface shadow-xl flex flex-col py-1"
+          className="absolute left-0 top-full mt-1.5 z-50 w-44 rounded-lg border border-border bg-surface shadow-xl p-2 flex items-center gap-1.5 flex-wrap"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="px-3 py-1.5 flex items-center gap-1.5 flex-wrap border-b border-border">
+          <button
+            onClick={() => { onUpdate(set.id, "color", null); setOpen(false); }}
+            className={[
+              "px-1.5 py-0.5 rounded border font-mono text-[9px] transition-colors",
+              set.color === null
+                ? "border-accent/60 bg-accent-dim text-accent"
+                : "border-border text-text-muted hover:text-text",
+            ].join(" ")}
+          >
+            {t("speed")}
+          </button>
+          {PRESET_COLORS.map((hex) => (
             <button
-              onClick={() => { onUpdate(set.id, "color", null); setOpen(false); }}
+              key={hex}
+              onClick={() => { onUpdate(set.id, "color", hex); setOpen(false); }}
               className={[
-                "px-1.5 py-0.5 rounded border font-mono text-[9px] transition-colors",
-                set.color === null
-                  ? "border-accent/60 bg-accent-dim text-accent"
-                  : "border-border text-text-muted hover:text-text",
+                "w-4 h-4 rounded-sm border-2 transition-all",
+                set.color === hex ? "border-white scale-110" : "border-transparent hover:scale-105",
               ].join(" ")}
-            >
-              {t("speed")}
-            </button>
-            {PRESET_COLORS.map((hex) => (
-              <button
-                key={hex}
-                onClick={() => { onUpdate(set.id, "color", hex); setOpen(false); }}
-                className={[
-                  "w-4 h-4 rounded-sm border-2 transition-all",
-                  set.color === hex ? "border-white scale-110" : "border-transparent hover:scale-105",
-                ].join(" ")}
-                style={{ backgroundColor: hex }}
-              />
-            ))}
-            <label className="w-4 h-4 rounded-sm border border-dashed border-border flex items-center justify-center cursor-pointer hover:border-border-hi relative" title="Custom">
-              <span className="font-mono text-[9px] text-text-muted leading-none">+</span>
-              <input
-                type="color"
-                value={set.color ?? "#00ffaa"}
-                onChange={(e) => onUpdate(set.id, "color", e.target.value)}
-                className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
-              />
-            </label>
-          </div>
-          <button
-            onClick={() => { onClear(set.id); setOpen(false); }}
-            className="w-full text-left px-3 py-1.5 font-mono text-[11px] text-text-muted hover:text-text hover:bg-white/5 transition-colors"
-          >
-            {t("clearPoints")}
-          </button>
-          <button
-            onClick={() => { onRemove(set.id); setOpen(false); }}
-            className="w-full text-left px-3 py-1.5 font-mono text-[11px] text-red-400/60 hover:text-red-400 hover:bg-white/5 transition-colors"
-          >
-            {t("deleteSet")}
-          </button>
+              style={{ backgroundColor: hex }}
+            />
+          ))}
+          <label className="w-4 h-4 rounded-sm border border-dashed border-border flex items-center justify-center cursor-pointer hover:border-border-hi relative" title="Custom">
+            <span className="font-mono text-[9px] text-text-muted leading-none">+</span>
+            <input
+              type="color"
+              value={set.color ?? "#00ffaa"}
+              onChange={(e) => onUpdate(set.id, "color", e.target.value)}
+              className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
+            />
+          </label>
         </div>
       )}
     </div>
@@ -144,8 +124,17 @@ export default function ObservationSetPanel({
         <span className="text-[10px] font-mono uppercase tracking-widest text-text-muted">
           {t("title")}
         </span>
-        {/* Един бутон с dropdown: зареди файл | нов празен набор */}
-        <AddSetMenu onLoadFile={openFilePicker} onAddEmpty={onAdd} />
+        <button
+          onClick={openFilePicker}
+          title={t("loadFile")}
+          className="font-mono text-[10px] px-2 py-0.5 rounded border border-border text-text-muted hover:border-border-hi hover:text-text transition-colors flex items-center gap-1"
+        >
+          <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+        </button>
       </div>
 
       {sets.length === 0 ? (
@@ -167,16 +156,13 @@ export default function ObservationSetPanel({
               key={s.id}
               onClick={() => onSelect(s.id)}
               className={[
-                "flex items-center gap-2 w-full px-3 py-2 rounded-lg border font-mono text-[11px] transition-colors cursor-pointer group",
+                "flex items-center gap-2 w-full min-w-0 px-3 py-2 rounded-lg border font-mono text-[11px] transition-colors cursor-pointer group",
                 s.id === activeSetId
                   ? "border-accent/50 bg-accent-dim text-accent"
                   : "border-border text-text-muted hover:border-border-hi hover:text-text",
               ].join(" ")}
             >
-              <span
-                className="w-2 h-2 rounded-full shrink-0 ring-1 ring-white/10"
-                style={{ background: s.color ?? "linear-gradient(135deg,#00e5ff 0%,#69ff47 50%,#ff4444 100%)" }}
-              />
+              <ColorDot set={s} onUpdate={onUpdate} />
 
               <EditableLabel value={s.label} onChange={(v) => onUpdate(s.id, "label", v)} />
 
@@ -184,10 +170,11 @@ export default function ObservationSetPanel({
                 {s.points.length}
               </span>
 
+              {/* Visibility toggle — always visible */}
               <button
                 onClick={(e) => { e.stopPropagation(); onUpdate(s.id, "visible", !s.visible); }}
                 title={s.visible ? t("hide") : t("show")}
-                className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity text-text-muted hover:text-text"
+                className="shrink-0 text-text-muted hover:text-text transition-colors"
               >
                 <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   {s.visible
@@ -197,60 +184,18 @@ export default function ObservationSetPanel({
                 </svg>
               </button>
 
-              <SetMenu set={s} onUpdate={onUpdate} onRemove={onRemove} onClear={onClear} />
+              {/* Delete — always visible */}
+              <button
+                onClick={(e) => { e.stopPropagation(); onRemove(s.id); }}
+                title={t("deleteSet")}
+                className="shrink-0 text-text-muted hover:text-red-400 transition-colors"
+              >
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/>
+                </svg>
+              </button>
             </div>
           ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function AddSetMenu({ onLoadFile, onAddEmpty }: { onLoadFile: () => void; onAddEmpty: () => void }) {
-  const t               = useTranslations("observationSets");
-  const [open, setOpen] = useState(false);
-  const ref             = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const h = (e: MouseEvent) => { if (!ref.current?.contains(e.target as Node)) setOpen(false); };
-    document.addEventListener("mousedown", h);
-    return () => document.removeEventListener("mousedown", h);
-  }, [open]);
-
-  return (
-    <div ref={ref} className="relative">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="font-mono text-[10px] px-2 py-0.5 rounded border border-border text-text-muted hover:border-border-hi hover:text-text transition-colors flex items-center gap-1"
-      >
-        + <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <path d="M6 9l6 6 6-6"/>
-          </svg>
-      </button>
-
-      {open && (
-        <div className="absolute right-0 top-full mt-1 z-50 w-40 rounded-lg border border-border bg-surface shadow-xl flex flex-col py-1">
-          <button
-            onClick={() => { onLoadFile(); setOpen(false); }}
-            className="w-full text-left px-3 py-1.5 font-mono text-[11px] text-text-muted hover:text-text hover:bg-white/5 transition-colors flex items-center gap-2"
-          >
-            <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-              <polyline points="17 8 12 3 7 8"/>
-              <line x1="12" y1="3" x2="12" y2="15"/>
-            </svg>
-            {t("loadFile")}
-          </button>
-          <button
-            onClick={() => { onAddEmpty(); setOpen(false); }}
-            className="w-full text-left px-3 py-1.5 font-mono text-[11px] text-text-muted hover:text-text hover:bg-white/5 transition-colors flex items-center gap-2"
-          >
-            <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-            {t("newSet")}
-          </button>
         </div>
       )}
     </div>

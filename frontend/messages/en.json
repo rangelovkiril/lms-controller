@@ -47,7 +47,9 @@
     "object": "Object",
     "timeWindow": "Time window",
     "exporting": "Exporting...",
-    "rows": "{rows} rows · {format}"
+    "rows": "{rows} rows · {format}",
+    "from": "From",
+    "to": "To"
   },
   "import": {
     "title": "Import observations",

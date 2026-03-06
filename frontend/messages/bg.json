@@ -47,7 +47,9 @@
     "object": "Обект",
     "timeWindow": "Времеви интервал",
     "exporting": "Експортиране...",
-    "rows": "{rows} реда · {format}"
+    "rows": "{rows} реда · {format}",
+    "from": "От",
+    "to": "До"
   },
   "import": {
     "title": "Импортиране на наблюдения",
