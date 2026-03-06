@@ -1,0 +1,127 @@
+<svg width="640" height="248" viewBox="0 0 640 248"
+  preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    @keyframes preview-trace {
+      from { stroke-dashoffset: 500; }
+      to   { stroke-dashoffset: 0;   }
+    }
+    @keyframes preview-ring {
+      0%   { r:3;  opacity:.7; }
+      100% { r:18; opacity:0;  }
+    }
+    @keyframes pv-laser {
+      0%,18%   { opacity:0; }
+      20%,26%  { opacity:.85; }
+      28%,46%  { opacity:0; }
+      48%,54%  { opacity:.85; }
+      56%,74%  { opacity:0; }
+      76%,82%  { opacity:.85; }
+      84%,100% { opacity:0; }
+    }
+    .pv-trace  { animation: preview-trace 5s ease-out 0.3s both; stroke-dasharray: 500; }
+    .pv-ring   { animation: preview-ring  2s ease-out 1s infinite; transform-box: fill-box; transform-origin: center; }
+    .pv-laser  { animation: pv-laser 12s linear infinite; }
+  </style>
+
+  <defs>
+    <radialGradient id="sky" cx="50%" cy="35%" r="60%">
+      <stop offset="0%"   stop-color="#0d1525"/>
+      <stop offset="100%" stop-color="#080c14"/>
+    </radialGradient>
+    <linearGradient id="horizon" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="60%"  stop-color="#0a0f1a" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#0a0f1a"/>
+    </linearGradient>
+    <radialGradient id="stationglow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"   stop-color="#00dc82" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#00dc82" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="tracecol" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%"   stop-color="#0070f3" stop-opacity="0.2"/>
+      <stop offset="45%"  stop-color="#00dc82" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#ff4444" stop-opacity="0.6"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="640" height="248" fill="url(#sky)"/>
+
+  <circle cx="40"  cy="18" r="1.1"  fill="white" opacity=".15"/>
+  <circle cx="120" cy="8"  r=".55"  fill="white" opacity=".27"/>
+  <circle cx="200" cy="30" r=".55"  fill="white" opacity=".39"/>
+  <circle cx="310" cy="12" r=".55"  fill="white" opacity=".15"/>
+  <circle cx="420" cy="22" r="1.1"  fill="white" opacity=".27"/>
+  <circle cx="510" cy="8"  r=".55"  fill="white" opacity=".39"/>
+  <circle cx="580" cy="30" r=".55"  fill="white" opacity=".15"/>
+  <circle cx="65"  cy="45" r=".55"  fill="white" opacity=".27"/>
+  <circle cx="175" cy="55" r="1.1"  fill="white" opacity=".39"/>
+  <circle cx="290" cy="38" r=".55"  fill="white" opacity=".15"/>
+  <circle cx="395" cy="48" r=".55"  fill="white" opacity=".27"/>
+  <circle cx="480" cy="35" r=".55"  fill="white" opacity=".39"/>
+  <circle cx="555" cy="52" r="1.1"  fill="white" opacity=".15"/>
+  <circle cx="90"  cy="70" r=".55"  fill="white" opacity=".27"/>
+  <circle cx="340" cy="62" r=".55"  fill="white" opacity=".39"/>
+  <circle cx="460" cy="72" r=".55"  fill="white" opacity=".15"/>
+
+  <g transform="translate(320, 220)" opacity="0.55">
+    <ellipse cx="0" cy="0" rx="45"  ry="13.5" fill="none" stroke="#223055" stroke-width=".7"/>
+    <ellipse cx="0" cy="0" rx="85"  ry="25.5" fill="none" stroke="#172038" stroke-width=".7"/>
+    <ellipse cx="0" cy="0" rx="130" ry="39"   fill="none" stroke="#223055" stroke-width=".7"/>
+    <ellipse cx="0" cy="0" rx="185" ry="55.5" fill="none" stroke="#172038" stroke-width=".7"/>
+    <line x1="0" y1="0" x2="185"    y2="0"      stroke="#172038" stroke-width=".5" opacity=".5"/>
+    <line x1="0" y1="0" x2="149.7"  y2="32.6"   stroke="#172038" stroke-width=".5" opacity=".5"/>
+    <line x1="0" y1="0" x2="57.2"   y2="52.8"   stroke="#172038" stroke-width=".5" opacity=".5"/>
+    <line x1="0" y1="0" x2="-57.2"  y2="52.8"   stroke="#172038" stroke-width=".5" opacity=".5"/>
+    <line x1="0" y1="0" x2="-149.7" y2="32.6"   stroke="#172038" stroke-width=".5" opacity=".5"/>
+    <line x1="0" y1="0" x2="-185"   y2="0"      stroke="#172038" stroke-width=".5" opacity=".5"/>
+    <line x1="0" y1="0" x2="-149.7" y2="-32.6"  stroke="#172038" stroke-width=".5" opacity=".5"/>
+    <line x1="0" y1="0" x2="-57.2"  y2="-52.8"  stroke="#172038" stroke-width=".5" opacity=".5"/>
+    <line x1="0" y1="0" x2="57.2"   y2="-52.8"  stroke="#172038" stroke-width=".5" opacity=".5"/>
+    <line x1="0" y1="0" x2="149.7"  y2="-32.6"  stroke="#172038" stroke-width=".5" opacity=".5"/>
+  </g>
+
+  <rect width="640" height="248" fill="url(#horizon)"/>
+  <ellipse cx="320" cy="224" rx="110" ry="30" fill="url(#stationglow)"/>
+
+  <g transform="translate(305,212)">
+    <rect x="0" y="6" width="30" height="6" rx="1.5" fill="#141e2c" stroke="#1e2e40" stroke-width=".4"/>
+    <rect x="12" y="0" width="6" height="8" rx="1" fill="#0e1820"/>
+    <path d="M5 3 Q15 -7 25 3" stroke="#00dc82" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+    <circle cx="15" cy="2" r="2" fill="#00dc82"/>
+    <circle class="pv-ring" cx="15" cy="2" r="3" fill="none" stroke="#00dc82" stroke-width=".8"/>
+  </g>
+
+  <path class="pv-trace"
+    d="M 130 195 C 170 160 220 120 290 85 S 400 55 480 72 S 560 100 590 128"
+    fill="none" stroke="url(#tracecol)" stroke-width="1.8" stroke-linecap="round"/>
+
+  <line class="pv-laser"
+    x1="320" y1="212" x2="130" y2="195"
+    stroke="#00dc82" stroke-width="1" stroke-dasharray="4 3" opacity="0">
+    <animate attributeName="x2" dur="12s" repeatCount="indefinite"
+      calcMode="linear"
+      values="130;155;183;215;250;290;329;364;399;436;480;527;554;571;590"
+      keyTimes="0;0.06;0.14;0.23;0.33;0.44;0.54;0.63;0.71;0.78;0.84;0.89;0.93;0.97;1"/>
+    <animate attributeName="y2" dur="12s" repeatCount="indefinite"
+      calcMode="linear"
+      values="195;173;151;129;107;85;69;60;59;63;72;84;96;110;128"
+      keyTimes="0;0.06;0.14;0.23;0.33;0.44;0.54;0.63;0.71;0.78;0.84;0.89;0.93;0.97;1"/>
+  </line>
+
+  <g>
+    <animateTransform attributeName="transform" type="translate"
+      dur="12s" repeatCount="indefinite" calcMode="linear"
+      values="130,195;155,173;183,151;215,129;250,107;290,85;329,69;364,60;399,59;436,63;480,72;527,84;554,96;571,110;590,128"
+      keyTimes="0;0.06;0.14;0.23;0.33;0.44;0.54;0.63;0.71;0.78;0.84;0.89;0.93;0.97;1"/>
+    <rect x="-14" y="-4" width="10" height="7" rx="1" fill="#1a3060" stroke="#2845a0" stroke-width=".5"/>
+    <line x1="-10" y1="-4" x2="-10" y2="3" stroke="#2845a0" stroke-width=".3"/>
+    <line x1="-7"  y1="-4" x2="-7"  y2="3" stroke="#2845a0" stroke-width=".3"/>
+    <rect x="4"    y="-4" width="10" height="7" rx="1" fill="#1a3060" stroke="#2845a0" stroke-width=".5"/>
+    <line x1="8"   y1="-4" x2="8"   y2="3" stroke="#2845a0" stroke-width=".3"/>
+    <line x1="11"  y1="-4" x2="11"  y2="3" stroke="#2845a0" stroke-width=".3"/>
+    <rect x="-5"   y="-6" width="10" height="11" rx="2" fill="#141e2c" stroke="#2a3a50" stroke-width=".8"/>
+    <rect x="-3"   y="-3" width="6" height="3" rx=".5" fill="#1a2840"/>
+    <line x1="0"   y1="-6" x2="0" y2="-12" stroke="#00dc82" stroke-width=".9"/>
+    <circle cx="0" cy="-13" r="1.8" fill="#00dc82"/>
+    <circle cx="0" cy="0" r="14" fill="#00dc82" opacity=".03"/>
+  </g>
+</svg>

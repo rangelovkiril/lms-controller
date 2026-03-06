@@ -1,0 +1,91 @@
+<svg width="280" height="200" viewBox="0 0 280 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    @keyframes slr-orbit {
+      from { transform: rotate(0deg)   translateX(96px) rotate(0deg); }
+      to   { transform: rotate(360deg) translateX(96px) rotate(-360deg); }
+    }
+    @keyframes slr-trail {
+      0%   { stroke-dashoffset: 603; opacity: 0; }
+      5%   { opacity: 0.5; }
+      100% { stroke-dashoffset: 0;   opacity: 0.45; }
+    }
+    @keyframes slr-appear {
+      0%   { opacity: 0; transform: scale(0.3) rotate(-25deg); }
+      55%  { opacity: 1; transform: scale(1.06) rotate(4deg); }
+      100% { opacity: 1; transform: scale(1) rotate(0deg); }
+    }
+    @keyframes slr-pulse {
+      0%   { r: 5;  opacity: 0.7; }
+      100% { r: 20; opacity: 0; }
+    }
+    @keyframes slr-laser {
+      0%, 55%   { opacity: 0; }
+      60%, 72%  { opacity: 0.9; }
+      78%, 100% { opacity: 0; }
+    }
+    @keyframes slr-hud-in {
+      from { opacity: 0; transform: translateY(4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes slr-blink {
+      0%, 100% { opacity: 1; }
+      50%      { opacity: 0.15; }
+    }
+    .slr-orbit-body  { animation: slr-orbit    9s  linear       infinite; transform-origin: 140px 100px; }
+    .slr-sat-appear  { animation: slr-appear   1s  cubic-bezier(.22,1,.36,1) 0.4s both; }
+    .slr-trail       { animation: slr-trail    2.5s ease-out     0.2s both; }
+    .slr-pulse       { animation: slr-pulse    2.2s ease-out     1.4s infinite; }
+    .slr-laser       { animation: slr-laser    9s  linear        0.4s infinite; }
+    .slr-hud         { animation: slr-hud-in   0.5s ease-out     1.8s both; }
+    .slr-blink       { animation: slr-blink    1.8s ease-in-out  1.6s infinite; }
+  </style>
+
+  <ellipse cx="140" cy="100" rx="96" ry="58"
+    stroke="#222" stroke-width="1" stroke-dasharray="3 5"/>
+
+  <ellipse class="slr-trail" cx="140" cy="100" rx="96" ry="58"
+    stroke="#00dc82" stroke-width="1.5" stroke-linecap="round"
+    stroke-dasharray="603" fill="none"/>
+
+  <g transform="translate(120, 162)">
+    <rect x="0" y="7" width="40" height="7" rx="1.5" fill="#141e2c" stroke="#1e2e40" stroke-width="0.5"/>
+    <rect x="17" y="2" width="6" height="9" rx="1" fill="#0e1820"/>
+    <path d="M 8 5 Q 20 -5 32 5" stroke="#00dc82" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <circle cx="20" cy="4" r="2.5" fill="#00dc82"/>
+    <circle class="slr-blink" cx="20" cy="4" r="4" fill="none" stroke="#00dc82" stroke-width="1" opacity="0.5"/>
+  </g>
+
+  <line class="slr-laser"
+    x1="140" y1="162" x2="236" y2="42"
+    stroke="#00dc82" stroke-width="1.2"
+    stroke-dasharray="4 4" opacity="0.9"/>
+
+  <g class="slr-orbit-body">
+    <g class="slr-sat-appear" transform="translate(-16,-13)">
+      <rect x="-2" y="8"  width="12" height="8" rx="1.5"
+        fill="#1a3060" stroke="#2845a0" stroke-width="0.6"/>
+      <line x1="2"  y1="8"  x2="2"  y2="16" stroke="#2845a0" stroke-width="0.4"/>
+      <line x1="6"  y1="8"  x2="6"  y2="16" stroke="#2845a0" stroke-width="0.4"/>
+      <rect x="22" y="8"  width="12" height="8" rx="1.5"
+        fill="#1a3060" stroke="#2845a0" stroke-width="0.6"/>
+      <line x1="26" y1="8"  x2="26" y2="16" stroke="#2845a0" stroke-width="0.4"/>
+      <line x1="30" y1="8"  x2="30" y2="16" stroke="#2845a0" stroke-width="0.4"/>
+      <rect x="9"  y="11" width="4" height="2" fill="#0e1820"/>
+      <rect x="19" y="11" width="4" height="2" fill="#0e1820"/>
+      <rect x="11" y="6"  width="10" height="12" rx="2"
+        fill="#141e2c" stroke="#2a3a50" stroke-width="0.8"/>
+      <rect x="13" y="9"  width="6" height="3" rx="0.5" fill="#1a2840" opacity="0.8"/>
+      <line x1="16" y1="6"  x2="16" y2="1"  stroke="#00dc82" stroke-width="0.8"/>
+      <circle cx="16" cy="0.5" r="1.5" fill="#00dc82"/>
+      <circle class="slr-pulse" cx="16" cy="12" fill="none" stroke="#00dc82" stroke-width="0.7"/>
+    </g>
+  </g>
+
+  <g class="slr-hud">
+    <rect x="4" y="4" width="80" height="32" rx="3"
+      fill="#080808" fill-opacity="0.75" stroke="#1e1e1e" stroke-width="0.6"/>
+    <text x="10" y="16" fill="#00dc82" font-size="7" font-family="monospace" letter-spacing="0.5">SOFIA-01</text>
+    <text x="10" y="27" fill="#444" font-size="6" font-family="monospace">LAGEOS-2 ◈ TRACK</text>
+    <text x="196" y="12" fill="#333" font-size="6" font-family="monospace" text-anchor="end">42.70°N  23.32°E</text>
+  </g>
+</svg>

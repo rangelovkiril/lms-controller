@@ -13,7 +13,7 @@ export default async function HomePage() {
       {/* ── Hero section ── */}
       <section className="relative z-10 flex flex-col items-center justify-center min-h-[calc(100vh-48px)] px-6 text-center gap-10">
 
-        <SatelliteHero />
+        <SatelliteModel />
 
         <div className="flex flex-col items-center gap-5 max-w-xl">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-accent/25 bg-accent/8 font-mono text-[10px] text-accent tracking-[0.15em] uppercase">
@@ -129,118 +129,11 @@ function BackgroundLayer() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Animated SVG satellite
+// Animated SVG satellite model
 
-function SatelliteHero() {
+function SatelliteModel() {
   return (
-    <div style={{ width: 280, height: 200 }}>
-      <style>{`
-        @keyframes slr-orbit {
-          from { transform: rotate(0deg)   translateX(96px) rotate(0deg); }
-          to   { transform: rotate(360deg) translateX(96px) rotate(-360deg); }
-        }
-        @keyframes slr-trail {
-          0%   { stroke-dashoffset: 603; opacity: 0; }
-          5%   { opacity: 0.5; }
-          100% { stroke-dashoffset: 0;   opacity: 0.45; }
-        }
-        @keyframes slr-appear {
-          0%   { opacity: 0; transform: scale(0.3) rotate(-25deg); }
-          55%  { opacity: 1; transform: scale(1.06) rotate(4deg); }
-          100% { opacity: 1; transform: scale(1) rotate(0deg); }
-        }
-        @keyframes slr-pulse {
-          0%   { r: 5;  opacity: 0.7; }
-          100% { r: 20; opacity: 0; }
-        }
-        @keyframes slr-laser {
-          0%, 55%   { opacity: 0; }
-          60%, 72%  { opacity: 0.9; }
-          78%, 100% { opacity: 0; }
-        }
-        @keyframes slr-hud-in {
-          from { opacity: 0; transform: translateY(4px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes slr-blink {
-          0%, 100% { opacity: 1; }
-          50%      { opacity: 0.15; }
-        }
-        .slr-orbit-body  { animation: slr-orbit    9s  linear       infinite; transform-origin: 140px 100px; }
-        .slr-sat-appear  { animation: slr-appear   1s  cubic-bezier(.22,1,.36,1) 0.4s both; }
-        .slr-trail       { animation: slr-trail    2.5s ease-out     0.2s both; }
-        .slr-pulse       { animation: slr-pulse    2.2s ease-out     1.4s infinite; }
-        .slr-laser       { animation: slr-laser    9s  linear        0.4s infinite; }
-        .slr-hud         { animation: slr-hud-in   0.5s ease-out     1.8s both; }
-        .slr-blink       { animation: slr-blink    1.8s ease-in-out  1.6s infinite; }
-      `}</style>
-
-      <svg width="280" height="200" viewBox="0 0 280 200" fill="none" xmlns="http://www.w3.org/2000/svg">
-
-        {/* Orbit ellipse — faint */}
-        <ellipse cx="140" cy="100" rx="96" ry="58"
-          stroke="#222" strokeWidth="1" strokeDasharray="3 5"/>
-
-        {/* Animated trail */}
-        <ellipse className="slr-trail" cx="140" cy="100" rx="96" ry="58"
-          stroke="#00dc82" strokeWidth="1.5" strokeLinecap="round"
-          strokeDasharray="603" fill="none"/>
-
-        {/* Ground station */}
-        <g transform="translate(120, 162)">
-          <rect x="0" y="7" width="40" height="7" rx="1.5" fill="#141e2c" stroke="#1e2e40" strokeWidth="0.5"/>
-          <rect x="17" y="2" width="6" height="9" rx="1" fill="#0e1820"/>
-          <path d="M 8 5 Q 20 -5 32 5" stroke="#00dc82" strokeWidth="2" fill="none" strokeLinecap="round"/>
-          <circle cx="20" cy="4" r="2.5" fill="#00dc82"/>
-          <circle className="slr-blink" cx="20" cy="4" r="4" fill="none" stroke="#00dc82" strokeWidth="1" opacity="0.5"/>
-        </g>
-
-        {/* Laser — from station centre to satellite position */}
-        <line className="slr-laser"
-          x1="140" y1="162"  x2="236" y2="42"
-          stroke="#00dc82" strokeWidth="1.2"
-          strokeDasharray="4 4" opacity="0.9"/>
-
-        {/* Orbiting satellite */}
-        <g className="slr-orbit-body">
-          <g className="slr-sat-appear" transform="translate(-16,-13)">
-            {/* Left solar panel */}
-            <rect x="-2" y="8"  width="12" height="8" rx="1.5"
-              fill="#1a3060" stroke="#2845a0" strokeWidth="0.6"/>
-            {/* Panel detail lines */}
-            <line x1="2"  y1="8"  x2="2"  y2="16" stroke="#2845a0" strokeWidth="0.4"/>
-            <line x1="6"  y1="8"  x2="6"  y2="16" stroke="#2845a0" strokeWidth="0.4"/>
-            {/* Right solar panel */}
-            <rect x="22" y="8"  width="12" height="8" rx="1.5"
-              fill="#1a3060" stroke="#2845a0" strokeWidth="0.6"/>
-            <line x1="26" y1="8"  x2="26" y2="16" stroke="#2845a0" strokeWidth="0.4"/>
-            <line x1="30" y1="8"  x2="30" y2="16" stroke="#2845a0" strokeWidth="0.4"/>
-            {/* Panel arms */}
-            <rect x="9"  y="11" width="4" height="2" fill="#0e1820"/>
-            <rect x="19" y="11" width="4" height="2" fill="#0e1820"/>
-            {/* Body */}
-            <rect x="11" y="6"  width="10" height="12" rx="2"
-              fill="#141e2c" stroke="#2a3a50" strokeWidth="0.8"/>
-            {/* Body detail */}
-            <rect x="13" y="9"  width="6" height="3" rx="0.5" fill="#1a2840" opacity="0.8"/>
-            {/* Antenna */}
-            <line x1="16" y1="6"  x2="16" y2="1"  stroke="#00dc82" strokeWidth="0.8"/>
-            <circle cx="16" cy="0.5" r="1.5" fill="#00dc82"/>
-            {/* Pulse ring */}
-            <circle className="slr-pulse" cx="16" cy="12" fill="none" stroke="#00dc82" strokeWidth="0.7"/>
-          </g>
-        </g>
-
-        {/* HUD overlay — fades in after satellite appears */}
-        <g className="slr-hud">
-          <rect x="4" y="4" width="80" height="32" rx="3"
-            fill="#080808" fillOpacity="0.75" stroke="#1e1e1e" strokeWidth="0.6"/>
-          <text x="10" y="16" fill="#00dc82" fontSize="7" fontFamily="monospace" letterSpacing="0.5">SOFIA-01</text>
-          <text x="10" y="27" fill="#444"    fontSize="6" fontFamily="monospace">LAGEOS-2 ◈ TRACK</text>
-          <text x="196" y="12" fill="#333"   fontSize="6" fontFamily="monospace" textAnchor="end">42.70°N  23.32°E</text>
-        </g>
-      </svg>
-    </div>
+    <img src="/satellite-animation.svg" alt="" width="280" height="200" />
   );
 }
 
@@ -271,135 +164,8 @@ function ScenePreviewMockup() {
 
         {/* 3D viewport SVG */}
         <div className="flex-1 relative overflow-hidden">
-          <svg width="100%" height="100%" viewBox="0 0 640 248"
-            preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
-            <style>{`
-              @keyframes preview-sat {
-                0%   { transform: translate(210px, 108px); }
-                50%  { transform: translate(400px, 50px);  }
-                100% { transform: translate(210px, 108px); }
-              }
-              @keyframes preview-trace {
-                from { stroke-dashoffset: 500; }
-                to   { stroke-dashoffset: 0;   }
-              }
-              @keyframes preview-laser {
-                0%, 45%   { opacity: 0; }
-                50%, 55%  { opacity: 1; }
-                60%, 100% { opacity: 0; }
-              }
-              @keyframes preview-ring {
-                0%   { r:3;  opacity:.7; }
-                100% { r:18; opacity:0;  }
-              }
-              .pv-sat    { animation: preview-sat   14s ease-in-out infinite; }
-              .pv-trace  { animation: preview-trace 5s  ease-out    0.3s both; stroke-dasharray: 500; }
-              .pv-laser  { animation: preview-laser 14s linear      infinite; }
-              .pv-ring   { animation: preview-ring  2s  ease-out    1s infinite; transform-box: fill-box; transform-origin: center; }
-            `}</style>
-
-            {/* Sky gradient */}
-            <defs>
-              <radialGradient id="sky" cx="50%" cy="35%" r="60%">
-                <stop offset="0%"   stopColor="#0d1525"/>
-                <stop offset="100%" stopColor="#080c14"/>
-              </radialGradient>
-              <linearGradient id="horizon" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="60%"  stopColor="#0a0f1a" stopOpacity="0"/>
-                <stop offset="100%" stopColor="#0a0f1a"/>
-              </linearGradient>
-              <radialGradient id="stationglow" cx="50%" cy="50%" r="50%">
-                <stop offset="0%"   stopColor="#00dc82" stopOpacity="0.18"/>
-                <stop offset="100%" stopColor="#00dc82" stopOpacity="0"/>
-              </radialGradient>
-              <linearGradient id="tracecol" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0%"   stopColor="#0070f3" stopOpacity="0.2"/>
-                <stop offset="45%"  stopColor="#00dc82" stopOpacity="0.9"/>
-                <stop offset="100%" stopColor="#ff4444" stopOpacity="0.6"/>
-              </linearGradient>
-            </defs>
-
-            <rect width="640" height="248" fill="url(#sky)"/>
-
-            {/* Stars */}
-            {[
-              [40,18],[120,8],[200,30],[310,12],[420,22],[510,8],[580,30],[65,45],
-              [175,55],[290,38],[395,48],[480,35],[555,52],[90,70],[340,62],[460,72],
-            ].map(([cx,cy],i)=>(
-              <circle key={i} cx={cx} cy={cy}
-                r={i%4===0?1.1:.55} fill="white" opacity={.15+(i%3)*.12}/>
-            ))}
-
-            {/* Polar grid (ground plane perspective) */}
-            <g transform="translate(320, 220)" opacity="0.55">
-              {[45,85,130,185].map((rx,i)=>(
-                <ellipse key={rx} cx="0" cy="0" rx={rx} ry={rx*.3}
-                  fill="none" stroke={i%2===0?"#223055":"#172038"} strokeWidth=".7"/>
-              ))}
-              {Array.from({length:10}).map((_,i)=>{
-                const a=(i/10)*Math.PI*2, R=185;
-                return <line key={i} x1="0" y1="0"
-                  x2={Math.cos(a)*R} y2={Math.sin(a)*R*.3}
-                  stroke="#172038" strokeWidth=".5" opacity=".5"/>;
-              })}
-            </g>
-
-            {/* Ground fade */}
-            <rect width="640" height="248" fill="url(#horizon)"/>
-
-            {/* Station glow */}
-            <ellipse cx="320" cy="224" rx="110" ry="30" fill="url(#stationglow)"/>
-
-            {/* Station model */}
-            <g transform="translate(305,212)">
-              <rect x="0" y="6" width="30" height="6" rx="1.5" fill="#141e2c" stroke="#1e2e40" strokeWidth=".4"/>
-              <rect x="12" y="0" width="6" height="8" rx="1" fill="#0e1820"/>
-              <path d="M5 3 Q15 -7 25 3" stroke="#00dc82" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
-              <circle cx="15" cy="2" r="2" fill="#00dc82"/>
-              <circle className="pv-ring" cx="15" cy="2" r="3" fill="none" stroke="#00dc82" strokeWidth=".8"/>
-            </g>
-
-            {/* Trajectory trace */}
-            <path className="pv-trace"
-              d="M 130 195 C 170 160 220 120 290 85 S 400 55 480 72 S 560 100 590 128"
-              fill="none" stroke="url(#tracecol)" strokeWidth="1.8" strokeLinecap="round"/>
-
-            {/* Laser */}
-            <line className="pv-laser"
-              x1="320" y1="212" x2="400" y2="52"
-              stroke="#00dc82" strokeWidth="1" strokeDasharray="4 3" opacity=".85"/>
-
-            {/* Moving satellite */}
-            <g className="pv-sat">
-              <rect x="-14" y="-4" width="10" height="7" rx="1" fill="#1a3060" stroke="#2845a0" strokeWidth=".5"/>
-              <line x1="-10" y1="-4" x2="-10" y2="3" stroke="#2845a0" strokeWidth=".3"/>
-              <line x1="-7"  y1="-4" x2="-7"  y2="3" stroke="#2845a0" strokeWidth=".3"/>
-              <rect x="4"    y="-4" width="10" height="7" rx="1" fill="#1a3060" stroke="#2845a0" strokeWidth=".5"/>
-              <line x1="8"   y1="-4" x2="8"   y2="3" stroke="#2845a0" strokeWidth=".3"/>
-              <line x1="11"  y1="-4" x2="11"  y2="3" stroke="#2845a0" strokeWidth=".3"/>
-              <rect x="-5"   y="-6" width="10" height="11" rx="2" fill="#141e2c" stroke="#2a3a50" strokeWidth=".8"/>
-              <rect x="-3"   y="-3" width="6" height="3" rx=".5" fill="#1a2840"/>
-              <line x1="0"   y1="-6" x2="0" y2="-12" stroke="#00dc82" strokeWidth=".9"/>
-              <circle cx="0" cy="-13" r="1.8" fill="#00dc82"/>
-              <circle cx="0" cy="0" r="14" fill="#00dc82" opacity=".03"/>
-            </g>
-
-            {/* HUD: top-left info */}
-            <rect x="8" y="8" width="130" height="54" rx="3"
-              fill="#080808" fillOpacity=".82" stroke="#1e1e1e" strokeWidth=".6"/>
-            <circle cx="18" cy="19" r="3" fill="#00dc82" opacity=".8"/>
-            <text x="26" y="22" fill="#00dc82" fontSize="7.5" fontFamily="monospace">SOFIA-SLR-01</text>
-            <text x="12" y="35" fill="#555" fontSize="6.5" fontFamily="monospace">STATUS  TRACKING</text>
-            <text x="12" y="46" fill="#555" fontSize="6.5" fontFamily="monospace">OBJ     LAGEOS-2</text>
-            <text x="12" y="57" fill="#555" fontSize="6.5" fontFamily="monospace">DIST    5812 km</text>
-
-            {/* HUD: coordinates top-right */}
-            <rect x="500" y="8" width="132" height="44" rx="3"
-              fill="#080808" fillOpacity=".82" stroke="#1e1e1e" strokeWidth=".6"/>
-            <text x="508" y="21" fill="#333" fontSize="6" fontFamily="monospace">X   3241.82</text>
-            <text x="508" y="32" fill="#333" fontSize="6" fontFamily="monospace">Y   1847.63</text>
-            <text x="508" y="43" fill="#333" fontSize="6" fontFamily="monospace">Z   4521.11</text>
-          </svg>
+          <img src="/scene-preview.svg" alt="" width="640" height="248"
+            className="w-full h-full object-cover" />
         </div>
 
         {/* Sidebar mockup */}
