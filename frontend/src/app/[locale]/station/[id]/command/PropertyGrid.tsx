@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { API_BASE } from "@/types";
 import { Spinner } from "@/components/ui/Spinner";
 import { SectionHeader } from "./SectionHeader";
@@ -13,14 +14,14 @@ interface StationMeta {
 }
 
 const inputCls =
-  "w-full bg-transparent border-0 font-mono text-[12px] text-text outline-none " +
+  "w-full bg-transparent border-0 font-mono text-[13px] text-text outline-none " +
   "focus:bg-surface-hi rounded px-1.5 py-0.5 transition-colors placeholder:text-text-muted/40 " +
   "[color-scheme:dark]";
 
 function PropRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="grid grid-cols-[90px_1fr] items-center gap-2 py-1.5 border-b border-border/50 last:border-0">
-      <span className="font-mono text-[10.5px] text-text-muted uppercase tracking-wide shrink-0">
+      <span className="font-mono text-[11.5px] text-text-muted uppercase tracking-wide shrink-0">
         {label}
       </span>
       <div className="min-w-0">{children}</div>
@@ -29,6 +30,7 @@ function PropRow({ label, children }: { label: string; children: React.ReactNode
 }
 
 export function PropertyGrid({ stationId }: { stationId: string }) {
+  const t = useTranslations("command");
   const [meta,    setMeta]    = useState<StationMeta | null>(null);
   const [saving,  setSaving]  = useState(false);
   const [saved,   setSaved]   = useState(false);
@@ -90,33 +92,33 @@ export function PropertyGrid({ stationId }: { stationId: string }) {
 
   return (
     <div>
-      <SectionHeader label="Metadata">
+      <SectionHeader label={t("metadata")}>
         <button
           onClick={save}
           disabled={saving}
           className={[
-            "text-[10.5px] font-mono px-2.5 py-1 rounded border transition-colors disabled:opacity-40",
+            "text-[11.5px] font-mono px-2.5 py-1 rounded border transition-colors disabled:opacity-40",
             saved
               ? "border-accent/40 bg-accent-dim text-accent"
               : "border-border text-text-muted hover:border-border-hi hover:text-text",
           ].join(" ")}
         >
-          {saving ? "Saving…" : saved ? "✓ Saved" : "Save"}
+          {saving ? t("saving") : saved ? t("saved") : t("save")}
         </button>
       </SectionHeader>
 
       <div className="flex flex-col gap-0">
-        <PropRow label="ID">
-          <span className="font-mono text-[12px] text-text-muted">{meta.stationId}</span>
+        <PropRow label={t("propId")}>
+          <span className="font-mono text-[13px] text-text-muted">{meta.stationId}</span>
         </PropRow>
-        <PropRow label="Name">
+        <PropRow label={t("propName")}>
           <input
             className={inputCls}
             value={meta.name}
             onChange={(e) => patch("name", e.target.value)}
           />
         </PropRow>
-        <PropRow label="Description">
+        <PropRow label={t("propDescription")}>
           <input
             className={inputCls}
             value={meta.description ?? ""}
@@ -124,7 +126,7 @@ export function PropertyGrid({ stationId }: { stationId: string }) {
             onChange={(e) => patch("description", e.target.value)}
           />
         </PropRow>
-        <PropRow label="Latitude">
+        <PropRow label={t("propLatitude")}>
           <input
             type="number"
             step="0.001"
@@ -133,7 +135,7 @@ export function PropertyGrid({ stationId }: { stationId: string }) {
             onChange={(e) => patch("lat", parseFloat(e.target.value) || 0)}
           />
         </PropRow>
-        <PropRow label="Longitude">
+        <PropRow label={t("propLongitude")}>
           <input
             type="number"
             step="0.001"
@@ -143,8 +145,8 @@ export function PropertyGrid({ stationId }: { stationId: string }) {
           />
         </PropRow>
         {geocode && (
-          <PropRow label="Location">
-            <span className="font-mono text-[11px] text-text-muted truncate" title={geocode}>
+          <PropRow label={t("propLocation")}>
+            <span className="font-mono text-[12px] text-text-muted truncate" title={geocode}>
               📍 {geocode}
             </span>
           </PropRow>

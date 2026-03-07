@@ -40,12 +40,12 @@ export default function Trajectories() {
       <div className="max-w-5xl mx-auto flex flex-col gap-6">
 
         <div className="flex flex-col gap-1">
-          <h1 className="text-xl font-semibold tracking-tight">{t("title")}</h1>
-          <p className="text-xs font-mono text-text-muted">{t("subtitle")}</p>
+          <h1 className="text-2xl font-semibold tracking-tight">{t("title")}</h1>
+          <p className="text-sm font-mono text-text-muted">{t("subtitle")}</p>
         </div>
 
         {overlayError && (
-          <div className="px-4 py-2.5 rounded-lg border border-danger/40 bg-danger/10 font-mono text-[12px] text-danger">
+          <div className="px-4 py-2.5 rounded-lg border border-danger/40 bg-danger/10 font-mono text-[13px] text-danger">
             {overlayError}
           </div>
         )}

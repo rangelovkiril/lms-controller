@@ -96,6 +96,75 @@
     "loadObjects": "Грешка при зареждане на обектите",
     "httpError": "Грешка {status}: {statusText}"
   },
+  "home": {
+    "badge": "Laser Management System",
+    "title": "Спътниково\nЛазерно Разстояниемерване",
+    "description": "Управление на станции в реално време, 3D визуализация на траектории и запис на наблюдения за наземни SLR мрежи.",
+    "previewLabel": "Преглед",
+    "previewHeading": "Проследяване в реално време, в браузъра",
+    "previewSubtext": "WebGL сцена · позиция в реално време · следа, оцветена по скорост · наблюдения",
+    "features": {
+      "multiStation": {
+        "title": "Множество станции",
+        "desc": "Управление на множество SLR станции едновременно. Всяка със собствен 3D изглед, телеметрия и команден интерфейс."
+      },
+      "liveTelemetry": {
+        "title": "Телеметрия на живо",
+        "desc": "MQTT → WebSocket pipeline, доставящ данни за позиция до 10 Hz. InfluxDB пази пълна история на наблюденията."
+      },
+      "observationSets": {
+        "title": "Набори от наблюдения",
+        "desc": "Импортиране, наслагване и сравняване на множество сесии като следи, оцветени по скорост, в една 3D сцена."
+      }
+    }
+  },
+  "stationCard": {
+    "status": {
+      "online": "Онлайн",
+      "offline": "Офлайн",
+      "connecting": "Свързване…",
+      "disconnected": "Изключен"
+    },
+    "deleteConfirm": "Изтриване на станцията и всички данни?",
+    "cancel": "Отказ",
+    "commandCenter": "Команден център",
+    "view3d": "3D Изглед"
+  },
+  "command": {
+    "stations": "Станции",
+    "commandCenter": "Команден център",
+    "view3d": "3D Изглед",
+    "stationControl": "Управление на станцията",
+    "track": "▶ Проследяване",
+    "stop": "■ Стоп",
+    "metadata": "Метаданни",
+    "save": "Запази",
+    "saving": "Запазване…",
+    "saved": "✓ Запазено",
+    "propId": "ID",
+    "propName": "Име",
+    "propDescription": "Описание",
+    "propLatitude": "Ширина",
+    "propLongitude": "Дължина",
+    "propLocation": "Местоположение",
+    "systemLog": "Системен журнал",
+    "resume": "▶ Продължи",
+    "pause": "⏸ Пауза",
+    "noLogs": "Няма записи в журнала.",
+    "environment": "Среда",
+    "meteo": {
+      "temp": "Температура",
+      "humidity": "Влажност",
+      "pressure": "Налягане",
+      "wind": "Вятър"
+    }
+  },
+  "datePicker": {
+    "today": "Днес"
+  },
+  "timePicker": {
+    "now": "Сега"
+  },
   "info": {
     "title": "Информация за системата",
     "subtitle": "LMS – Laser Management System",

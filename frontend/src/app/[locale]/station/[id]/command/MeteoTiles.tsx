@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { API_BASE } from "@/types";
 import { SectionHeader } from "./SectionHeader";
 
@@ -31,7 +32,6 @@ function Sparkline({ points, color = "#00dc82" }: { points: SparkPoint[]; color?
 const METEO_FIELDS = [
   {
     key:   "temp",
-    label: "Temperature",
     unit:  "°C",
     color: "#ff9966",
     icon:  (
@@ -42,7 +42,6 @@ const METEO_FIELDS = [
   },
   {
     key:   "humidity",
-    label: "Humidity",
     unit:  "%",
     color: "#66b3ff",
     icon:  (
@@ -53,7 +52,6 @@ const METEO_FIELDS = [
   },
   {
     key:   "pressure",
-    label: "Pressure",
     unit:  "hPa",
     color: "#c084fc",
     icon:  (
@@ -66,7 +64,6 @@ const METEO_FIELDS = [
   },
   {
     key:   "wind",
-    label: "Wind",
     unit:  "km/h",
     color: "#4ade80",
     icon:  (
@@ -80,6 +77,7 @@ const METEO_FIELDS = [
 ] as const;
 
 export function MeteoTiles({ stationId }: { stationId: string }) {
+  const t = useTranslations("command");
   const [current,   setCurrent] = useState<MeteoReading>({});
   const [sparklines, setSpark]  = useState<Record<string, SparkPoint[]>>({});
 
@@ -107,9 +105,9 @@ export function MeteoTiles({ stationId }: { stationId: string }) {
 
   return (
     <div>
-      <SectionHeader label="Environment" />
+      <SectionHeader label={t("environment")} />
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-2">
-        {METEO_FIELDS.map(({ key, label, unit, color, icon }) => {
+        {METEO_FIELDS.map(({ key, unit, color, icon }) => {
           const val    = current[key as keyof MeteoReading];
           const points = sparklines[key] ?? [];
           return (
@@ -119,13 +117,13 @@ export function MeteoTiles({ stationId }: { stationId: string }) {
             >
               <div className="flex items-center justify-between">
                 <span style={{ color }} className="opacity-70">{icon}</span>
-                <span className="font-mono text-[9.5px] uppercase tracking-widest text-text-muted">
-                  {label}
+                <span className="font-mono text-[10.5px] uppercase tracking-widest text-text-muted">
+                  {t(`meteo.${key}`)}
                 </span>
               </div>
               <div className="font-mono text-[20px] font-semibold text-text leading-none">
                 {val != null ? val.toFixed(1) : "—"}
-                <span className="text-[11px] font-normal text-text-muted ml-1">{unit}</span>
+                <span className="text-[12px] font-normal text-text-muted ml-1">{unit}</span>
               </div>
               <Sparkline points={points} color={color} />
             </div>

@@ -50,7 +50,7 @@ export function Dropdown({
         disabled={isDisabled}
         className={[
           "w-full flex items-center justify-between gap-2 px-3 py-[0.55rem]",
-          "bg-bg border rounded-md font-mono text-[13px]",
+          "bg-bg border rounded-md font-mono text-[14px]",
           "outline-none transition-[border-color,box-shadow] duration-150",
           "disabled:opacity-40 disabled:cursor-not-allowed",
           open
@@ -71,7 +71,7 @@ export function Dropdown({
       {open && (
         <div className="absolute z-50 mt-1 w-full bg-surface border border-border rounded-md shadow-[0_8px_24px_#00000080] overflow-hidden animate-fade-in">
           {options.length === 0 ? (
-            <div className="px-3 py-2 text-[12px] font-mono text-text-muted">{resolvedEmptyLabel}</div>
+            <div className="px-3 py-2 text-[13px] font-mono text-text-muted">{resolvedEmptyLabel}</div>
           ) : (
             options.map((opt) => (
               <button
@@ -79,7 +79,7 @@ export function Dropdown({
                 type="button"
                 onClick={() => { onChange(opt); setOpen(false); }}
                 className={[
-                  "w-full text-left px-3 py-2 text-[13px] font-mono transition-colors flex items-center gap-2",
+                  "w-full text-left px-3 py-2 text-[14px] font-mono transition-colors flex items-center gap-2",
                   opt === value
                     ? "bg-accent-dim text-accent"
                     : "text-text-dim hover:bg-surface-hi hover:text-text",

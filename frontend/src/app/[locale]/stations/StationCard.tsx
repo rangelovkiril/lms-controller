@@ -2,6 +2,7 @@
 
 import Link      from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { API_BASE } from "@/types";
 import {
   buildSubscribeMessage,
@@ -30,13 +31,6 @@ const STATUS_DOT: Record<ConnectionStatus, string> = {
   disconnected: "bg-text-muted opacity-40",
 };
 
-const STATUS_LABEL: Record<ConnectionStatus, string> = {
-  online:       "Online",
-  offline:      "Offline",
-  connecting:   "Connecting…",
-  disconnected: "Disconnected",
-};
-
 export function StationCard({
   station,
   onDelete,
@@ -44,6 +38,7 @@ export function StationCard({
   station:  StationMeta;
   onDelete: (id: string) => void;
 }) {
+  const t = useTranslations("stationCard");
   const initials = station.stationId.slice(0, 2).toUpperCase();
   const wsUrl    = station.wsUrl ?? WS_FALLBACK;
 
@@ -116,18 +111,18 @@ export function StationCard({
     <div className="bg-surface border border-border rounded-xl overflow-hidden hover:border-border-hi transition-colors group">
 
       <div className="px-4 pt-4 pb-3 flex items-start gap-3">
-        <div className="w-9 h-9 shrink-0 rounded-lg bg-surface-hi border border-border flex items-center justify-center font-mono text-[11px] font-bold text-text-dim">
+        <div className="w-9 h-9 shrink-0 rounded-lg bg-surface-hi border border-border flex items-center justify-center font-mono text-[12px] font-bold text-text-dim">
           {initials}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="font-semibold text-[13px] text-text truncate">{station.name}</span>
+            <span className="font-semibold text-[14px] text-text truncate">{station.name}</span>
             <span
               className={`w-1.5 h-1.5 rounded-full shrink-0 ${STATUS_DOT[status]}`}
-              title={STATUS_LABEL[status]}
+              title={t(`status.${status}`)}
             />
           </div>
-          <div className="font-mono text-[10.5px] text-text-muted mt-0.5 truncate">
+          <div className="font-mono text-[11.5px] text-text-muted mt-0.5 truncate">
             {station.stationId}
           </div>
         </div>
@@ -160,17 +155,17 @@ export function StationCard({
 
       {confirmDel && !deleting && (
         <div className="mx-4 mb-3 px-3 py-2 rounded-lg border border-red-500/30 bg-red-500/5 flex items-center justify-between gap-2">
-          <span className="font-mono text-[10.5px] text-red-400">Delete station and all data?</span>
+          <span className="font-mono text-[11.5px] text-red-400">{t("deleteConfirm")}</span>
           <button
             onClick={() => setConfirmDel(false)}
-            className="font-mono text-[10.5px] text-text-muted hover:text-text transition-colors"
+            className="font-mono text-[11.5px] text-text-muted hover:text-text transition-colors"
           >
-            Cancel
+            {t("cancel")}
           </button>
         </div>
       )}
 
-      <div className="px-4 pb-3 flex gap-3 font-mono text-[10.5px] text-text-muted">
+      <div className="px-4 pb-3 flex gap-3 font-mono text-[11.5px] text-text-muted">
         <span>{station.lat.toFixed(3)}°N</span>
         <span className="text-border-hi">·</span>
         <span>{station.lon.toFixed(3)}°E</span>
@@ -185,22 +180,22 @@ export function StationCard({
       <div className="border-t border-border grid grid-cols-2">
         <Link
           href={`/station/${station.stationId}/command`}
-          className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-[11.5px] font-mono font-medium text-text-muted hover:text-text hover:bg-surface-hi border-r border-border transition-colors no-underline"
+          className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-[12.5px] font-mono font-medium text-text-muted hover:text-text hover:bg-surface-hi border-r border-border transition-colors no-underline"
         >
           <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <rect x="2" y="3" width="20" height="14" rx="2"/>
             <path d="M8 21h8M12 17v4"/>
           </svg>
-          Command Center
+          {t("commandCenter")}
         </Link>
         <Link
           href={`/station/${station.stationId}`}
-          className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-[11.5px] font-mono font-medium text-text-muted hover:text-accent hover:bg-accent-dim transition-colors no-underline"
+          className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-[12.5px] font-mono font-medium text-text-muted hover:text-accent hover:bg-accent-dim transition-colors no-underline"
         >
           <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
           </svg>
-          3D View
+          {t("view3d")}
         </Link>
       </div>
     </div>

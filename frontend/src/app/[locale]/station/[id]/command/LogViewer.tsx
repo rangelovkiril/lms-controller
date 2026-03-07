@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import { API_BASE } from "@/types";
 import { SectionHeader } from "./SectionHeader";
 
@@ -22,6 +23,7 @@ const LEVEL_COLORS: Record<string, string> = {
 const LEVELS = ["ALL", "ERROR", "WARN", "INFO", "DEBUG"];
 
 export function LogViewer({ stationId }: { stationId: string }) {
+  const t = useTranslations("command");
   const [logs,     setLogs]        = useState<LogEntry[]>([]);
   const [paused,   setPaused]      = useState(false);
   const [interval, setIntervalVal] = useState<PollInterval>(5);
@@ -55,12 +57,12 @@ export function LogViewer({ stationId }: { stationId: string }) {
 
   return (
     <div className="flex flex-col h-full">
-      <SectionHeader label="System Log">
+      <SectionHeader label={t("systemLog")}>
         <div className="flex items-center gap-2">
           <select
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            className="bg-bg border border-border rounded text-[10.5px] font-mono text-text-muted px-1.5 py-0.5 outline-none [color-scheme:dark]"
+            className="bg-bg border border-border rounded text-[11.5px] font-mono text-text-muted px-1.5 py-0.5 outline-none [color-scheme:dark]"
           >
             {LEVELS.map((l) => <option key={l}>{l}</option>)}
           </select>
@@ -71,7 +73,7 @@ export function LogViewer({ stationId }: { stationId: string }) {
                 key={s}
                 onClick={() => setIntervalVal(s)}
                 className={[
-                  "text-[10px] font-mono px-1.5 py-0.5 rounded transition-colors",
+                  "text-[11px] font-mono px-1.5 py-0.5 rounded transition-colors",
                   interval === s && !paused
                     ? "bg-accent-dim text-accent"
                     : "text-text-muted hover:text-text",
@@ -85,24 +87,24 @@ export function LogViewer({ stationId }: { stationId: string }) {
           <button
             onClick={() => setPaused((p) => !p)}
             className={[
-              "text-[10px] font-mono px-1.5 py-0.5 rounded border transition-colors",
+              "text-[11px] font-mono px-1.5 py-0.5 rounded border transition-colors",
               paused
                 ? "border-yellow-400/40 bg-yellow-400/10 text-yellow-400"
                 : "border-border text-text-muted hover:text-text",
             ].join(" ")}
           >
-            {paused ? "▶ Resume" : "⏸ Pause"}
+            {paused ? t("resume") : t("pause")}
           </button>
         </div>
       </SectionHeader>
 
       <div
-        className="flex-1 overflow-y-auto font-mono text-[10.5px] bg-bg rounded-lg border border-border p-2 min-h-0"
+        className="flex-1 overflow-y-auto font-mono text-[11.5px] bg-bg rounded-lg border border-border p-2 min-h-0"
         onMouseEnter={() => { hovered.current = true; }}
         onMouseLeave={() => { hovered.current = false; }}
       >
         {visible.length === 0 ? (
-          <div className="text-text-muted p-2">No log entries.</div>
+          <div className="text-text-muted p-2">{t("noLogs")}</div>
         ) : (
           visible.map((entry, i) => {
             const lvl   = entry.level?.toUpperCase() ?? "INFO";

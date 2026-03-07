@@ -1,6 +1,7 @@
 "use client"
-import { useStation }   from "@/contexts/stationContext";
-import Link             from "next/link";
+import { useStation }      from "@/contexts/stationContext";
+import { useTranslations } from "next-intl";
+import Link                from "next/link";
 import { PropertyGrid } from "./PropertyGrid";
 import { ControlPanel } from "./ControlPanel";
 import { LogViewer }    from "./LogViewer";
@@ -8,17 +9,18 @@ import { MeteoTiles }   from "./MeteoTiles";
 
 export default function CommandClient() {
   const { station, state, fire, stop } = useStation();
+  const t = useTranslations("command");
 
   return (
     <div className="h-full overflow-hidden flex flex-col">
 
       {/* Breadcrumb */}
-      <div className="shrink-0 flex items-center gap-1.5 px-5 py-2.5 border-b border-border font-mono text-[11px] text-text-muted">
-        <Link href="/stations" className="hover:text-text transition-colors no-underline">Stations</Link>
+      <div className="shrink-0 flex items-center gap-1.5 px-5 py-2.5 border-b border-border font-mono text-[12px] text-text-muted">
+        <Link href="/stations" className="hover:text-text transition-colors no-underline">{t("stations")}</Link>
         <span className="text-border-hi">/</span>
         <span className="text-text">{station.name}</span>
         <span className="text-border-hi">/</span>
-        <span className="text-accent">Command Center</span>
+        <span className="text-accent">{t("commandCenter")}</span>
 
         <div className="ml-auto flex items-center gap-3">
           <a
@@ -28,7 +30,7 @@ export default function CommandClient() {
             <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
             </svg>
-            3D View
+            {t("view3d")}
           </a>
         </div>
       </div>

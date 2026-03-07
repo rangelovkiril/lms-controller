@@ -3,6 +3,33 @@ import { getTranslations } from "next-intl/server";
 
 export default async function HomePage() {
   const t = await getTranslations("nav");
+  const h = await getTranslations("home");
+
+  const features = [
+    {
+      title: h("features.multiStation.title"),
+      desc:  h("features.multiStation.desc"),
+      icon: <IconStation />,
+    },
+    {
+      title: h("features.liveTelemetry.title"),
+      desc:  h("features.liveTelemetry.desc"),
+      icon: (
+        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        </svg>
+      ),
+    },
+    {
+      title: h("features.observationSets.title"),
+      desc:  h("features.observationSets.desc"),
+      icon: (
+        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+        </svg>
+      ),
+    },
+  ];
 
   return (
     <div className="relative h-full overflow-y-auto overflow-x-hidden">
@@ -16,9 +43,9 @@ export default async function HomePage() {
         <SatelliteModel />
 
         <div className="flex flex-col items-center gap-5 max-w-xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-accent/25 bg-accent/8 font-mono text-[10px] text-accent tracking-[0.15em] uppercase">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-accent/25 bg-accent/8 font-mono text-[11px] text-accent tracking-[0.15em] uppercase">
             <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse-dot" />
-            Laser Management System
+            {h("badge")}
           </div>
 
           <h1 className="text-[clamp(2.4rem,6vw,4rem)] font-bold tracking-tight leading-[1.05]"
@@ -28,19 +55,20 @@ export default async function HomePage() {
               WebkitTextFillColor: "transparent",
             }}
           >
-            Satellite<br />Laser Ranging
+            {h("title").split("\n").map((line, i) => (
+              <span key={i}>{i > 0 && <br />}{line}</span>
+            ))}
           </h1>
 
-          <p className="text-text-muted font-mono text-[12px] leading-[1.8] max-w-sm">
-            Real-time station management, 3D trajectory visualization,
-            and observation recording for ground-based SLR networks.
+          <p className="text-text-muted font-mono text-[13px] leading-[1.8] max-w-sm">
+            {h("description")}
           </p>
         </div>
 
         {/* CTA */}
         <div className="flex items-center gap-3 flex-wrap justify-center">
           <Link href="/stations"
-            className="group flex items-center gap-2 px-5 py-2.5 rounded-lg bg-accent text-black font-mono text-[12px] font-bold hover:bg-[#00ef8e] transition-all hover:shadow-[0_0_24px_#00dc8240] no-underline"
+            className="group flex items-center gap-2 px-5 py-2.5 rounded-lg bg-accent text-black font-mono text-[13px] font-bold hover:bg-[#00ef8e] transition-all hover:shadow-[0_0_24px_#00dc8240] no-underline"
           >
             <IconStation />
             {t("stations")}
@@ -48,14 +76,14 @@ export default async function HomePage() {
           </Link>
 
           <Link href="/trajectories"
-            className="flex items-center gap-2 px-5 py-2.5 rounded-lg border border-border bg-surface text-text-muted font-mono text-[12px] hover:text-text hover:border-border-hi hover:bg-surface-hi transition-colors no-underline"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-lg border border-border bg-surface text-text-muted font-mono text-[13px] hover:text-text hover:border-border-hi hover:bg-surface-hi transition-colors no-underline"
           >
             <IconTrajectory />
             {t("trajectories")}
           </Link>
 
           <Link href="/info"
-            className="flex items-center gap-2 px-5 py-2.5 rounded-lg border border-border bg-surface text-text-muted font-mono text-[12px] hover:text-text hover:border-border-hi hover:bg-surface-hi transition-colors no-underline"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-lg border border-border bg-surface text-text-muted font-mono text-[13px] hover:text-text hover:border-border-hi hover:bg-surface-hi transition-colors no-underline"
           >
             <IconInfo />
             {t("info")}
@@ -76,10 +104,10 @@ export default async function HomePage() {
       <section className="relative z-10 px-6 pb-20 flex flex-col items-center gap-10 max-w-5xl mx-auto">
 
         <div className="flex flex-col items-center gap-3 text-center">
-          <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-accent/60">Preview</span>
-          <h2 className="text-2xl font-semibold tracking-tight">Live tracking, in your browser</h2>
-          <p className="text-text-muted font-mono text-[11px] max-w-xs leading-relaxed">
-            WebGL scene · real-time position · speed-colored trace · observation overlays
+          <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-accent/60">{h("previewLabel")}</span>
+          <h2 className="text-3xl font-semibold tracking-tight">{h("previewHeading")}</h2>
+          <p className="text-text-muted font-mono text-[12px] max-w-xs leading-relaxed">
+            {h("previewSubtext")}
           </p>
         </div>
 
@@ -88,7 +116,7 @@ export default async function HomePage() {
 
       {/* ── Feature cards ── */}
       <section className="relative z-10 px-6 pb-32 max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {FEATURES.map((f) => (
+        {features.map((f) => (
           <FeatureCard key={f.title} {...f} />
         ))}
       </section>
@@ -229,38 +257,12 @@ function FeatureCard({ title, desc, icon }: { title: string; desc: string; icon:
         {icon}
       </div>
       <div>
-        <div className="font-semibold text-[13px] text-text">{title}</div>
-        <div className="font-mono text-[11px] text-text-muted mt-1.5 leading-relaxed">{desc}</div>
+        <div className="font-semibold text-[14px] text-text">{title}</div>
+        <div className="font-mono text-[12px] text-text-muted mt-1.5 leading-relaxed">{desc}</div>
       </div>
     </div>
   );
 }
-
-const FEATURES = [
-  {
-    title: "Multi-Station",
-    desc:  "Manage multiple SLR stations simultaneously. Each with its own 3D view, telemetry stream and command interface.",
-    icon: <IconStation />,
-  },
-  {
-    title: "Live Telemetry",
-    desc:  "MQTT → WebSocket pipeline delivers position data at up to 10 Hz. InfluxDB retains full observation history.",
-    icon: (
-      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-      </svg>
-    ),
-  },
-  {
-    title: "Observation Sets",
-    desc:  "Import, overlay and compare multiple observation sessions as speed-colored traces in the same 3D scene.",
-    icon: (
-      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-      </svg>
-    ),
-  },
-];
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Reusable micro-icons

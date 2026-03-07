@@ -18,7 +18,7 @@ function SceneLoader() {
     <div className="w-full h-full flex items-center justify-center bg-[#050505]">
       <div className="flex flex-col items-center gap-3 text-text-muted">
         <div className="w-5 h-5 border-[1.5px] border-border border-t-accent rounded-full animate-spin" />
-        <span className="text-xs font-mono">{t("visualizationLoading")}</span>
+        <span className="text-sm font-mono">{t("visualizationLoading")}</span>
       </div>
     </div>
   );
@@ -27,7 +27,7 @@ function SceneLoader() {
 function SidebarRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-1">
-      <span className="text-[10px] font-mono uppercase tracking-widest text-text-muted">{label}</span>
+      <span className="text-[11px] font-mono uppercase tracking-widest text-text-muted">{label}</span>
       {children}
     </div>
   );
@@ -41,8 +41,8 @@ function PositionDisplay({ state }: { state: TrackingState }) {
       <div className="grid grid-cols-3 gap-1.5">
         {(["x", "y", "z"] as const).map((axis) => (
           <div key={axis} className="flex flex-col rounded-md border border-border bg-bg px-2 py-1.5">
-            <span className="font-mono uppercase text-text-muted text-[9px]">{axis}</span>
-            <span className="font-mono text-text text-[12px]">
+            <span className="font-mono uppercase text-text-muted text-[10px]">{axis}</span>
+            <span className="font-mono text-text text-[13px]">
               {pos ? pos[axis].toFixed(2) : "—"}
             </span>
           </div>
@@ -57,8 +57,9 @@ function StatusBadge({ state }: { state: TrackingState }) {
   const STATUS_COLOR: Record<TrackingState["kind"], string> = {
     disconnected: "text-text-muted",
     online:       "text-blue",
+    locating:     "text-yellow-400",
     tracking:     "text-accent",
-    offline:      "text-yellow-400",
+    offline:      "text-text-muted",
   };
   const isLive = state.kind === "tracking";
   return (
@@ -69,7 +70,7 @@ function StatusBadge({ state }: { state: TrackingState }) {
         state.kind === "online"  ? "bg-blue animate-pulse-dot"   :
                                    "bg-border-hi",
       ].join(" ")} />
-      <span className={`font-mono text-[11px] ${STATUS_COLOR[state.kind]}`}>
+      <span className={`font-mono text-[12px] ${STATUS_COLOR[state.kind]}`}>
         {t(`status.${state.kind}`)}
       </span>
     </div>
@@ -81,7 +82,7 @@ function CurrentObject({ state }: { state: TrackingState }) {
   const objId = state.kind === "tracking" ? state.objId : null;
   return (
     <SidebarRow label={t("object")}>
-      <div className="px-3 py-2 rounded-lg border border-border bg-bg font-mono text-[12px] text-text-muted">
+      <div className="px-3 py-2 rounded-lg border border-border bg-bg font-mono text-[13px] text-text-muted">
         {objId ?? "—"}
       </div>
     </SidebarRow>
@@ -99,13 +100,13 @@ function FireControls({ state, onFire, onStop }: {
     <div className="mt-auto pt-4 border-t border-border flex flex-col gap-2">
       {state.kind === "tracking" ? (
         <button onClick={onStop} disabled={!canInteract}
-          className="w-full font-medium font-mono bg-danger/20 border border-danger/40 text-danger hover:bg-danger/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed rounded-lg py-2.5 text-[12px]"
+          className="w-full font-medium font-mono bg-danger/20 border border-danger/40 text-danger hover:bg-danger/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed rounded-lg py-2.5 text-[13px]"
         >
           {t("stop")}
         </button>
       ) : (
         <button onClick={onFire} disabled={!canInteract}
-          className="w-full font-medium font-mono bg-accent-dim border border-accent-glow text-accent hover:bg-accent/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed rounded-lg py-2.5 text-[12px]"
+          className="w-full font-medium font-mono bg-accent-dim border border-accent-glow text-accent hover:bg-accent/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed rounded-lg py-2.5 text-[13px]"
         >
           {t("fire")}
         </button>
@@ -142,7 +143,7 @@ export default function StationClient() {
         <Scene targetPosVec={targetPosVec} observationSets={sets} />
 
         {isFullscreen && (
-          <div className="absolute top-4 left-4 text-[10px] font-mono text-text-muted bg-surface/70 border border-border px-2 py-1 rounded-md backdrop-blur-sm">
+          <div className="absolute top-4 left-4 text-[11px] font-mono text-text-muted bg-surface/70 border border-border px-2 py-1 rounded-md backdrop-blur-sm">
             {t("exitFullscreen")}
           </div>
         )}
@@ -160,9 +161,9 @@ export default function StationClient() {
 
       <aside className="w-72 shrink-0 flex flex-col gap-5 border-l border-border bg-surface p-5 overflow-y-auto">
         <div className="flex flex-col gap-0.5">
-          <span className="font-semibold text-sm text-text">{station.name}</span>
-          <span className="font-mono text-[11px] text-text-muted">{station.location}</span>
-          <span className="font-mono text-[11px] text-text-muted mt-0.5">{station.hardware}</span>
+          <span className="font-semibold text-[15px] text-text">{station.name}</span>
+          <span className="font-mono text-[12px] text-text-muted">{station.lat.toFixed(3)}°N {station.lon.toFixed(3)}°E</span>
+          <span className="font-mono text-[12px] text-text-muted mt-0.5">{station.hardware}</span>
         </div>
 
         <div className="h-px bg-border" />

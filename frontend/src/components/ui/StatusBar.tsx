@@ -19,7 +19,7 @@ export function StatusBar({ status, error, lastAction, idleLabel, station, objec
   return (
     <div
       className={[
-        "border-t border-border px-6 py-3 flex items-center gap-2.5 font-mono text-[11.5px] min-h-[44px]",
+        "border-t border-border px-6 py-3 flex items-center gap-2.5 font-mono text-[12.5px] min-h-[44px]",
         error      ? "text-danger"     :
         lastAction ? "text-accent"     : "text-text-muted",
       ].join(" ")}
@@ -32,7 +32,7 @@ export function StatusBar({ status, error, lastAction, idleLabel, station, objec
         <>
           <StatusDot variant="success" />
           {lastAction.label}
-          <span className="ml-auto text-text-muted text-[10.5px]">{lastAction.time}</span>
+          <span className="ml-auto text-text-muted text-[11.5px]">{lastAction.time}</span>
         </>
       ) : (
         <span>{idleLabel}</span>

@@ -1,6 +1,7 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
+import { useTranslations } from "next-intl";
 import { pad, toLocal, fromParts } from "@/lib/dateUtils";
 
 function daysInMonth(year: number, month: number) {
@@ -35,6 +36,7 @@ interface DatePickerProps {
 }
 
 export function DatePicker({ value, onChange, label }: DatePickerProps) {
+  const t = useTranslations("datePicker");
   const parsed = toLocal(value);
   const now = new Date();
 
@@ -115,7 +117,7 @@ export function DatePicker({ value, onChange, label }: DatePickerProps) {
   return (
     <div>
       {label && (
-        <span className="block mb-1 text-[11px] font-mono text-text-muted uppercase tracking-wider">
+        <span className="block mb-1 text-[12px] font-mono text-text-muted uppercase tracking-wider">
           {label}
         </span>
       )}
@@ -130,7 +132,7 @@ export function DatePicker({ value, onChange, label }: DatePickerProps) {
           }
           setOpen((v) => !v);
         }}
-        className="w-full h-10 flex items-center gap-2 bg-bg border border-border rounded-md font-mono text-[12px] px-3 outline-none transition-[border-color,box-shadow] duration-150 hover:border-border-hi focus:border-accent focus:shadow-[0_0_0_3px_#00dc8220] text-left"
+        className="w-full h-10 flex items-center gap-2 bg-bg border border-border rounded-md font-mono text-[13px] px-3 outline-none transition-[border-color,box-shadow] duration-150 hover:border-border-hi focus:border-accent focus:shadow-[0_0_0_3px_#00dc8220] text-left"
       >
         <svg
           className="w-3.5 h-3.5 text-text-muted shrink-0"
@@ -173,7 +175,7 @@ export function DatePicker({ value, onChange, label }: DatePickerProps) {
                   <path d="M15 18l-6-6 6-6" />
                 </svg>
               </button>
-              <span className="font-mono text-[12px] text-text font-medium">
+              <span className="font-mono text-[13px] text-text font-medium">
                 {MONTH_NAMES[viewMonth]} {viewYear}
               </span>
               <button
@@ -197,7 +199,7 @@ export function DatePicker({ value, onChange, label }: DatePickerProps) {
               {DAYS.map((d) => (
                 <span
                   key={d}
-                  className="text-center font-mono text-[9px] text-text-muted/50 py-1"
+                  className="text-center font-mono text-[10px] text-text-muted/50 py-1"
                 >
                   {d}
                 </span>
@@ -212,7 +214,7 @@ export function DatePicker({ value, onChange, label }: DatePickerProps) {
                   disabled={d === null}
                   onClick={() => d && pickDay(d)}
                   className={[
-                    "h-7 rounded text-center font-mono text-[11px] transition-colors",
+                    "h-7 rounded text-center font-mono text-[12px] transition-colors",
                     d === null
                       ? "invisible"
                       : d === selDay
@@ -246,9 +248,9 @@ export function DatePicker({ value, onChange, label }: DatePickerProps) {
                   );
                   setOpen(false);
                 }}
-                className="px-2 py-0.5 rounded border border-border font-mono text-[9px] text-text-muted hover:text-accent hover:border-accent/40 transition-colors"
+                className="px-2 py-0.5 rounded border border-border font-mono text-[10px] text-text-muted hover:text-accent hover:border-accent/40 transition-colors"
               >
-                Today
+                {t("today")}
               </button>
             </div>
           </div>,

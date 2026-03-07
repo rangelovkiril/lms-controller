@@ -27,7 +27,7 @@ export default async function Navbar() {
             <path d="M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M16.3 7.7l-2.1 2.1M7.7 16.3l-2.1 2.1" />
           </svg>
         </div>
-        <span className="text-[13px] font-semibold tracking-tight text-text">
+        <span className="text-[14px] font-semibold tracking-tight text-text">
           LMS
         </span>
       </Link>
@@ -39,7 +39,7 @@ export default async function Navbar() {
           <Link
             key={href}
             href={href}
-            className="px-3 py-1.5 rounded-md text-[12px] font-medium font-mono transition-colors no-underline text-text-muted hover:text-text hover:bg-surface"
+            className="px-3 py-1.5 rounded-md text-[13px] font-medium font-mono transition-colors no-underline text-text-muted hover:text-text hover:bg-surface"
           >
             {label}
           </Link>

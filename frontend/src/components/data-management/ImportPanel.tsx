@@ -124,7 +124,7 @@ export default function ImportPanel({
         <div className="w-7 h-7 rounded-lg bg-blue-dim border border-blue/20 flex items-center justify-center text-blue">
           <UploadIcon />
         </div>
-        <div className="text-sm font-semibold text-text">{t("title")}</div>
+        <div className="text-[15px] font-semibold text-text">{t("title")}</div>
       </div>
 
       <div className="p-6 flex flex-col gap-5 flex-1">
@@ -182,7 +182,7 @@ export default function ImportPanel({
                     <div className="text-accent/70">
                       <FileIcon />
                     </div>
-                    <div className="flex-1 text-[12px] font-mono truncate text-text">
+                    <div className="flex-1 text-[13px] font-mono truncate text-text">
                       {f.name}
                     </div>
                     <button
@@ -193,7 +193,7 @@ export default function ImportPanel({
                     </button>
                   </div>
                 ))}
-                <div className="text-[10px] text-center text-text-muted pt-1 uppercase tracking-wider font-bold">
+                <div className="text-[11px] text-center text-text-muted pt-1 uppercase tracking-wider font-bold">
                   {t("clickToAddMore")}
                 </div>
               </div>
@@ -203,11 +203,11 @@ export default function ImportPanel({
                   <UploadIcon />
                 </div>
                 <div className="text-center">
-                  <div className="text-[13px] text-text">
+                  <div className="text-[14px] text-text">
                     {t("dropZone")}{" "}
                     <span className="text-blue">{t("browse")}</span>
                   </div>
-                  <div className="text-[11px] text-text-muted mt-1">
+                  <div className="text-[12px] text-text-muted mt-1">
                     {t("formatHint")}
                   </div>
                 </div>

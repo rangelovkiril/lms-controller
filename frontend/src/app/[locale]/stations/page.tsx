@@ -38,13 +38,13 @@ export default function StationsPage() {
         <div className="flex items-baseline justify-between">
           <div>
             <h1 className="text-base font-semibold tracking-tight text-text">{t("title")}</h1>
-            <p className="text-[11px] font-mono text-text-muted mt-0.5">
+            <p className="text-[13px] font-mono text-text-muted mt-0.5">
               {loading ? "…" : t("registered", { count: stations.length })}
             </p>
           </div>
           <Link
             href="/stations/new"
-            className="px-3 py-1.5 rounded-md text-[12px] font-mono font-medium border border-border bg-surface text-text-muted hover:text-text hover:border-border-hi transition-colors no-underline"
+            className="px-3 py-1.5 rounded-md text-[13px] font-mono font-medium border border-border bg-surface text-text-muted hover:text-text hover:border-border-hi transition-colors no-underline"
           >
             {t("new")}
           </Link>
@@ -60,7 +60,7 @@ export default function StationsPage() {
               <circle cx="12" cy="12" r="3"/>
               <path d="M3 12h3M18 12h3M12 3v3M12 18v3"/>
             </svg>
-            <span className="font-mono text-[12px]">{t("empty")}</span>
+            <span className="font-mono text-[13px]">{t("empty")}</span>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">

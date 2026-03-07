@@ -96,6 +96,75 @@
     "loadObjects": "Failed to load objects",
     "httpError": "Error {status}: {statusText}"
   },
+  "home": {
+    "badge": "Laser Management System",
+    "title": "Satellite\nLaser Ranging",
+    "description": "Real-time station management, 3D trajectory visualization, and observation recording for ground-based SLR networks.",
+    "previewLabel": "Preview",
+    "previewHeading": "Live tracking, in your browser",
+    "previewSubtext": "WebGL scene · real-time position · speed-colored trace · observation overlays",
+    "features": {
+      "multiStation": {
+        "title": "Multi-Station",
+        "desc": "Manage multiple SLR stations simultaneously. Each with its own 3D view, telemetry stream and command interface."
+      },
+      "liveTelemetry": {
+        "title": "Live Telemetry",
+        "desc": "MQTT → WebSocket pipeline delivers position data at up to 10 Hz. InfluxDB retains full observation history."
+      },
+      "observationSets": {
+        "title": "Observation Sets",
+        "desc": "Import, overlay and compare multiple observation sessions as speed-colored traces in the same 3D scene."
+      }
+    }
+  },
+  "stationCard": {
+    "status": {
+      "online": "Online",
+      "offline": "Offline",
+      "connecting": "Connecting…",
+      "disconnected": "Disconnected"
+    },
+    "deleteConfirm": "Delete station and all data?",
+    "cancel": "Cancel",
+    "commandCenter": "Command Center",
+    "view3d": "3D View"
+  },
+  "command": {
+    "stations": "Stations",
+    "commandCenter": "Command Center",
+    "view3d": "3D View",
+    "stationControl": "Station Control",
+    "track": "▶ Track",
+    "stop": "■ Stop",
+    "metadata": "Metadata",
+    "save": "Save",
+    "saving": "Saving…",
+    "saved": "✓ Saved",
+    "propId": "ID",
+    "propName": "Name",
+    "propDescription": "Description",
+    "propLatitude": "Latitude",
+    "propLongitude": "Longitude",
+    "propLocation": "Location",
+    "systemLog": "System Log",
+    "resume": "▶ Resume",
+    "pause": "⏸ Pause",
+    "noLogs": "No log entries.",
+    "environment": "Environment",
+    "meteo": {
+      "temp": "Temperature",
+      "humidity": "Humidity",
+      "pressure": "Pressure",
+      "wind": "Wind"
+    }
+  },
+  "datePicker": {
+    "today": "Today"
+  },
+  "timePicker": {
+    "now": "Now"
+  },
   "info": {
     "title": "System Information",
     "subtitle": "LMS – Laser Management System",

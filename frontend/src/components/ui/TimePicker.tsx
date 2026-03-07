@@ -1,4 +1,5 @@
 "use client";
+import { useTranslations } from "next-intl";
 import { pad, toLocal, fromParts } from "@/lib/dateUtils";
 
 interface TimePickerProps {
@@ -8,6 +9,7 @@ interface TimePickerProps {
 }
 
 export function TimePicker({ value, onChange, label }: TimePickerProps) {
+  const t = useTranslations("timePicker");
   const parsed = toLocal(value);
   const now = new Date();
 
@@ -25,12 +27,12 @@ export function TimePicker({ value, onChange, label }: TimePickerProps) {
   const changeMin = (m: number) => emit(hour, ((m % 60) + 60) % 60);
 
   const inputCls =
-    "w-9 bg-bg border border-border rounded text-center font-mono text-[12px] text-text py-1.5 outline-none focus:border-accent [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none";
+    "w-9 bg-bg border border-border rounded text-center font-mono text-[13px] text-text py-1.5 outline-none focus:border-accent [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none";
 
   return (
     <div>
       {label && (
-        <span className="block mb-1 text-[11px] font-mono text-text-muted uppercase tracking-wider">
+        <span className="block mb-1 text-[12px] font-mono text-text-muted uppercase tracking-wider">
           {label}
         </span>
       )}
@@ -55,7 +57,7 @@ export function TimePicker({ value, onChange, label }: TimePickerProps) {
           onChange={(e) => changeHour(parseInt(e.target.value) || 0)}
           className={inputCls}
         />
-        <span className="text-text-muted font-mono text-[13px] font-bold">
+        <span className="text-text-muted font-mono text-[14px] font-bold">
           :
         </span>
         <input
@@ -73,9 +75,9 @@ export function TimePicker({ value, onChange, label }: TimePickerProps) {
             const n = new Date();
             emit(n.getHours(), n.getMinutes());
           }}
-          className="ml-auto px-2 py-0.5 rounded border border-border font-mono text-[9px] text-text-muted hover:text-accent hover:border-accent/40 transition-colors"
+          className="ml-auto px-2 py-0.5 rounded border border-border font-mono text-[10px] text-text-muted hover:text-accent hover:border-accent/40 transition-colors"
         >
-          Now
+          {t("now")}
         </button>
       </div>
     </div>

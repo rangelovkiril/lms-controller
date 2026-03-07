@@ -31,7 +31,7 @@ function EditableLabel({ value, onChange }: { value: string; onChange: (v: strin
           if (e.key === "Escape") { setDraft(value); setEditing(false); }
         }}
         onClick={(e) => e.stopPropagation()}
-        className="flex-1 min-w-0 bg-transparent border-b border-accent outline-none font-mono text-[11px] text-accent"
+        className="flex-1 min-w-0 bg-transparent border-b border-accent outline-none font-mono text-[12px] text-accent"
       />
     );
   }
@@ -77,7 +77,7 @@ function ColorDot({ set, onUpdate }: {
           <button
             onClick={() => { onUpdate(set.id, "color", null); setOpen(false); }}
             className={[
-              "px-1.5 py-0.5 rounded border font-mono text-[9px] transition-colors",
+              "px-1.5 py-0.5 rounded border font-mono text-[10px] transition-colors",
               set.color === null
                 ? "border-accent/60 bg-accent-dim text-accent"
                 : "border-border text-text-muted hover:text-text",
@@ -97,7 +97,7 @@ function ColorDot({ set, onUpdate }: {
             />
           ))}
           <label className="w-4 h-4 rounded-sm border border-dashed border-border flex items-center justify-center cursor-pointer hover:border-border-hi relative" title="Custom">
-            <span className="font-mono text-[9px] text-text-muted leading-none">+</span>
+            <span className="font-mono text-[10px] text-text-muted leading-none">+</span>
             <input
               type="color"
               value={set.color ?? "#00ffaa"}
@@ -121,13 +121,13 @@ export default function ObservationSetPanel({
     <div className="flex flex-col gap-3">
 
       <div className="flex items-center justify-between">
-        <span className="text-[10px] font-mono uppercase tracking-widest text-text-muted">
+        <span className="text-[11px] font-mono uppercase tracking-widest text-text-muted">
           {t("title")}
         </span>
         <button
           onClick={openFilePicker}
           title={t("loadFile")}
-          className="font-mono text-[10px] px-2 py-0.5 rounded border border-border text-text-muted hover:border-border-hi hover:text-text transition-colors flex items-center gap-1"
+          className="font-mono text-[12px] px-2 py-0.5 rounded border border-border text-text-muted hover:border-border-hi hover:text-text transition-colors flex items-center gap-1"
         >
           <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
@@ -147,7 +147,7 @@ export default function ObservationSetPanel({
             <polyline points="17 8 12 3 7 8"/>
             <line x1="12" y1="3" x2="12" y2="15"/>
           </svg>
-          <span className="font-mono text-[10px]">{t("loadFile")}</span>
+          <span className="font-mono text-[12px]">{t("loadFile")}</span>
         </button>
       ) : (
         <div className="flex flex-col gap-1">
@@ -156,7 +156,7 @@ export default function ObservationSetPanel({
               key={s.id}
               onClick={() => onSelect(s.id)}
               className={[
-                "flex items-center gap-2 w-full min-w-0 px-3 py-2 rounded-lg border font-mono text-[11px] transition-colors cursor-pointer group",
+                "flex items-center gap-2 w-full min-w-0 px-3 py-2 rounded-lg border font-mono text-[12px] transition-colors cursor-pointer group",
                 s.id === activeSetId
                   ? "border-accent/50 bg-accent-dim text-accent"
                   : "border-border text-text-muted hover:border-border-hi hover:text-text",
@@ -166,7 +166,7 @@ export default function ObservationSetPanel({
 
               <EditableLabel value={s.label} onChange={(v) => onUpdate(s.id, "label", v)} />
 
-              <span className="shrink-0 font-mono text-[9px] text-text-muted/60">
+              <span className="shrink-0 font-mono text-[10px] text-text-muted/60">
                 {s.points.length}
               </span>
 
