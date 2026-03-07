@@ -101,7 +101,7 @@ export async function getObjects(
   const rows = await influx.query<{ _value: string }>(`
     import "influxdata/influxdb/schema"
     schema.measurements(bucket: "${station}")
-    |> filter(fn: (r) => r._value != "_meta")
+    |> filter(fn: (r) => r._value != "_meta" and r._value != "env" and r._value != "log")
   `)
   return rows.map((r) => r._value).filter(Boolean)
 }

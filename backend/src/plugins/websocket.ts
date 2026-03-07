@@ -4,6 +4,7 @@ import { WsEvent } from "../types"
 export type CommandHandler = (
   stationId: string,
   action:    "track" | "stop",
+  objId?:    string,
 ) => void
 
 export interface CommandHandlerRef {

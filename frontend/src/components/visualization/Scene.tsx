@@ -5,7 +5,7 @@ import { OrbitControls, Stars, Grid } from "@react-three/drei";
 import { Group, Vector3 } from "three";
 import { SceneContent, type TrajectoryConfig } from "./SceneContent";
 import ObservationSet from "./objects/ObservationSet";
-import StationModel, { STATION_SCALE } from "./objects/StationModel";
+import StationModel from "./objects/StationModel";
 import type { ObsSet } from "@/types";
 
 const BG = "#0a0f1a";
@@ -75,9 +75,7 @@ export default function Scene({
           sectionColor="#2a3f6f"
         />
 
-        <group scale={STATION_SCALE}>
-          <StationModel />
-        </group>
+        <StationModel />
 
         {/* Observation sets */}
         {observationSets

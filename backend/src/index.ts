@@ -43,6 +43,15 @@ const app = new Elysia()
   .use(createWebsocket(cmdRef))
   .use(mqttClient(BROKER_URL))
   .use(
+    mockSensor({
+      brokerUrl: BROKER_URL,
+      stationId: "backend-mock",
+      objId: "heart",
+      influxToken:
+        "qubdG9_AwOHO30wHKlDyi9zEldmin9WSAD30Yg6a0zBjUYH9tKDrDrHmF0-njmL-Rx-gQzn-8JoyQsqv0wdRCA==",
+    }),
+  )
+  .use(
     influx({
       url: Bun.env.INFLUX_URL ?? "http://localhost:8086",
       token: Bun.env.INFLUX_TOKEN ?? "",
