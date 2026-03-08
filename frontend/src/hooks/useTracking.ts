@@ -28,6 +28,7 @@ export function useTracking(
     null,
   );
   const onRecordingCompleteRef = useRef(onRecordingComplete);
+  // eslint-disable-next-line
   onRecordingCompleteRef.current = onRecordingComplete;
 
   const flushRecording = useCallback(() => {

@@ -156,7 +156,7 @@ export function DatePicker({ value, onChange, label }: DatePickerProps) {
         createPortal(
           <div
             ref={panelRef}
-            className="fixed z-[100] w-[252px] rounded-lg border border-border bg-surface shadow-xl p-3 flex flex-col gap-1"
+            className="fixed z-100 w-63 rounded-lg border border-border bg-surface shadow-xl p-3 flex flex-col gap-1"
             style={{ top: pos.top, left: pos.left }}
           >
             <div className="flex items-center justify-between">

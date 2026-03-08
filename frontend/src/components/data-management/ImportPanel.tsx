@@ -155,7 +155,7 @@ export default function ImportPanel({
               setDragging(false);
               handleFiles(e.dataTransfer.files);
             }}
-            className={`relative flex flex-col items-center justify-center min-h-[160px] gap-3 p-4 rounded-lg border-2 border-dashed transition-all cursor-pointer ${
+            className={`relative flex flex-col items-center justify-center min-h-40 gap-3 p-4 rounded-lg border-2 border-dashed transition-all cursor-pointer ${
               dragging
                 ? "border-blue bg-blue/5 scale-[1.01]"
                 : files.length > 0
@@ -173,7 +173,7 @@ export default function ImportPanel({
             />
 
             {files.length > 0 ? (
-              <div className="w-full flex flex-col gap-2 max-h-[200px] overflow-y-auto p-1">
+              <div className="w-full flex flex-col gap-2 max-h-50 overflow-y-auto p-1">
                 {files.map((f, i) => (
                   <div
                     key={`${f.name}-${i}`}

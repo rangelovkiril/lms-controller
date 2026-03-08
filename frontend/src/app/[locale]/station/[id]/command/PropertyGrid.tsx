@@ -58,7 +58,7 @@ export function PropertyGrid({ stationId }: { stationId: string }) {
       }
     }, 800);
     return () => clearTimeout(id);
-  }, [meta?.lat, meta?.lon]);
+  }, [meta]);
 
   const patch = (key: keyof StationMeta, value: string | number) =>
     setMeta((m) => m ? { ...m, [key]: value } : m);

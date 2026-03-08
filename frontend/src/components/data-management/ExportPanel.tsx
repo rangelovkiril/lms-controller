@@ -5,6 +5,7 @@ import { Dropdown } from "../ui/Dropdown";
 import { StatusBar } from "../ui/StatusBar";
 import { TimePicker } from "@/components/ui/TimePicker";
 import { DatePicker } from "@/components/ui/DatePicker";
+
 import { Spinner } from "../ui/Spinner";
 import { Label } from "../ui/Label";
 import { useExport } from "@/hooks/useExport";
@@ -23,6 +24,28 @@ const DownloadIcon = () => (
     <line x1="12" y1="15" x2="12" y2="3" />
   </svg>
 );
+
+function DownloadButton({
+  format, label, cls, canExport, exporting, onDownload, exportingLabel,
+}: {
+  format: "csv" | "json";
+  label: string;
+  cls: string;
+  canExport: boolean;
+  exporting: boolean;
+  onDownload: (format: "csv" | "json") => void;
+  exportingLabel: string;
+}) {
+  return (
+    <button
+      disabled={!canExport}
+      onClick={() => onDownload(format)}
+      className={`flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-md text-[14px] font-medium transition-all duration-150 disabled:opacity-35 disabled:cursor-not-allowed cursor-pointer ${cls}`}
+    >
+      {exporting ? <><Spinner /> {exportingLabel}</> : label}
+    </button>
+  );
+}
 
 export default function ExportPanel({
   stations,
@@ -52,30 +75,6 @@ export default function ExportPanel({
     object &&
     (isCustom ? !!customStart : true) &&
     status === "idle"
-  );
-
-  const DownloadButton = ({
-    format,
-    label,
-    cls,
-  }: {
-    format: "csv" | "json";
-    label: string;
-    cls: string;
-  }) => (
-    <button
-      disabled={!canExport}
-      onClick={() => download(format)}
-      className={`flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-md text-[14px] font-medium transition-all duration-150 disabled:opacity-35 disabled:cursor-not-allowed cursor-pointer ${cls}`}
-    >
-      {status === "exporting" ? (
-        <>
-          <Spinner /> {t("exporting")}
-        </>
-      ) : (
-        label
-      )}
-    </button>
   );
 
   return (
@@ -173,11 +172,19 @@ export default function ExportPanel({
             format="csv"
             label="CSV"
             cls="bg-accent text-black hover:bg-[#00f090]"
+            canExport={canExport}
+            exporting={status === "exporting"}
+            onDownload={download}
+            exportingLabel={t("exporting")}
           />
           <DownloadButton
             format="json"
             label="JSON"
             cls="bg-blue text-white hover:bg-[#1a80ff]"
+            canExport={canExport}
+            exporting={status === "exporting"}
+            onDownload={download}
+            exportingLabel={t("exporting")}
           />
         </div>
       </div>

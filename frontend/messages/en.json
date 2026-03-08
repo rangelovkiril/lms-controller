@@ -97,7 +97,7 @@
     "httpError": "Error {status}: {statusText}"
   },
   "home": {
-    "badge": "Laser Management System",
+    "badge": "Satellite Laser Ranging",
     "title": "Satellite\nLaser Ranging",
     "description": "Real-time station management, 3D trajectory visualization, and observation recording for ground-based SLR networks.",
     "previewLabel": "Preview",

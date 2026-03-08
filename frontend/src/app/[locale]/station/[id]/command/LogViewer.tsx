@@ -6,17 +6,17 @@ import { SectionHeader } from "./SectionHeader";
 
 interface LogEntry {
   timestamp: string;
-  level:     string;
-  message:   string;
+  level: string;
+  message: string;
 }
 
 const POLL_OPTIONS = [2, 5, 10] as const;
-type PollInterval  = (typeof POLL_OPTIONS)[number];
+type PollInterval = (typeof POLL_OPTIONS)[number];
 
 const LEVEL_COLORS: Record<string, string> = {
   ERROR: "text-danger",
-  WARN:  "text-yellow-400",
-  INFO:  "text-text-muted",
+  WARN: "text-yellow-400",
+  INFO: "text-text-muted",
   DEBUG: "text-text-dim",
 };
 
@@ -24,12 +24,12 @@ const LEVELS = ["ALL", "ERROR", "WARN", "INFO", "DEBUG"];
 
 export function LogViewer({ stationId }: { stationId: string }) {
   const t = useTranslations("command");
-  const [logs,     setLogs]        = useState<LogEntry[]>([]);
-  const [paused,   setPaused]      = useState(false);
+  const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [paused, setPaused] = useState(false);
   const [interval, setIntervalVal] = useState<PollInterval>(5);
-  const [filter,   setFilter]      = useState("ALL");
+  const [filter, setFilter] = useState("ALL");
   const bottomRef = useRef<HTMLDivElement>(null);
-  const hovered   = useRef(false);
+  const hovered = useRef(false);
 
   const load = useCallback(() => {
     fetch(`${API_BASE}/stations/${stationId}/logs?limit=200`)
@@ -37,13 +37,18 @@ export function LogViewer({ stationId }: { stationId: string }) {
       .then((data: LogEntry[]) => {
         setLogs(data);
         if (!hovered.current) {
-          setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
+          setTimeout(
+            () => bottomRef.current?.scrollIntoView({ behavior: "smooth" }),
+            50,
+          );
         }
       })
       .catch(() => {});
   }, [stationId]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+  }, [load]);
 
   useEffect(() => {
     if (paused) return;
@@ -51,9 +56,10 @@ export function LogViewer({ stationId }: { stationId: string }) {
     return () => clearInterval(id);
   }, [paused, interval, load]);
 
-  const visible = filter === "ALL"
-    ? logs
-    : logs.filter((l) => l.level?.toUpperCase() === filter);
+  const visible =
+    filter === "ALL"
+      ? logs
+      : logs.filter((l) => l.level?.toUpperCase() === filter);
 
   return (
     <div className="flex flex-col h-full">
@@ -62,9 +68,11 @@ export function LogViewer({ stationId }: { stationId: string }) {
           <select
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            className="bg-bg border border-border rounded text-[11.5px] font-mono text-text-muted px-1.5 py-0.5 outline-none [color-scheme:dark]"
+            className="bg-bg border border-border rounded text-[11.5px] font-mono text-text-muted px-1.5 py-0.5 outline-none color-scheme:dark"
           >
-            {LEVELS.map((l) => <option key={l}>{l}</option>)}
+            {LEVELS.map((l) => (
+              <option key={l}>{l}</option>
+            ))}
           </select>
 
           <div className="flex items-center gap-1">
@@ -100,20 +108,29 @@ export function LogViewer({ stationId }: { stationId: string }) {
 
       <div
         className="flex-1 overflow-y-auto font-mono text-[11.5px] bg-bg rounded-lg border border-border p-2 min-h-0"
-        onMouseEnter={() => { hovered.current = true; }}
-        onMouseLeave={() => { hovered.current = false; }}
+        onMouseEnter={() => {
+          hovered.current = true;
+        }}
+        onMouseLeave={() => {
+          hovered.current = false;
+        }}
       >
         {visible.length === 0 ? (
           <div className="text-text-muted p-2">{t("noLogs")}</div>
         ) : (
           visible.map((entry, i) => {
-            const lvl   = entry.level?.toUpperCase() ?? "INFO";
+            const lvl = entry.level?.toUpperCase() ?? "INFO";
             const color = LEVEL_COLORS[lvl] ?? "text-text-muted";
-            const ts    = entry.timestamp
-              ? new Date(entry.timestamp).toLocaleTimeString("en-GB", { hour12: false })
+            const ts = entry.timestamp
+              ? new Date(entry.timestamp).toLocaleTimeString("en-GB", {
+                  hour12: false,
+                })
               : "";
             return (
-              <div key={i} className="flex gap-2 py-[1px] hover:bg-surface-hi px-1 rounded">
+              <div
+                key={i}
+                className="flex gap-2 py-px hover:bg-surface-hi px-1 rounded"
+              >
                 <span className="text-text-dim shrink-0 select-none">{ts}</span>
                 <span className={`shrink-0 w-11 ${color}`}>[{lvl}]</span>
                 <span className="text-text break-all">{entry.message}</span>

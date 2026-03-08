@@ -1,13 +1,18 @@
 "use client";
 import { useRef, useMemo, useEffect } from "react";
-import { useFrame }                   from "@react-three/fiber";
+import { useFrame } from "@react-three/fiber";
 import {
-  BufferGeometry, BufferAttribute, DynamicDrawUsage,
-  Group, Line, LineBasicMaterial, Color,
+  BufferGeometry,
+  BufferAttribute,
+  DynamicDrawUsage,
+  Group,
+  Line,
+  LineBasicMaterial,
+  Color,
 } from "three";
 import { DOME_APEX_Y } from "./StationModel";
 
-const BLINK_ON  = 0.08;
+const BLINK_ON = 0.08;
 const BLINK_OFF = 0.04;
 
 interface LaserProps {
@@ -16,26 +21,32 @@ interface LaserProps {
 
 export default function Laser({ targetRef }: LaserProps) {
   const blinkTimer = useRef(0);
-  const blinkOn    = useRef(true);
+  const blinkOn = useRef(true);
 
   const { line, posAttr } = useMemo(() => {
-    const arr     = new Float32Array([0, DOME_APEX_Y, 0, 0, DOME_APEX_Y, 0]);
+    const arr = new Float32Array([0, DOME_APEX_Y, 0, 0, DOME_APEX_Y, 0]);
     const posAttr = new BufferAttribute(arr, 3);
     posAttr.setUsage(DynamicDrawUsage);
 
-    const geo  = new BufferGeometry();
+    const geo = new BufferGeometry();
     geo.setAttribute("position", posAttr);
 
-    const mat  = new LineBasicMaterial({ color: new Color("#00dc82"), toneMapped: false });
+    const mat = new LineBasicMaterial({
+      color: new Color("#00dc82"),
+      toneMapped: false,
+    });
     const line = new Line(geo, mat);
 
     return { line, posAttr };
   }, []);
 
-  useEffect(() => () => {
-    line.geometry.dispose();
-    (line.material as LineBasicMaterial).dispose();
-  }, [line]);
+  useEffect(
+    () => () => {
+      line.geometry.dispose();
+      (line.material as LineBasicMaterial).dispose();
+    },
+    [line],
+  );
 
   useFrame((_, delta) => {
     if (!targetRef.current) return;
@@ -45,18 +56,20 @@ export default function Laser({ targetRef }: LaserProps) {
     // Скриваме лазера когато Target е скрит (нула позиция)
     const hasTarget = targetRef.current.visible;
     if (!hasTarget) {
+      // eslint-disable-next-line
       line.visible = false;
       return;
     }
 
     posAttr.setXYZ(1, x, y, z);
+    // eslint-disable-next-line
     posAttr.needsUpdate = true;
 
     blinkTimer.current += delta;
     const interval = blinkOn.current ? BLINK_ON : BLINK_OFF;
     if (blinkTimer.current >= interval) {
       blinkTimer.current = 0;
-      blinkOn.current    = !blinkOn.current;
+      blinkOn.current = !blinkOn.current;
     }
     line.visible = blinkOn.current;
   });

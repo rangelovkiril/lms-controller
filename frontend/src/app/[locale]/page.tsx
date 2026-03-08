@@ -1,4 +1,5 @@
-import Link               from "next/link";
+import Image from "next/image";
+import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 
 export default async function HomePage() {
@@ -8,24 +9,36 @@ export default async function HomePage() {
   const features = [
     {
       title: h("features.multiStation.title"),
-      desc:  h("features.multiStation.desc"),
+      desc: h("features.multiStation.desc"),
       icon: <IconStation />,
     },
     {
       title: h("features.liveTelemetry.title"),
-      desc:  h("features.liveTelemetry.desc"),
+      desc: h("features.liveTelemetry.desc"),
       icon: (
-        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        <svg
+          className="w-4 h-4"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+        >
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
         </svg>
       ),
     },
     {
       title: h("features.observationSets.title"),
-      desc:  h("features.observationSets.desc"),
+      desc: h("features.observationSets.desc"),
       icon: (
-        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+        <svg
+          className="w-4 h-4"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+        >
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
         </svg>
       ),
     },
@@ -33,31 +46,29 @@ export default async function HomePage() {
 
   return (
     <div className="relative h-full overflow-y-auto overflow-x-hidden">
-
       {/* ── Background ── */}
       <BackgroundLayer />
 
-      {/* ── Hero section ── */}
-      <section className="relative z-10 flex flex-col items-center justify-center min-h-[calc(100vh-48px)] px-6 text-center gap-10">
-
-        <SatelliteModel />
-
+      {/* ── Hero ── */}
+      <section className="relative z-10 flex flex-col items-center px-6 text-center pt-[max(8vh,3rem)] gap-6">
         <div className="flex flex-col items-center gap-5 max-w-xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-accent/25 bg-accent/8 font-mono text-[11px] text-accent tracking-[0.15em] uppercase">
-            <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse-dot" />
-            {h("badge")}
-          </div>
-
-          <h1 className="text-[clamp(2.4rem,6vw,4rem)] font-bold tracking-tight leading-[1.05]"
+          <h1
+            className="text-[clamp(2.4rem,6vw,4rem)] font-bold tracking-tight leading-[1.05]"
             style={{
-              background: "linear-gradient(170deg, #ffffff 0%, #ededed 40%, #555 100%)",
+              background:
+                "linear-gradient(170deg, #ffffff 0%, #ededed 40%, #555 100%)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
             }}
           >
-            {h("title").split("\n").map((line, i) => (
-              <span key={i}>{i > 0 && <br />}{line}</span>
-            ))}
+            {h("title")
+              .split("\n")
+              .map((line, i) => (
+                <span key={i}>
+                  {i > 0 && <br />}
+                  {line}
+                </span>
+              ))}
           </h1>
 
           <p className="text-text-muted font-mono text-[13px] leading-[1.8] max-w-sm">
@@ -67,50 +78,29 @@ export default async function HomePage() {
 
         {/* CTA */}
         <div className="flex items-center gap-3 flex-wrap justify-center">
-          <Link href="/stations"
+          <Link
+            href="/stations"
             className="group flex items-center gap-2 px-5 py-2.5 rounded-lg bg-accent text-black font-mono text-[13px] font-bold hover:bg-[#00ef8e] transition-all hover:shadow-[0_0_24px_#00dc8240] no-underline"
           >
             <IconStation />
             {t("stations")}
-            <span className="ml-0.5 opacity-40 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all">→</span>
+            <span className="ml-0.5 opacity-40 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all">
+              →
+            </span>
           </Link>
 
-          <Link href="/trajectories"
+          <Link
+            href="/trajectories"
             className="flex items-center gap-2 px-5 py-2.5 rounded-lg border border-border bg-surface text-text-muted font-mono text-[13px] hover:text-text hover:border-border-hi hover:bg-surface-hi transition-colors no-underline"
           >
             <IconTrajectory />
             {t("trajectories")}
           </Link>
-
-          <Link href="/info"
-            className="flex items-center gap-2 px-5 py-2.5 rounded-lg border border-border bg-surface text-text-muted font-mono text-[13px] hover:text-text hover:border-border-hi hover:bg-surface-hi transition-colors no-underline"
-          >
-            <IconInfo />
-            {t("info")}
-          </Link>
-        </div>
-
-        {/* Scroll hint */}
-        <div className="absolute bottom-6 flex flex-col items-center gap-1 opacity-20">
-          <svg width="16" height="24" viewBox="0 0 16 24" fill="none">
-            <rect x="1" y="1" width="14" height="22" rx="7" stroke="currentColor" strokeWidth="1.5"/>
-            <style>{`.scroll-dot{animation:scrolldot 2s ease-in-out infinite}@keyframes scrolldot{0%{transform:translateY(0);opacity:.8}60%{transform:translateY(8px);opacity:.1}100%{transform:translateY(0);opacity:.8}}`}</style>
-            <circle className="scroll-dot" cx="8" cy="7" r="2" fill="currentColor"/>
-          </svg>
         </div>
       </section>
 
-      {/* ── Visualization preview ── */}
-      <section className="relative z-10 px-6 pb-20 flex flex-col items-center gap-10 max-w-5xl mx-auto">
-
-        <div className="flex flex-col items-center gap-3 text-center">
-          <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-accent/60">{h("previewLabel")}</span>
-          <h2 className="text-3xl font-semibold tracking-tight">{h("previewHeading")}</h2>
-          <p className="text-text-muted font-mono text-[12px] max-w-xs leading-relaxed">
-            {h("previewSubtext")}
-          </p>
-        </div>
-
+      {/* ── Preview mockup ── */}
+      <section className="relative z-10 px-6 pt-12 pb-16 max-w-5xl mx-auto">
         <ScenePreviewMockup />
       </section>
 
@@ -120,7 +110,6 @@ export default async function HomePage() {
           <FeatureCard key={f.title} {...f} />
         ))}
       </section>
-
     </div>
   );
 }
@@ -132,23 +121,37 @@ function BackgroundLayer() {
   return (
     <>
       {/* Dot grid */}
-      <div className="pointer-events-none fixed inset-0 z-0" aria-hidden
+      <div
+        className="pointer-events-none fixed inset-0 z-0"
+        aria-hidden
         style={{
-          backgroundImage: "radial-gradient(circle, #2a2a2a 1px, transparent 1px)",
+          backgroundImage:
+            "radial-gradient(circle, #2a2a2a 1px, transparent 1px)",
           backgroundSize: "28px 28px",
           opacity: 0.35,
         }}
       />
       {/* Radial vignette over dots */}
-      <div className="pointer-events-none fixed inset-0 z-0" aria-hidden
-        style={{ background: "radial-gradient(ellipse 80% 70% at 50% 0%, transparent 0%, #080808 100%)" }}
+      <div
+        className="pointer-events-none fixed inset-0 z-0"
+        aria-hidden
+        style={{
+          background:
+            "radial-gradient(ellipse 80% 70% at 50% 0%, transparent 0%, #080808 100%)",
+        }}
       />
       {/* Accent glow */}
-      <div className="pointer-events-none fixed z-0" aria-hidden
+      <div
+        className="pointer-events-none fixed z-0"
+        aria-hidden
         style={{
-          top: 0, left: "50%", transform: "translateX(-50%)",
-          width: 700, height: 400,
-          background: "radial-gradient(ellipse at 50% 0%, #00dc8210 0%, transparent 70%)",
+          top: 0,
+          left: "50%",
+          transform: "translateX(-50%)",
+          width: 700,
+          height: 400,
+          background:
+            "radial-gradient(ellipse at 50% 0%, #00dc8210 0%, transparent 70%)",
           filter: "blur(20px)",
         }}
       />
@@ -157,21 +160,16 @@ function BackgroundLayer() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Animated SVG satellite model
-
-function SatelliteModel() {
-  return (
-    <img src="/satellite-animation.svg" alt="" width="280" height="200" />
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
 // Scene preview mockup
 
 function ScenePreviewMockup() {
   return (
-    <div className="w-full rounded-2xl border border-border overflow-hidden"
-      style={{ boxShadow: "0 0 0 1px #1e1e1e, 0 32px 80px #000000a0, 0 0 60px #00dc8210" }}
+    <div
+      className="w-full rounded-2xl border border-border overflow-hidden"
+      style={{
+        boxShadow:
+          "0 0 0 1px #1e1e1e, 0 32px 80px #000000a0, 0 0 60px #00dc8210",
+      }}
     >
       {/* Browser chrome */}
       <div className="h-9 bg-surface border-b border-border flex items-center gap-3 px-4 shrink-0">
@@ -189,11 +187,15 @@ function ScenePreviewMockup() {
 
       {/* Main content — 3D scene + sidebar */}
       <div className="flex bg-[#0a0f1a]" style={{ aspectRatio: "16/6.5" }}>
-
         {/* 3D viewport SVG */}
         <div className="flex-1 relative overflow-hidden">
-          <img src="/scene-preview.svg" alt="" width="640" height="248"
-            className="w-full h-full object-cover" />
+          <Image
+            src="/scene-preview.svg"
+            alt=""
+            width="640"
+            height="248"
+            className="w-full h-full object-cover"
+          />
         </div>
 
         {/* Sidebar mockup */}
@@ -206,18 +208,24 @@ function ScenePreviewMockup() {
 
           {/* Object */}
           <div className="flex flex-col gap-0.5">
-            <span className="text-[8px] uppercase tracking-[.15em] text-text-muted/40">Object</span>
+            <span className="text-[8px] uppercase tracking-[.15em] text-text-muted/40">
+              Object
+            </span>
             <span className="text-text text-[10px]">LAGEOS-2</span>
           </div>
 
           {/* XYZ readout */}
           <div className="flex flex-col gap-0.5">
-            <span className="text-[8px] uppercase tracking-[.15em] text-text-muted/40">Position</span>
+            <span className="text-[8px] uppercase tracking-[.15em] text-text-muted/40">
+              Position
+            </span>
             <div className="grid grid-cols-3 gap-1">
-              {["X","Y","Z"].map((a,i) => (
+              {["X", "Y", "Z"].map((a, i) => (
                 <div key={a} className="bg-bg rounded border border-border p-1">
                   <div className="text-[7px] text-text-muted/50">{a}</div>
-                  <div className="text-[9px] text-text">{["3241","1847","4521"][i]}</div>
+                  <div className="text-[9px] text-text">
+                    {["3241", "1847", "4521"][i]}
+                  </div>
                 </div>
               ))}
             </div>
@@ -225,10 +233,21 @@ function ScenePreviewMockup() {
 
           {/* Observation sets */}
           <div className="flex flex-col gap-0.5">
-            <span className="text-[8px] uppercase tracking-[.15em] text-text-muted/40">Obs sets</span>
-            {[{c:"#00dc82",n:"Set-01",p:482},{c:"#0070f3",n:"Set-02",p:317}].map(s=>(
-              <div key={s.n} className="flex items-center gap-1.5 py-1 px-1.5 rounded border border-border bg-bg/50">
-                <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{background:s.c}}/>
+            <span className="text-[8px] uppercase tracking-[.15em] text-text-muted/40">
+              Obs sets
+            </span>
+            {[
+              { c: "#00dc82", n: "Set-01", p: 482 },
+              { c: "#0070f3", n: "Set-02", p: 317 },
+            ].map((s) => (
+              <div
+                key={s.n}
+                className="flex items-center gap-1.5 py-1 px-1.5 rounded border border-border bg-bg/50"
+              >
+                <span
+                  className="w-1.5 h-1.5 rounded-full shrink-0"
+                  style={{ background: s.c }}
+                />
                 <span className="text-[9px] text-text-muted flex-1">{s.n}</span>
                 <span className="text-[8px] text-text-muted/40">{s.p}</span>
               </div>
@@ -248,17 +267,31 @@ function ScenePreviewMockup() {
 // ─────────────────────────────────────────────────────────────────────────────
 // Feature cards
 
-function FeatureCard({ title, desc, icon }: { title: string; desc: string; icon: React.ReactNode }) {
+function FeatureCard({
+  title,
+  desc,
+  icon,
+}: {
+  title: string;
+  desc: string;
+  icon: React.ReactNode;
+}) {
   return (
-    <div className="flex flex-col gap-3 p-5 rounded-xl border border-border bg-surface
-      hover:border-accent/20 hover:bg-surface-hi transition-colors group">
-      <div className="w-8 h-8 rounded-lg bg-bg border border-border flex items-center justify-center
-        text-accent group-hover:border-accent/20 transition-colors">
+    <div
+      className="flex flex-col gap-3 p-5 rounded-xl border border-border bg-surface
+      hover:border-accent/20 hover:bg-surface-hi transition-colors group"
+    >
+      <div
+        className="w-8 h-8 rounded-lg bg-bg border border-border flex items-center justify-center
+        text-accent group-hover:border-accent/20 transition-colors"
+      >
         {icon}
       </div>
       <div>
         <div className="font-semibold text-[14px] text-text">{title}</div>
-        <div className="font-mono text-[12px] text-text-muted mt-1.5 leading-relaxed">{desc}</div>
+        <div className="font-mono text-[12px] text-text-muted mt-1.5 leading-relaxed">
+          {desc}
+        </div>
       </div>
     </div>
   );
@@ -269,28 +302,33 @@ function FeatureCard({ title, desc, icon }: { title: string; desc: string; icon:
 
 function IconStation() {
   return (
-    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <circle cx="12" cy="12" r="3"/>
-      <path d="M3 12h3M18 12h3M12 3v3M12 18v3
+    <svg
+      className="w-4 h-4"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+    >
+      <circle cx="12" cy="12" r="3" />
+      <path
+        d="M3 12h3M18 12h3M12 3v3M12 18v3
                M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1
-               M16.3 7.7l-2.1 2.1M7.7 16.3l-2.1 2.1"/>
+               M16.3 7.7l-2.1 2.1M7.7 16.3l-2.1 2.1"
+      />
     </svg>
   );
 }
 
 function IconTrajectory() {
   return (
-    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M3 3l18 18M3 21C3 12 12 3 21 3"/>
-    </svg>
-  );
-}
-
-function IconInfo() {
-  return (
-    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <circle cx="12" cy="12" r="10"/>
-      <path d="M12 16v-4M12 8h.01"/>
+    <svg
+      className="w-4 h-4"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+    >
+      <path d="M3 3l18 18M3 21C3 12 12 3 21 3" />
     </svg>
   );
 }

@@ -97,8 +97,8 @@
     "httpError": "Грешка {status}: {statusText}"
   },
   "home": {
-    "badge": "Laser Management System",
-    "title": "Спътниково\nЛазерно Разстояниемерване",
+    "badge": "Satellite Laser Ranging",
+    "title": "Satellite\nLaser Ranging",
     "description": "Управление на станции в реално време, 3D визуализация на траектории и запис на наблюдения за наземни SLR мрежи.",
     "previewLabel": "Преглед",
     "previewHeading": "Проследяване в реално време, в браузъра",

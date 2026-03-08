@@ -1,40 +1,17 @@
 "use client";
-import { useEffect, useState } from "react";
 import { useLocale } from "next-intl";
 import { useRouter, usePathname } from "next/navigation";
-import { API_BASE } from "@/types";
-
-interface StationSummary {
-  stationId: string;
-  name: string;
-}
 
 export default function NavClient() {
-  const [stations, setStations] = useState<StationSummary[] | null>(null);
   const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
-
-  useEffect(() => {
-    const load = () =>
-      fetch(`${API_BASE}/stations`)
-        .then((r) => r.json())
-        .then(setStations)
-        .catch(() => {});
-
-    load();
-    const id = setInterval(load, 30_000);
-    return () => clearInterval(id);
-  }, []);
 
   const toggleLocale = () => {
     const next = locale === "bg" ? "en" : "bg";
     const newPath = pathname.replace(`/${locale}`, `/${next}`);
     router.push(newPath);
   };
-
-  const total = stations?.length ?? 0;
-  const online = total;
 
   return (
     <div className="flex items-center gap-3">
