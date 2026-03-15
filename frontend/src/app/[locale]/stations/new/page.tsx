@@ -165,13 +165,13 @@ function TokenReveal({
       {/* Actions */}
       <div className="flex flex-col gap-2">
         <button
-          onClick={() => router.push(`/station/${stationId}/command`)}
+          onClick={() => router.push(`${locale}/station/${stationId}/command`)}
           className="w-full py-2.5 rounded-lg font-mono text-[12px] font-medium bg-accent-dim border border-accent/40 text-accent hover:bg-accent/20 transition-colors"
         >
           Open Command Center →
         </button>
         <button
-          onClick={() => router.push(`/station/${stationId}`)}
+          onClick={() => router.push(`${locale}/station/${stationId}`)}
           className="w-full py-2.5 rounded-lg font-mono text-[12px] font-medium border border-border text-text-muted hover:text-text hover:border-border-hi transition-colors"
         >
           Open 3D View →

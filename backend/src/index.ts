@@ -7,7 +7,7 @@ import {
 } from "./plugins/websocket"
 import { mqttClient } from "./plugins/mqtt"
 import { influx } from "./plugins/influx"
-import { mockSensor } from "./test/mockMqtt"
+// import { mockSensor } from "./test/mockMqtt"
 import { registerMqttHandlers } from "./handlers/mqtt.handlers"
 import {
   getStations,
@@ -42,15 +42,15 @@ const app = new Elysia()
   )
   .use(createWebsocket(cmdRef))
   .use(mqttClient(BROKER_URL))
-  .use(
-    mockSensor({
-      brokerUrl: BROKER_URL,
-      stationId: "docker-test",
-      objId: "heart",
-      influxToken:
-        "w0EjfNDtenlZ4hwsxzJRt_yEgsJUVXdab6_c-vwwn0HaIJSF59gwfG8L46fvUWJ0HWZamOGlBOFsRrr5h-N0uQ==",
-    }),
-  )
+  // .use(
+  //   mockSensor({
+  //     brokerUrl: BROKER_URL,
+  //     stationId: "docker-test",
+  //     objId: "heart",
+  //     influxToken:
+  //       "w0EjfNDtenlZ4hwsxzJRt_yEgsJUVXdab6_c-vwwn0HaIJSF59gwfG8L46fvUWJ0HWZamOGlBOFsRrr5h-N0uQ==",
+  //   }),
+  // )
   .use(
     influx({
       url: Bun.env.INFLUX_URL ?? "http://localhost:8086",
