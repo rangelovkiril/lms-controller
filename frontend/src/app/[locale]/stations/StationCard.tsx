@@ -20,9 +20,11 @@ interface StationMeta {
 
 type ConnectionStatus = "connecting" | "online" | "offline" | "disconnected";
 
-const WS_FALLBACK =
-  (typeof process !== "undefined" && process.env.NEXT_PUBLIC_WS_URL) ??
-  "ws://localhost:3000/ws";
+function getWsFallback() {
+  if (typeof window === "undefined") return "";
+  const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
+  return `${proto}//${window.location.hostname}:4000/ws`;
+}
 
 const STATUS_DOT: Record<ConnectionStatus, string> = {
   online:       "bg-accent animate-pulse-dot",
@@ -40,7 +42,7 @@ export function StationCard({
 }) {
   const t = useTranslations("stationCard");
   const initials = station.stationId.slice(0, 2).toUpperCase();
-  const wsUrl    = station.wsUrl ?? WS_FALLBACK;
+  const wsUrl    = station.wsUrl || getWsFallback();
 
   const [status,     setStatus]     = useState<ConnectionStatus>("connecting");
   const [deleting,   setDeleting]   = useState(false);

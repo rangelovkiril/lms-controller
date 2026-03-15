@@ -41,7 +41,7 @@ function metaToStation(meta: any): Station {
     lat:         meta.lat         ?? 0,
     lon:         meta.lon         ?? 0,
     description: meta.description ?? undefined,
-    wsUrl:       meta.wsUrl       ?? `ws://localhost:3000/ws`,
+    wsUrl:       meta.wsUrl       ?? "",
     hardware:    meta.hardware    ?? undefined,
   };
 }
