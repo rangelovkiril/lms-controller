@@ -4,27 +4,13 @@ import Link      from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { API_BASE } from "@/types";
+import { getWsUrl, type Station } from "@/lib/stations";
 import {
   buildSubscribeMessage,
   parseTrackingMessage,
 } from "@/lib/tracking";
 
-interface StationMeta {
-  stationId:    string;
-  name:         string;
-  lat:          number;
-  lon:          number;
-  description?: string;
-  wsUrl?:       string;
-}
-
 type ConnectionStatus = "connecting" | "online" | "offline" | "disconnected";
-
-function getWsFallback() {
-  if (typeof window === "undefined") return "";
-  const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
-  return `${proto}//${window.location.hostname}:4000/ws`;
-}
 
 const STATUS_DOT: Record<ConnectionStatus, string> = {
   online:       "bg-accent animate-pulse-dot",
@@ -37,12 +23,12 @@ export function StationCard({
   station,
   onDelete,
 }: {
-  station:  StationMeta;
+  station:  Station;
   onDelete: (id: string) => void;
 }) {
   const t = useTranslations("stationCard");
-  const initials = station.stationId.slice(0, 2).toUpperCase();
-  const wsUrl    = station.wsUrl || getWsFallback();
+  const initials = station.id.slice(0, 2).toUpperCase();
+  const wsUrl    = getWsUrl(station);
 
   const [status,     setStatus]     = useState<ConnectionStatus>("connecting");
   const [deleting,   setDeleting]   = useState(false);
@@ -50,6 +36,7 @@ export function StationCard({
   const socketRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
+    if (!wsUrl) return;
     let active = true;
     let timer:  ReturnType<typeof setTimeout>;
 
@@ -61,7 +48,7 @@ export function StationCard({
 
       ws.onopen = () => {
         if (!active) { ws.close(); return; }
-        ws.send(buildSubscribeMessage("subscribe", station.stationId));
+        ws.send(buildSubscribeMessage("subscribe", station.id));
       };
 
       ws.onmessage = (ev) => {
@@ -95,14 +82,14 @@ export function StationCard({
       socketRef.current = null;
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [wsUrl, station.stationId]);
+  }, [wsUrl, station.id]);
 
   const handleDelete = async () => {
     if (!confirmDel) { setConfirmDel(true); return; }
     setDeleting(true);
     try {
-      await fetch(`${API_BASE}/stations/${station.stationId}`, { method: "DELETE" });
-      onDelete(station.stationId);
+      await fetch(`${API_BASE}/stations/${station.id}`, { method: "DELETE" });
+      onDelete(station.id);
     } catch {
       setDeleting(false);
       setConfirmDel(false);
@@ -125,7 +112,7 @@ export function StationCard({
             />
           </div>
           <div className="font-mono text-[11.5px] text-text-muted mt-0.5 truncate">
-            {station.stationId}
+            {station.id}
           </div>
         </div>
 
@@ -181,7 +168,7 @@ export function StationCard({
 
       <div className="border-t border-border grid grid-cols-2">
         <Link
-          href={`/station/${station.stationId}/command`}
+          href={`/station/${station.id}/command`}
           className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-[12.5px] font-mono font-medium text-text-muted hover:text-text hover:bg-surface-hi border-r border-border transition-colors no-underline"
         >
           <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -191,7 +178,7 @@ export function StationCard({
           {t("commandCenter")}
         </Link>
         <Link
-          href={`/station/${station.stationId}`}
+          href={`/station/${station.id}`}
           className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-[12.5px] font-mono font-medium text-text-muted hover:text-accent hover:bg-accent-dim transition-colors no-underline"
         >
           <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

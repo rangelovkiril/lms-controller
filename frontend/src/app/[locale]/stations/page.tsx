@@ -3,33 +3,22 @@
 import Link      from "next/link";
 import { useEffect, useState } from "react";
 import { useTranslations }     from "next-intl";
-import { API_BASE } from "@/types";
+import { type Station, getAllStations } from "@/lib/stations";
 import { StationCard } from "./StationCard";
-
-interface StationMeta {
-  stationId:    string;
-  name:         string;
-  lat:          number;
-  lon:          number;
-  description?: string;
-  wsUrl?:       string;
-}
 
 export default function StationsPage() {
   const t = useTranslations("stations");
-  const [stations, setStations] = useState<StationMeta[]>([]);
+  const [stations, setStations] = useState<Station[]>([]);
   const [loading,  setLoading]  = useState(true);
 
   useEffect(() => {
-    fetch(`${API_BASE}/stations`, { cache: "no-store" })
-      .then((r) => r.ok ? r.json() : [])
+    getAllStations()
       .then(setStations)
-      .catch(() => setStations([]))
       .finally(() => setLoading(false));
   }, []);
 
   const handleDelete = (id: string) =>
-    setStations((prev) => prev.filter((s) => s.stationId !== id));
+    setStations((prev) => prev.filter((s) => s.id !== id));
 
   return (
     <div className="h-full overflow-y-auto p-6">
@@ -66,7 +55,7 @@ export default function StationsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
             {stations.map((station) => (
               <StationCard
-                key={station.stationId}
+                key={station.id}
                 station={station}
                 onDelete={handleDelete}
               />

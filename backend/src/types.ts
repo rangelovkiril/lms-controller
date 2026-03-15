@@ -3,23 +3,23 @@ import type { InfluxClient } from "./plugins/influx"
 
 type MqttPlugin = ReturnType<typeof mqttClient>
 
-export type MqttDecorator   = MqttPlugin["decorator"]["mqtt"]
+export type MqttDecorator = MqttPlugin["decorator"]["mqtt"]
 export type InfluxDecorator = InfluxClient
 
 export interface StationMeta {
-  stationId:    string
-  name:         string
-  lat:          number
-  lon:          number
+  stationId: string
+  name: string
+  lat: number
+  lon: number
   description?: string
-  wsUrl?:       string
-  hardware?:    string
+  backendUrl?: string
+  hardware?: string
 }
 
 export interface PositionPayload {
-  az:           number
-  el:           number
-  dist:         number
+  az: number
+  el: number
+  dist: number
   influx_token: string
 }
 
