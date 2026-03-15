@@ -45,10 +45,10 @@ const app = new Elysia()
   .use(
     mockSensor({
       brokerUrl: BROKER_URL,
-      stationId: "backend-mock",
+      stationId: "docker-test",
       objId: "heart",
       influxToken:
-        "qubdG9_AwOHO30wHKlDyi9zEldmin9WSAD30Yg6a0zBjUYH9tKDrDrHmF0-njmL-Rx-gQzn-8JoyQsqv0wdRCA==",
+        "w0EjfNDtenlZ4hwsxzJRt_yEgsJUVXdab6_c-vwwn0HaIJSF59gwfG8L46fvUWJ0HWZamOGlBOFsRrr5h-N0uQ==",
     }),
   )
   .use(
@@ -93,7 +93,7 @@ const app = new Elysia()
           lat: t.Number({ minimum: -90, maximum: 90 }),
           lon: t.Number({ minimum: -180, maximum: 180 }),
           description: t.Optional(t.String()),
-          wsUrl: t.Optional(t.String()),
+          backendUrl: t.Optional(t.String()),
           hardware: t.Optional(t.String()),
         }),
       })
@@ -122,7 +122,7 @@ const app = new Elysia()
             lat: t.Optional(t.Number({ minimum: -90, maximum: 90 })),
             lon: t.Optional(t.Number({ minimum: -180, maximum: 180 })),
             description: t.Optional(t.String()),
-            wsUrl: t.Optional(t.String()),
+            backendUrl: t.Optional(t.String()),
             hardware: t.Optional(t.String()),
           }),
         },

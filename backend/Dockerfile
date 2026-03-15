@@ -5,7 +5,7 @@ COPY package.json bun.lock* ./
 RUN --mount=type=cache,target=/root/.bun/install/cache \
     bun install --frozen-lockfile
 
-COPY tsconfig.json middleware.ts ./
+COPY tsconfig.json ./
 COPY src/ src/
 
 RUN bun build src/index.ts \

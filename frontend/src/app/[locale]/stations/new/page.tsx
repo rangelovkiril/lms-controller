@@ -1,35 +1,36 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
-import { useRouter }     from "next/navigation";
-import { API_BASE }      from "@/types";
-import { inputBase }     from "@/components/ui/inputStyles";
+import { useRouter } from "next/navigation";
+import { API_BASE } from "@/types";
+import { inputBase } from "@/components/ui/inputStyles";
+import { useLocale } from "next-intl";
 import Link from "next/link";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface FormState {
-  stationId:   string;
-  name:        string;
-  lat:         string;
-  lon:         string;
+  stationId: string;
+  name: string;
+  lat: string;
+  lon: string;
   description: string;
-  wsUrl:       string;
-  hardware:    string;
+  backendUrl: string;
+  hardware: string;
 }
 
-interface FieldError { [key: string]: string }
+interface FieldError {
+  [key: string]: string;
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function validate(form: FormState): FieldError {
   const errors: FieldError = {};
-  if (!form.stationId.trim())
-    errors.stationId = "Required";
+  if (!form.stationId.trim()) errors.stationId = "Required";
   else if (!/^[a-z0-9-]+$/.test(form.stationId))
     errors.stationId = "Lowercase letters, numbers and dashes only";
 
-  if (!form.name.trim())
-    errors.name = "Required";
+  if (!form.name.trim()) errors.name = "Required";
 
   const lat = parseFloat(form.lat);
   if (form.lat === "" || isNaN(lat) || lat < -90 || lat > 90)
@@ -39,8 +40,8 @@ function validate(form: FormState): FieldError {
   if (form.lon === "" || isNaN(lon) || lon < -180 || lon > 180)
     errors.lon = "Must be between −180 and 180";
 
-  if (form.wsUrl && !/^wss?:\/\/.+/.test(form.wsUrl))
-    errors.wsUrl = "Must start with ws:// or wss://";
+  if (form.backendUrl && !/^https?:\/\/.+/.test(form.backendUrl))
+    errors.backendUrl = "Must start with http:// or https://";
 
   return errors;
 }
@@ -48,12 +49,16 @@ function validate(form: FormState): FieldError {
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 function FieldRow({
-  label, required, error, hint, children,
+  label,
+  required,
+  error,
+  hint,
+  children,
 }: {
-  label:    string;
+  label: string;
   required?: boolean;
-  error?:   string;
-  hint?:    string;
+  error?: string;
+  hint?: string;
   children: React.ReactNode;
 }) {
   return (
@@ -70,15 +75,24 @@ function FieldRow({
           <span className="font-mono text-[10.5px] text-danger">{error}</span>
         )}
         {hint && !error && (
-          <span className="font-mono text-[10.5px] text-text-muted">{hint}</span>
+          <span className="font-mono text-[10.5px] text-text-muted">
+            {hint}
+          </span>
         )}
       </div>
     </div>
   );
 }
 
-function TokenReveal({ token, stationId }: { token: string; stationId: string }) {
+function TokenReveal({
+  token,
+  stationId,
+}: {
+  token: string;
+  stationId: string;
+}) {
   const [copied, setCopied] = useState(false);
+  const locale = useLocale();
   const router = useRouter();
 
   const copy = async () => {
@@ -92,22 +106,39 @@ function TokenReveal({ token, stationId }: { token: string; stationId: string })
       {/* Success header */}
       <div className="flex items-center gap-3">
         <div className="w-9 h-9 rounded-full bg-accent-dim border border-accent/30 flex items-center justify-center shrink-0">
-          <svg className="w-4 h-4 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <path d="M20 6L9 17l-5-5"/>
+          <svg
+            className="w-4 h-4 text-accent"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+          >
+            <path d="M20 6L9 17l-5-5" />
           </svg>
         </div>
         <div>
-          <div className="text-[13px] font-semibold text-text">Station created</div>
-          <div className="font-mono text-[11px] text-text-muted">{stationId}</div>
+          <div className="text-[13px] font-semibold text-text">
+            Station created
+          </div>
+          <div className="font-mono text-[11px] text-text-muted">
+            {stationId}
+          </div>
         </div>
       </div>
 
       {/* Token box */}
       <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 flex flex-col gap-3">
         <div className="flex items-start gap-2">
-          <svg className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
-            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+          <svg
+            className="w-4 h-4 text-amber-400 shrink-0 mt-0.5"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+            <line x1="12" y1="9" x2="12" y2="13" />
+            <line x1="12" y1="17" x2="12.01" y2="17" />
           </svg>
           <p className="font-mono text-[11px] text-amber-300 leading-relaxed">
             Save this write token — it will <strong>not be shown again</strong>.
@@ -159,22 +190,22 @@ function TokenReveal({ token, stationId }: { token: string; stationId: string })
 // ─── Main form ────────────────────────────────────────────────────────────────
 
 const EMPTY: FormState = {
-  stationId:   "",
-  name:        "",
-  lat:         "",
-  lon:         "",
+  stationId: "",
+  name: "",
+  lat: "",
+  lon: "",
   description: "",
-  wsUrl:       "",
-  hardware:    "",
+  backendUrl: "",
+  hardware: "",
 };
 
 export default function NewStationPage() {
-  const [form,     setForm]     = useState<FormState>(EMPTY);
-  const [errors,   setErrors]   = useState<FieldError>({});
-  const [status,   setStatus]   = useState<"idle" | "submitting" | "done">("idle");
+  const [form, setForm] = useState<FormState>(EMPTY);
+  const [errors, setErrors] = useState<FieldError>({});
+  const [status, setStatus] = useState<"idle" | "submitting" | "done">("idle");
   const [apiError, setApiError] = useState("");
-  const [token,    setToken]    = useState("");
-  const [geocode,  setGeocode]  = useState("");
+  const [token, setToken] = useState("");
+  const [geocode, setGeocode] = useState("");
 
   const patch = (key: keyof FormState, value: string) =>
     setForm((f) => ({ ...f, [key]: value }));
@@ -183,13 +214,16 @@ export default function NewStationPage() {
   useEffect(() => {
     const lat = parseFloat(form.lat);
     const lon = parseFloat(form.lon);
-    if (isNaN(lat) || isNaN(lon)) { setGeocode(""); return; }
+    if (isNaN(lat) || isNaN(lon)) {
+      setGeocode("");
+      return;
+    }
 
     const id = setTimeout(async () => {
       try {
-        const res  = await fetch(
+        const res = await fetch(
           `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`,
-          { headers: { "Accept-Language": "en" } }
+          { headers: { "Accept-Language": "en" } },
         );
         const data = await res.json();
         setGeocode(data.display_name?.split(",").slice(0, 3).join(", ") ?? "");
@@ -202,7 +236,8 @@ export default function NewStationPage() {
 
   // Auto-populate stationId from name
   useEffect(() => {
-    if (form.stationId && form.stationId !== slugify(form.name.slice(0, -1))) return;
+    if (form.stationId && form.stationId !== slugify(form.name.slice(0, -1)))
+      return;
     patch("stationId", slugify(form.name));
   }, [form.name]);
 
@@ -216,16 +251,16 @@ export default function NewStationPage() {
 
     try {
       const res = await fetch(`${API_BASE}/stations`, {
-        method:  "POST",
+        method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          stationId:   form.stationId,
-          name:        form.name,
-          lat:         parseFloat(form.lat),
-          lon:         parseFloat(form.lon),
+          stationId: form.stationId,
+          name: form.name,
+          lat: parseFloat(form.lat),
+          lon: parseFloat(form.lon),
           description: form.description || undefined,
-          wsUrl:       form.wsUrl       || undefined,
-          hardware:    form.hardware    || undefined,
+          backendUrl: form.backendUrl || undefined,
+          hardware: form.hardware || undefined,
         }),
       });
 
@@ -246,17 +281,24 @@ export default function NewStationPage() {
   return (
     <div className="h-full overflow-y-auto p-6">
       <div className="max-w-xl mx-auto flex flex-col gap-5">
-
         {/* Header */}
         <div>
           <div className="flex items-center gap-2 font-mono text-[11px] text-text-muted mb-3">
-            <Link href="/stations" className="hover:text-text transition-colors no-underline">Stations</Link>
+            <Link
+              href="/stations"
+              className="hover:text-text transition-colors no-underline"
+            >
+              Stations
+            </Link>
             <span className="text-border-hi">/</span>
             <span className="text-text">New Station</span>
           </div>
-          <h1 className="text-base font-semibold text-text tracking-tight">Register Station</h1>
+          <h1 className="text-base font-semibold text-text tracking-tight">
+            Register Station
+          </h1>
           <p className="font-mono text-[11px] text-text-muted mt-0.5">
-            Creates an InfluxDB bucket and a write-only API token for the station hardware.
+            Creates an InfluxDB bucket and a write-only API token for the
+            station hardware.
           </p>
         </div>
 
@@ -267,20 +309,25 @@ export default function NewStationPage() {
               <TokenReveal token={token} stationId={form.stationId} />
             ) : (
               <div className="flex flex-col">
-
                 {/* Identity */}
                 <div className="mb-1">
                   <span className="text-[10px] font-mono uppercase tracking-widest text-text-muted">
                     Identity
                   </span>
                 </div>
-                <FieldRow label="Station ID" required error={errors.stationId}
-                  hint="URL-safe identifier, auto-filled from name">
+                <FieldRow
+                  label="Station ID"
+                  required
+                  error={errors.stationId}
+                  hint="URL-safe identifier, auto-filled from name"
+                >
                   <input
                     className={inputBase}
                     placeholder="sofia-slr-01"
                     value={form.stationId}
-                    onChange={(e) => patch("stationId", slugify(e.target.value))}
+                    onChange={(e) =>
+                      patch("stationId", slugify(e.target.value))
+                    }
                   />
                 </FieldRow>
                 <FieldRow label="Display Name" required error={errors.name}>
@@ -308,7 +355,10 @@ export default function NewStationPage() {
                 </div>
                 <FieldRow label="Latitude" required error={errors.lat}>
                   <input
-                    type="number" step="0.001" min="-90" max="90"
+                    type="number"
+                    step="0.001"
+                    min="-90"
+                    max="90"
                     className={inputBase}
                     placeholder="42.698"
                     value={form.lat}
@@ -317,7 +367,10 @@ export default function NewStationPage() {
                 </FieldRow>
                 <FieldRow label="Longitude" required error={errors.lon}>
                   <input
-                    type="number" step="0.001" min="-180" max="180"
+                    type="number"
+                    step="0.001"
+                    min="-180"
+                    max="180"
                     className={inputBase}
                     placeholder="23.322"
                     value={form.lon}
@@ -338,17 +391,23 @@ export default function NewStationPage() {
                     Connection
                   </span>
                 </div>
-                <FieldRow label="WS URL" error={errors.wsUrl}
-                  hint="WebSocket endpoint for this station's backend">
+                <FieldRow
+                  label="Backend URL"
+                  error={errors.backendUrl}
+                  hint="Base URL of this station's backend (leave empty for default)"
+                >
                   <input
                     className={inputBase}
-                    placeholder="ws://192.168.1.100:3000/ws"
-                    value={form.wsUrl}
-                    onChange={(e) => patch("wsUrl", e.target.value)}
+                    placeholder="http://192.168.1.100:3000"
+                    value={form.backendUrl}
+                    onChange={(e) => patch("backendUrl", e.target.value)}
                   />
                 </FieldRow>
-                <FieldRow label="Hardware" error={errors.hardware}
-                  hint="e.g. Nd:YAG 532nm · 10Hz">
+                <FieldRow
+                  label="Hardware"
+                  error={errors.hardware}
+                  hint="e.g. Nd:YAG 532nm · 10Hz"
+                >
                   <input
                     className={inputBase}
                     placeholder="Nd:YAG 532nm · 10Hz"
@@ -391,7 +450,6 @@ export default function NewStationPage() {
             )}
           </div>
         </div>
-
       </div>
     </div>
   );

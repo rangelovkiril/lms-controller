@@ -12,8 +12,8 @@ export async function getStations(influx: InfluxDecorator): Promise<string[]> {
 }
 
 export async function getStationMeta(
-  influx:  InfluxDecorator,
-  station: string
+  influx: InfluxDecorator,
+  station: string,
 ): Promise<StationMeta | null> {
   const rows = await influx.query<any>(`
     from(bucket: "${station}")
@@ -25,19 +25,19 @@ export async function getStationMeta(
   if (!rows.length) return null
   const r = rows[0]
   return {
-    stationId:   station,
-    name:        r.name        ?? station,
-    lat:         r.lat         ?? 0,
-    lon:         r.lon         ?? 0,
+    stationId: station,
+    name: r.name ?? station,
+    lat: r.lat ?? 0,
+    lon: r.lon ?? 0,
     description: r.description ?? undefined,
-    wsUrl:       r.wsUrl       ?? undefined,
-    hardware:    r.hardware    ?? undefined,
+    backendUrl: r.backendUrl ?? undefined,
+    hardware: r.hardware ?? undefined,
   }
 }
 
 export async function createStation(
   influx: InfluxDecorator,
-  meta:   StationMeta
+  meta: StationMeta,
 ): Promise<{ token: string }> {
   const orgId = await influx.getOrgId()
 
@@ -48,12 +48,14 @@ export async function createStation(
 
   const auth = await influx.authApi.postAuthorizations({
     body: {
-      orgID:       orgId,
+      orgID: orgId,
       description: `write-only: ${meta.stationId}`,
-      permissions: [{
-        action:   "write",
-        resource: { type: "buckets", id: bucket.id!, orgID: orgId },
-      }],
+      permissions: [
+        {
+          action: "write",
+          resource: { type: "buckets", id: bucket.id!, orgID: orgId },
+        },
+      ],
     },
   })
 
@@ -63,17 +65,21 @@ export async function createStation(
 }
 
 export async function updateStation(
-  influx:  InfluxDecorator,
+  influx: InfluxDecorator,
   station: string,
-  patch:   Partial<Omit<StationMeta, "stationId">>
+  patch: Partial<Omit<StationMeta, "stationId">>,
 ): Promise<void> {
   const current = await getStationMeta(influx, station)
-  await writeMetaPoint(influx, { ...current, stationId: station, ...patch } as StationMeta)
+  await writeMetaPoint(influx, {
+    ...current,
+    stationId: station,
+    ...patch,
+  } as StationMeta)
 }
 
 export async function writeMetaIfMissing(
   influx: InfluxDecorator,
-  meta:   StationMeta
+  meta: StationMeta,
 ): Promise<void> {
   const existing = await getStationMeta(influx, meta.stationId)
   if (existing) return
@@ -81,22 +87,25 @@ export async function writeMetaIfMissing(
   console.log(`[Station] Wrote _meta for mock station "${meta.stationId}"`)
 }
 
-function writeMetaPoint(influx: InfluxDecorator, meta: StationMeta): Promise<void> {
+function writeMetaPoint(
+  influx: InfluxDecorator,
+  meta: StationMeta,
+): Promise<void> {
   const point = new Point("_meta")
     .stringField("name", meta.name)
-    .floatField("lat",   meta.lat)
-    .floatField("lon",   meta.lon)
+    .floatField("lat", meta.lat)
+    .floatField("lon", meta.lon)
 
   if (meta.description) point.stringField("description", meta.description)
-  if (meta.wsUrl)       point.stringField("wsUrl",       meta.wsUrl)
-  if (meta.hardware)    point.stringField("hardware",    meta.hardware)
+  if (meta.backendUrl) point.stringField("backendUrl", meta.backendUrl)
+  if (meta.hardware) point.stringField("hardware", meta.hardware)
 
   return influx.writePoint(point, meta.stationId)
 }
 
 export async function getObjects(
-  influx:  InfluxDecorator,
-  station: string
+  influx: InfluxDecorator,
+  station: string,
 ): Promise<string[]> {
   const rows = await influx.query<{ _value: string }>(`
     import "influxdata/influxdb/schema"
@@ -108,15 +117,15 @@ export async function getObjects(
 
 export interface EnvHistoryPoint {
   timestamp: string
-  value:     number
+  value: number
 }
 
 export async function getEnvHistory(
-  influx:  InfluxDecorator,
+  influx: InfluxDecorator,
   station: string,
-  field:   string,
-  window:  string = "-1h",
-  points:  number = 50
+  field: string,
+  window: string = "-1h",
+  points: number = 50,
 ): Promise<EnvHistoryPoint[]> {
   const rows = await influx.query<any>(`
     from(bucket: "${station}")
@@ -131,11 +140,14 @@ export async function getEnvHistory(
 }
 
 export async function deleteStation(
-  influx:  InfluxDecorator,
-  station: string
+  influx: InfluxDecorator,
+  station: string,
 ): Promise<void> {
-  const orgId  = await influx.getOrgId()
-  const res    = await influx.bucketsApi.getBuckets({ name: station, org: influx.org })
+  const orgId = await influx.getOrgId()
+  const res = await influx.bucketsApi.getBuckets({
+    name: station,
+    org: influx.org,
+  })
   const bucket = res.buckets?.[0]
   if (!bucket?.id) throw new Error(`Bucket "${station}" not found`)
   await influx.bucketsApi.deleteBucketsID({ bucketID: bucket.id })

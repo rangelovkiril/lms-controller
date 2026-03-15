@@ -1,24 +1,27 @@
 export type TimePreset = { label: string; value: string; flux: string };
 
 export const TIME_PRESETS: TimePreset[] = [
-  { label: "15m",    value: "15m",    flux: "-15m"  },
-  { label: "1h",     value: "1h",     flux: "-1h"   },
-  { label: "6h",     value: "6h",     flux: "-6h"   },
-  { label: "24h",    value: "24h",    flux: "-24h"  },
-  { label: "7d",     value: "7d",     flux: "-7d"   },
-  { label: "30d",    value: "30d",    flux: "-30d"  },
-  { label: "Custom", value: "custom", flux: ""      },
+  { label: "15m", value: "15m", flux: "-15m" },
+  { label: "1h", value: "1h", flux: "-1h" },
+  { label: "6h", value: "6h", flux: "-6h" },
+  { label: "24h", value: "24h", flux: "-24h" },
+  { label: "7d", value: "7d", flux: "-7d" },
+  { label: "30d", value: "30d", flux: "-30d" },
+  { label: "Custom", value: "custom", flux: "" },
 ];
 
-export const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000/api";
+export const API_BASE =
+  typeof window === "undefined"
+    ? `${process.env.BACKEND_URL ?? "http://localhost:3000"}/api`
+    : `${window.location.protocol}//${window.location.hostname}:${process.env.NEXT_PUBLIC_BACKEND_PORT ?? "4000"}/api`;
 
 import { Vector3 } from "three";
 
 export interface ObsSet {
-  id:      string;
-  label:   string;
-  points:  Vector3[];
-  color:   string | null; 
+  id: string;
+  label: string;
+  points: Vector3[];
+  color: string | null;
   visible: boolean;
 }
 
@@ -28,7 +31,7 @@ export const PRESET_COLORS = [
   "#ff4444", // red
   "#ff9800", // orange
   "#c084fc", // purple
-  "#ffffff",  // white
+  "#ffffff", // white
 ] as const;
 
 export function nextColor(sets: ObsSet[]): string {
@@ -38,10 +41,10 @@ export function nextColor(sets: ObsSet[]): string {
 export function createSet(sets: ObsSet[], label?: string): ObsSet {
   const n = sets.length + 1;
   return {
-    id:      crypto.randomUUID(),
-    label:   label ?? `Set ${n}`,
-    points:  [],
-    color:   nextColor(sets),
+    id: crypto.randomUUID(),
+    label: label ?? `Set ${n}`,
+    points: [],
+    color: nextColor(sets),
     visible: true,
   };
 }

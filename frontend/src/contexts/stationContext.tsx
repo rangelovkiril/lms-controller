@@ -1,19 +1,17 @@
 "use client";
-import {
-  createContext, useContext, useCallback, type ReactNode,
-} from "react";
-import { Vector3 }           from "three";
+import { createContext, useContext, useCallback, type ReactNode } from "react";
+import { Vector3 } from "three";
 import { useTracking, type TrackingState } from "@/hooks/useTracking";
-import { useObservationSets }              from "@/contexts/observationSetContext";
-import type { Station }                    from "@/lib/stations";
+import { useObservationSets } from "@/contexts/observationSetContext";
+import { type Station, getWsUrl } from "@/lib/stations";
 
 interface StationContextValue {
-  station:      Station;
-  state:        TrackingState;
+  station: Station;
+  state: TrackingState;
   targetPosVec: React.RefObject<Vector3>;
-  send:         (data: object) => void;
-  fire:         () => void;
-  stop:         () => void;
+  send: (data: object) => void;
+  fire: () => void;
+  stop: () => void;
 }
 
 const Ctx = createContext<StationContextValue | null>(null);
@@ -22,7 +20,7 @@ export function StationProvider({
   station,
   children,
 }: {
-  station:  Station;
+  station: Station;
   children: ReactNode;
 }) {
   const { addSetFromPoints } = useObservationSets();
@@ -32,8 +30,10 @@ export function StationProvider({
     [addSetFromPoints],
   );
 
+  const wsUrl = getWsUrl(station);
+
   const { state, targetPosVec, send } = useTracking(
-    station.wsUrl,
+    wsUrl,
     station.id,
     onRecordingComplete,
   );
