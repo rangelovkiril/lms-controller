@@ -1,0 +1,60 @@
+services:
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    ports:
+      - "4001:3000"
+    environment:
+      HOSTNAME: "0.0.0.0"
+    depends_on:
+      - backend
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    ports:
+      - "4000:3000"
+    environment:
+      NODE_ENV: production
+      CORS_ORIGIN: http://localhost:4001
+      MQTT_BROKER_URL: mqtt://mqtt:1883
+      INFLUX_URL: http://influxdb:8086
+      INFLUX_TOKEN: ${INFLUX_TOKEN}
+      INFLUX_ORG: LightMySatellite
+    depends_on:
+      influxdb:
+        condition: service_healthy
+      mqtt:
+        condition: service_started
+
+  influxdb:
+    image: influxdb:2
+    restart: unless-stopped
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: admin
+      DOCKER_INFLUXDB_INIT_PASSWORD: adminadmin
+      DOCKER_INFLUXDB_INIT_ORG: LightMySatellite
+      DOCKER_INFLUXDB_INIT_BUCKET: slr
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: ${INFLUX_TOKEN}
+    volumes:
+      - influxdb-data:/var/lib/influxdb2
+    healthcheck:
+      test: ["CMD", "influx", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
+  mqtt:
+    image: eclipse-mosquitto:latest
+    restart: unless-stopped
+    volumes:
+      - ./broker/config:/mosquitto/config:ro
+      - mosquitto-data:/mosquitto/data
+      - mosquitto-log:/mosquitto/log
+
+volumes:
+  influxdb-data:
+  mosquitto-data:
+  mosquitto-log:
