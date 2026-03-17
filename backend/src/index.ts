@@ -266,9 +266,13 @@ const app = new Elysia()
 
       .post(
         "/stations",
-        async ({ influx, body, orgId }) => {
+        async ({ influx, body, orgId, set }) => {
+          if (!orgId || orgId === "_all") {
+            set.status = 400
+            return { message: "Select an organization first" }
+          }
           const result = await createStation(influx, body)
-          if (orgId && orgId !== "_all") linkStationToOrg(body.stationId, orgId)
+          linkStationToOrg(body.stationId, orgId)
           return result
         },
         {

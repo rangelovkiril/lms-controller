@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/api";
 import { inputBase } from "@/components/ui/inputStyles";
 import { useLocale } from "next-intl";
+import { useAuth } from "@/contexts/authContext";
+import { LoginGate } from "@/components/ui/LoginGate";
 import Link from "next/link";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -58,9 +60,17 @@ function slugify(s: string): string {
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 function FieldRow({
-  label, required, error, hint, children,
+  label,
+  required,
+  error,
+  hint,
+  children,
 }: {
-  label: string; required?: boolean; error?: string; hint?: string; children: React.ReactNode;
+  label: string;
+  required?: boolean;
+  error?: string;
+  hint?: string;
+  children: React.ReactNode;
 }) {
   return (
     <div className="grid grid-cols-[140px_1fr] items-start gap-x-4 gap-y-1 py-2.5 border-b border-border/50 last:border-0">
@@ -72,14 +82,26 @@ function FieldRow({
       </div>
       <div className="flex flex-col gap-1">
         {children}
-        {error && <span className="font-mono text-[10.5px] text-danger">{error}</span>}
-        {hint && !error && <span className="font-mono text-[10.5px] text-text-muted">{hint}</span>}
+        {error && (
+          <span className="font-mono text-[10.5px] text-danger">{error}</span>
+        )}
+        {hint && !error && (
+          <span className="font-mono text-[10.5px] text-text-muted">
+            {hint}
+          </span>
+        )}
       </div>
     </div>
   );
 }
 
-function TokenReveal({ token, stationId }: { token: string; stationId: string }) {
+function TokenReveal({
+  token,
+  stationId,
+}: {
+  token: string;
+  stationId: string;
+}) {
   const [copied, setCopied] = useState(false);
   const locale = useLocale();
   const router = useRouter();
@@ -94,19 +116,35 @@ function TokenReveal({ token, stationId }: { token: string; stationId: string })
     <div className="flex flex-col gap-5">
       <div className="flex items-center gap-3">
         <div className="w-9 h-9 rounded-full bg-accent-dim border border-accent/30 flex items-center justify-center shrink-0">
-          <svg className="w-4 h-4 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+          <svg
+            className="w-4 h-4 text-accent"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+          >
             <path d="M20 6L9 17l-5-5" />
           </svg>
         </div>
         <div>
-          <div className="text-[13px] font-semibold text-text">Station created</div>
-          <div className="font-mono text-[11px] text-text-muted">{stationId}</div>
+          <div className="text-[13px] font-semibold text-text">
+            Station created
+          </div>
+          <div className="font-mono text-[11px] text-text-muted">
+            {stationId}
+          </div>
         </div>
       </div>
 
       <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 flex flex-col gap-3">
         <div className="flex items-start gap-2">
-          <svg className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg
+            className="w-4 h-4 text-amber-400 shrink-0 mt-0.5"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
             <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
             <line x1="12" y1="9" x2="12" y2="13" />
             <line x1="12" y1="17" x2="12.01" y2="17" />
@@ -122,7 +160,9 @@ function TokenReveal({ token, stationId }: { token: string; stationId: string })
             onClick={copy}
             className={[
               "shrink-0 px-2.5 py-1 rounded border text-[10.5px] transition-colors",
-              copied ? "border-accent/40 bg-accent-dim text-accent" : "border-border text-text-muted hover:border-border-hi hover:text-text",
+              copied
+                ? "border-accent/40 bg-accent-dim text-accent"
+                : "border-border text-text-muted hover:border-border-hi hover:text-text",
             ].join(" ")}
           >
             {copied ? "✓ Copied" : "Copy"}
@@ -131,18 +171,63 @@ function TokenReveal({ token, stationId }: { token: string; stationId: string })
       </div>
 
       <div className="flex flex-col gap-2">
-        <button onClick={() => router.push(`/${locale}/station/${stationId}/command`)}
-          className="w-full py-2.5 rounded-lg font-mono text-[12px] font-medium bg-accent-dim border border-accent/40 text-accent hover:bg-accent/20 transition-colors">
+        <button
+          onClick={() => router.push(`/${locale}/station/${stationId}/command`)}
+          className="w-full py-2.5 rounded-lg font-mono text-[12px] font-medium bg-accent-dim border border-accent/40 text-accent hover:bg-accent/20 transition-colors"
+        >
           Open Command Center →
         </button>
-        <button onClick={() => router.push(`/${locale}/station/${stationId}`)}
-          className="w-full py-2.5 rounded-lg font-mono text-[12px] font-medium border border-border text-text-muted hover:text-text hover:border-border-hi transition-colors">
+        <button
+          onClick={() => router.push(`/${locale}/station/${stationId}`)}
+          className="w-full py-2.5 rounded-lg font-mono text-[12px] font-medium border border-border text-text-muted hover:text-text hover:border-border-hi transition-colors"
+        >
           Open 3D View →
         </button>
-        <button onClick={() => router.push("/stations")}
-          className="w-full py-2 rounded-lg font-mono text-[12px] text-text-muted hover:text-text transition-colors">
+        <button
+          onClick={() => router.push("/stations")}
+          className="w-full py-2 rounded-lg font-mono text-[12px] text-text-muted hover:text-text transition-colors"
+        >
           Back to stations
         </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── No-org guard ─────────────────────────────────────────────────────────────
+
+function NoOrgGuard() {
+  return (
+    <div className="h-full flex items-center justify-center p-6">
+      <div className="flex flex-col items-center gap-4 max-w-xs text-center">
+        <div className="w-12 h-12 rounded-xl bg-surface-hi border border-border flex items-center justify-center">
+          <svg
+            className="w-5 h-5 text-text-muted"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+          >
+            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <path d="M23 21v-2a4 4 0 00-3-3.87" />
+            <path d="M16 3.13a4 4 0 010 7.75" />
+          </svg>
+        </div>
+        <div>
+          <p className="text-[14px] font-medium text-text">
+            Organization required
+          </p>
+          <p className="text-[12px] font-mono text-text-muted mt-1">
+            Create or join an organization before adding a station.
+          </p>
+        </div>
+        <Link
+          href="/orgs"
+          className="px-4 py-2 rounded-lg font-mono text-[13px] font-medium bg-accent text-black hover:bg-[#00ef8e] transition-all no-underline"
+        >
+          Go to Organizations
+        </Link>
       </div>
     </div>
   );
@@ -151,16 +236,25 @@ function TokenReveal({ token, stationId }: { token: string; stationId: string })
 // ─── Main form ────────────────────────────────────────────────────────────────
 
 const EMPTY: FormState = {
-  stationId: "", name: "", lat: "", lon: "", description: "", backendUrl: "", hardware: "",
+  stationId: "",
+  name: "",
+  lat: "",
+  lon: "",
+  description: "",
+  backendUrl: "",
+  hardware: "",
 };
 
-export default function NewStationPage() {
-  const [form,     setForm]     = useState<FormState>(EMPTY);
-  const [errors,   setErrors]   = useState<FieldError>({});
-  const [status,   setStatus]   = useState<"idle" | "submitting" | "done">("idle");
+function NewStationForm() {
+  const { activeOrg } = useAuth();
+  const [form, setForm] = useState<FormState>(EMPTY);
+  const [errors, setErrors] = useState<FieldError>({});
+  const [status, setStatus] = useState<"idle" | "submitting" | "done">("idle");
   const [apiError, setApiError] = useState("");
-  const [token,    setToken]    = useState("");
-  const [geocode,  setGeocode]  = useState("");
+  const [token, setToken] = useState("");
+  const [geocode, setGeocode] = useState("");
+
+  if (!activeOrg) return <NoOrgGuard />;
 
   const patch = (key: keyof FormState, value: string) =>
     setForm((f) => ({ ...f, [key]: value }));
@@ -168,7 +262,10 @@ export default function NewStationPage() {
   useEffect(() => {
     const lat = parseFloat(form.lat);
     const lon = parseFloat(form.lon);
-    if (isNaN(lat) || isNaN(lon)) { setGeocode(""); return; }
+    if (isNaN(lat) || isNaN(lon)) {
+      setGeocode("");
+      return;
+    }
 
     const id = setTimeout(async () => {
       try {
@@ -178,13 +275,16 @@ export default function NewStationPage() {
         );
         const data = await res.json();
         setGeocode(data.display_name?.split(",").slice(0, 3).join(", ") ?? "");
-      } catch { setGeocode(""); }
+      } catch {
+        setGeocode("");
+      }
     }, 700);
     return () => clearTimeout(id);
   }, [form.lat, form.lon]);
 
   useEffect(() => {
-    if (form.stationId && form.stationId !== slugify(form.name.slice(0, -1))) return;
+    if (form.stationId && form.stationId !== slugify(form.name.slice(0, -1)))
+      return;
     patch("stationId", slugify(form.name));
   }, [form.name]);
 
@@ -201,13 +301,13 @@ export default function NewStationPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          stationId:   form.stationId,
-          name:        form.name,
-          lat:         parseFloat(form.lat),
-          lon:         parseFloat(form.lon),
+          stationId: form.stationId,
+          name: form.name,
+          lat: parseFloat(form.lat),
+          lon: parseFloat(form.lon),
           description: form.description || undefined,
-          backendUrl:  form.backendUrl || undefined,
-          hardware:    form.hardware || undefined,
+          backendUrl: form.backendUrl || undefined,
+          hardware: form.hardware || undefined,
         }),
       });
 
@@ -230,13 +330,22 @@ export default function NewStationPage() {
       <div className="max-w-xl mx-auto flex flex-col gap-5">
         <div>
           <div className="flex items-center gap-2 font-mono text-[11px] text-text-muted mb-3">
-            <Link href="/stations" className="hover:text-text transition-colors no-underline">Stations</Link>
+            <Link
+              href="/stations"
+              className="hover:text-text transition-colors no-underline"
+            >
+              Stations
+            </Link>
             <span className="text-border-hi">/</span>
             <span className="text-text">New Station</span>
           </div>
-          <h1 className="text-base font-semibold text-text tracking-tight">Register Station</h1>
+          <h1 className="text-base font-semibold text-text tracking-tight">
+            Register Station
+          </h1>
           <p className="font-mono text-[11px] text-text-muted mt-0.5">
-            Creates an InfluxDB bucket and a write-only API token for the station hardware.
+            Creates an InfluxDB bucket and a write-only API token for the
+            station hardware. Station will be added to{" "}
+            <span className="text-accent">{activeOrg.name}</span>.
           </p>
         </div>
 
@@ -247,48 +356,107 @@ export default function NewStationPage() {
             ) : (
               <div className="flex flex-col">
                 <div className="mb-1">
-                  <span className="text-[10px] font-mono uppercase tracking-widest text-text-muted">Identity</span>
+                  <span className="text-[10px] font-mono uppercase tracking-widest text-text-muted">
+                    Identity
+                  </span>
                 </div>
-                <FieldRow label="Station ID" required error={errors.stationId} hint="URL-safe identifier, auto-filled from name">
-                  <input className={inputBase} placeholder="sofia-slr-01" value={form.stationId}
-                    onChange={(e) => patch("stationId", slugify(e.target.value))} />
+                <FieldRow
+                  label="Station ID"
+                  required
+                  error={errors.stationId}
+                  hint="URL-safe identifier, auto-filled from name"
+                >
+                  <input
+                    className={inputBase}
+                    placeholder="sofia-slr-01"
+                    value={form.stationId}
+                    onChange={(e) =>
+                      patch("stationId", slugify(e.target.value))
+                    }
+                  />
                 </FieldRow>
                 <FieldRow label="Display Name" required error={errors.name}>
-                  <input className={inputBase} placeholder="Sofia SLR Station" value={form.name}
-                    onChange={(e) => patch("name", e.target.value)} />
+                  <input
+                    className={inputBase}
+                    placeholder="Sofia SLR Station"
+                    value={form.name}
+                    onChange={(e) => patch("name", e.target.value)}
+                  />
                 </FieldRow>
                 <FieldRow label="Description" error={errors.description}>
-                  <input className={inputBase} placeholder="Optional short description" value={form.description}
-                    onChange={(e) => patch("description", e.target.value)} />
+                  <input
+                    className={inputBase}
+                    placeholder="Optional short description"
+                    value={form.description}
+                    onChange={(e) => patch("description", e.target.value)}
+                  />
                 </FieldRow>
 
                 <div className="mt-4 mb-1">
-                  <span className="text-[10px] font-mono uppercase tracking-widest text-text-muted">Location</span>
+                  <span className="text-[10px] font-mono uppercase tracking-widest text-text-muted">
+                    Location
+                  </span>
                 </div>
                 <FieldRow label="Latitude" required error={errors.lat}>
-                  <input type="number" step="0.001" min="-90" max="90" className={inputBase}
-                    placeholder="42.698" value={form.lat} onChange={(e) => patch("lat", e.target.value)} />
+                  <input
+                    type="number"
+                    step="0.001"
+                    min="-90"
+                    max="90"
+                    className={inputBase}
+                    placeholder="42.698"
+                    value={form.lat}
+                    onChange={(e) => patch("lat", e.target.value)}
+                  />
                 </FieldRow>
                 <FieldRow label="Longitude" required error={errors.lon}>
-                  <input type="number" step="0.001" min="-180" max="180" className={inputBase}
-                    placeholder="23.322" value={form.lon} onChange={(e) => patch("lon", e.target.value)} />
+                  <input
+                    type="number"
+                    step="0.001"
+                    min="-180"
+                    max="180"
+                    className={inputBase}
+                    placeholder="23.322"
+                    value={form.lon}
+                    onChange={(e) => patch("lon", e.target.value)}
+                  />
                 </FieldRow>
                 {geocode && (
                   <FieldRow label="Resolved">
-                    <span className="font-mono text-[11.5px] text-text-muted py-[0.55rem]">📍 {geocode}</span>
+                    <span className="font-mono text-[11.5px] text-text-muted py-[0.55rem]">
+                      📍 {geocode}
+                    </span>
                   </FieldRow>
                 )}
 
                 <div className="mt-4 mb-1">
-                  <span className="text-[10px] font-mono uppercase tracking-widest text-text-muted">Connection</span>
+                  <span className="text-[10px] font-mono uppercase tracking-widest text-text-muted">
+                    Connection
+                  </span>
                 </div>
-                <FieldRow label="Backend URL" error={errors.backendUrl} hint="Base URL of this station's backend (leave empty for default)">
-                  <input className={inputBase} placeholder="http://192.168.1.100:3000" value={form.backendUrl}
-                    onChange={(e) => patch("backendUrl", e.target.value)} />
+                <FieldRow
+                  label="Backend URL"
+                  error={errors.backendUrl}
+                  hint="Base URL of this station's backend (leave empty for default)"
+                >
+                  <input
+                    className={inputBase}
+                    placeholder="http://192.168.1.100:3000"
+                    value={form.backendUrl}
+                    onChange={(e) => patch("backendUrl", e.target.value)}
+                  />
                 </FieldRow>
-                <FieldRow label="Hardware" error={errors.hardware} hint="e.g. Nd:YAG 532nm · 10Hz">
-                  <input className={inputBase} placeholder="Nd:YAG 532nm · 10Hz" value={form.hardware}
-                    onChange={(e) => patch("hardware", e.target.value)} />
+                <FieldRow
+                  label="Hardware"
+                  error={errors.hardware}
+                  hint="e.g. Nd:YAG 532nm · 10Hz"
+                >
+                  <input
+                    className={inputBase}
+                    placeholder="Nd:YAG 532nm · 10Hz"
+                    value={form.hardware}
+                    onChange={(e) => patch("hardware", e.target.value)}
+                  />
                 </FieldRow>
 
                 {apiError && (
@@ -298,17 +466,24 @@ export default function NewStationPage() {
                 )}
 
                 <div className="mt-5 flex gap-2">
-                  <button onClick={submit} disabled={status === "submitting"}
-                    className="flex-1 py-2.5 rounded-lg font-mono text-[12px] font-medium bg-accent-dim border border-accent/40 text-accent hover:bg-accent/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+                  <button
+                    onClick={submit}
+                    disabled={status === "submitting"}
+                    className="flex-1 py-2.5 rounded-lg font-mono text-[12px] font-medium bg-accent-dim border border-accent/40 text-accent hover:bg-accent/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
                     {status === "submitting" ? (
                       <span className="flex items-center justify-center gap-2">
                         <span className="w-3.5 h-3.5 border border-accent/40 border-t-accent rounded-full animate-spin" />
                         Creating…
                       </span>
-                    ) : "Create Station"}
+                    ) : (
+                      "Create Station"
+                    )}
                   </button>
-                  <Link href="/stations"
-                    className="px-4 py-2.5 rounded-lg font-mono text-[12px] text-text-muted border border-border hover:border-border-hi hover:text-text transition-colors no-underline">
+                  <Link
+                    href="/stations"
+                    className="px-4 py-2.5 rounded-lg font-mono text-[12px] text-text-muted border border-border hover:border-border-hi hover:text-text transition-colors no-underline"
+                  >
                     Cancel
                   </Link>
                 </div>
@@ -318,5 +493,13 @@ export default function NewStationPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function NewStationPage() {
+  return (
+    <LoginGate>
+      <NewStationForm />
+    </LoginGate>
   );
 }
