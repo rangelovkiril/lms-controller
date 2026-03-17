@@ -37,15 +37,22 @@ function metaToStation(meta: any): Station {
   }
 }
 
+/**
+ * WebSocket URL:
+ *   - If station has a custom backendUrl → use that
+ *   - Otherwise → same origin /ws (Caddy proxies to backend)
+ */
 export function getWsUrl(station: Station): string {
   if (typeof window === "undefined") return ""
+
   if (station.backendUrl) {
     const url = new URL(station.backendUrl)
     url.protocol = url.protocol === "https:" ? "wss:" : "ws:"
     url.pathname = "/ws"
     return url.toString()
   }
+
+  // Same origin — Caddy handles /ws → backend:3000
   const proto = window.location.protocol === "https:" ? "wss:" : "ws:"
-  const port  = process.env.NEXT_PUBLIC_BACKEND_PORT ?? "4000"
-  return `${proto}//${window.location.hostname}:${port}/ws`
+  return `${proto}//${window.location.host}/ws`
 }
