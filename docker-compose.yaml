@@ -6,11 +6,10 @@ services:
         BACKEND_URL: http://backend:3000
     restart: unless-stopped
     ports:
-      - "${FRONTEND_PORT:-4001}:3000"
+      - "127.0.0.1:${FRONTEND_PORT:-4001}:3000"
     environment:
       HOSTNAME: "0.0.0.0"
       BACKEND_URL: http://backend:3000
-      NEXT_PUBLIC_BACKEND_PORT: ${BACKEND_PORT:-4000}
       INTERNAL_KEY: ${INTERNAL_KEY}
     depends_on:
       - backend
@@ -19,10 +18,10 @@ services:
     build: ./backend
     restart: unless-stopped
     ports:
-      - "${BACKEND_PORT:-4000}:3000"
+      - "127.0.0.1:${BACKEND_PORT:-4000}:3000"
     environment:
       NODE_ENV: production
-      CORS_ORIGIN: "*"
+      CORS_ORIGIN: https://lmsproject.space
       MQTT_BROKER_URL: mqtt://mqtt:1883
       INFLUX_URL: http://influxdb:8086
       INFLUX_TOKEN: ${INFLUX_TOKEN}
@@ -42,7 +41,7 @@ services:
     image: influxdb:2
     restart: unless-stopped
     ports:
-      - "${INFLUX_PORT:-8086}:8086"
+      - "127.0.0.1:${INFLUX_PORT:-8086}:8086"
     environment:
       DOCKER_INFLUXDB_INIT_MODE: setup
       DOCKER_INFLUXDB_INIT_USERNAME: ${INFLUX_ADMIN_USER:-admin}

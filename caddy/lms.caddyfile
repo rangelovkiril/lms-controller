@@ -1,0 +1,19 @@
+# ── LMS Controller ────────────────────────────────
+# Add this block to your existing Caddyfile.
+# Caddy auto-provisions Let's Encrypt TLS for the domain.
+
+lmsproject.space {
+	# API + WebSocket → backend on host port 4000
+	handle /api/* {
+		reverse_proxy localhost:4000
+	}
+
+	handle /ws {
+		reverse_proxy localhost:4000
+	}
+
+	# Everything else → frontend on host port 4001
+	handle {
+		reverse_proxy localhost:4001
+	}
+}
