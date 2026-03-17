@@ -1,6 +1,6 @@
 import { useState }        from "react";
 import { useTranslations } from "next-intl";
-import { API_BASE }        from "@/types";
+import { apiFetch }        from "@/lib/api";
 
 export function useImport() {
   const t = useTranslations("errors");
@@ -23,7 +23,7 @@ export function useImport() {
     formData.append("observationSet", observationSet);
 
     try {
-      const res = await fetch(`${API_BASE}/observations/upload`, {
+      const res = await apiFetch("/observations/upload", {
         method: "POST",
         body:   formData,
       });

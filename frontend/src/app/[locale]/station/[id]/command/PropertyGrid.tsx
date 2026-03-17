@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { API_BASE } from "@/types";
+import { apiFetch } from "@/lib/api";
 import { Spinner } from "@/components/ui/Spinner";
 import { SectionHeader } from "./SectionHeader";
 
@@ -37,7 +37,7 @@ export function PropertyGrid({ stationId }: { stationId: string }) {
   const [geocode, setGeocode] = useState("");
 
   useEffect(() => {
-    fetch(`${API_BASE}/stations/${stationId}`)
+    apiFetch(`/stations/${stationId}`)
       .then((r) => r.json())
       .then(setMeta)
       .catch(() => {});
@@ -67,7 +67,7 @@ export function PropertyGrid({ stationId }: { stationId: string }) {
     if (!meta) return;
     setSaving(true);
     try {
-      await fetch(`${API_BASE}/stations/${stationId}`, {
+      await apiFetch(`/stations/${stationId}`, {
         method:  "PATCH",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({
@@ -112,43 +112,20 @@ export function PropertyGrid({ stationId }: { stationId: string }) {
           <span className="font-mono text-[13px] text-text-muted">{meta.stationId}</span>
         </PropRow>
         <PropRow label={t("propName")}>
-          <input
-            className={inputCls}
-            value={meta.name}
-            onChange={(e) => patch("name", e.target.value)}
-          />
+          <input className={inputCls} value={meta.name} onChange={(e) => patch("name", e.target.value)} />
         </PropRow>
         <PropRow label={t("propDescription")}>
-          <input
-            className={inputCls}
-            value={meta.description ?? ""}
-            placeholder="—"
-            onChange={(e) => patch("description", e.target.value)}
-          />
+          <input className={inputCls} value={meta.description ?? ""} placeholder="—" onChange={(e) => patch("description", e.target.value)} />
         </PropRow>
         <PropRow label={t("propLatitude")}>
-          <input
-            type="number"
-            step="0.001"
-            className={inputCls}
-            value={meta.lat}
-            onChange={(e) => patch("lat", parseFloat(e.target.value) || 0)}
-          />
+          <input type="number" step="0.001" className={inputCls} value={meta.lat} onChange={(e) => patch("lat", parseFloat(e.target.value) || 0)} />
         </PropRow>
         <PropRow label={t("propLongitude")}>
-          <input
-            type="number"
-            step="0.001"
-            className={inputCls}
-            value={meta.lon}
-            onChange={(e) => patch("lon", parseFloat(e.target.value) || 0)}
-          />
+          <input type="number" step="0.001" className={inputCls} value={meta.lon} onChange={(e) => patch("lon", parseFloat(e.target.value) || 0)} />
         </PropRow>
         {geocode && (
           <PropRow label={t("propLocation")}>
-            <span className="font-mono text-[12px] text-text-muted truncate" title={geocode}>
-              📍 {geocode}
-            </span>
+            <span className="font-mono text-[12px] text-text-muted truncate" title={geocode}>📍 {geocode}</span>
           </PropRow>
         )}
       </div>

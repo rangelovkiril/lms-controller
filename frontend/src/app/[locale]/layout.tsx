@@ -2,6 +2,7 @@ import Navbar                      from "@/components/layout/Navbar";
 import { NextIntlClientProvider }  from "next-intl";
 import { getMessages }             from "next-intl/server";
 import { ObservationSetsProvider } from "@/contexts/observationSetContext";
+import { AuthProvider }            from "@/contexts/authContext";
 
 export default async function LocaleLayout({
   children,
@@ -15,12 +16,14 @@ export default async function LocaleLayout({
 
   return (
     <NextIntlClientProvider messages={messages} locale={locale}>
-      <ObservationSetsProvider>
-        <Navbar />
-        <main className="flex-1 overflow-hidden min-h-0">
-          {children}
-        </main>
-      </ObservationSetsProvider>
+      <AuthProvider>
+        <ObservationSetsProvider>
+          <Navbar />
+          <main className="flex-1 overflow-hidden min-h-0">
+            {children}
+          </main>
+        </ObservationSetsProvider>
+      </AuthProvider>
     </NextIntlClientProvider>
   );
 }
