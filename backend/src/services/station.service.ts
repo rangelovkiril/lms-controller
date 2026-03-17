@@ -100,7 +100,8 @@ function writeMetaPoint(
   if (meta.backendUrl) point.stringField("backendUrl", meta.backendUrl)
   if (meta.hardware) point.stringField("hardware", meta.hardware)
 
-  return influx.writePoint(point, meta.stationId)
+  // Immediate flush — meta must be readable right after station creation
+  return influx.writePointImmediate(point, meta.stationId)
 }
 
 export async function getObjects(
