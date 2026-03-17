@@ -8,7 +8,7 @@ export interface Station {
   lat: number;
   lon: number;
   description?: string;
-  backendUrl: string;
+  backendUrl?: string;
   hardware?: string;
 }
 
@@ -50,7 +50,7 @@ function metaToStation(meta: any): Station {
     lat: meta.lat ?? 0,
     lon: meta.lon ?? 0,
     description: meta.description,
-    backendUrl: meta.backendUrl ?? "",
+    backendUrl: meta.backendUrl,
     hardware: meta.hardware,
   };
 }
@@ -58,7 +58,7 @@ function metaToStation(meta: any): Station {
 export function getWsUrl(station: Station): string {
   if (typeof window === "undefined") return "";
 
-  // Per-station override (custom backend URL)
+  // Per-station override (direct connection to station backend)
   if (station.backendUrl) {
     const url = new URL(station.backendUrl);
     url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
@@ -66,7 +66,7 @@ export function getWsUrl(station: Station): string {
     return url.toString();
   }
 
-  // Default: same origin — Caddy/reverse proxy routes /ws → backend
+  // Same origin — Caddy routes /ws to backend
   const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
   return `${proto}//${window.location.host}/ws`;
 }

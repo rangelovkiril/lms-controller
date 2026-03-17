@@ -1,17 +1,16 @@
 export type TimePreset = { label: string; value: string; flux: string };
 
 export const TIME_PRESETS: TimePreset[] = [
-  { label: "15m",    value: "15m",    flux: "-15m"  },
-  { label: "1h",     value: "1h",     flux: "-1h"   },
-  { label: "6h",     value: "6h",     flux: "-6h"   },
-  { label: "24h",    value: "24h",    flux: "-24h"  },
-  { label: "7d",     value: "7d",     flux: "-7d"   },
-  { label: "30d",    value: "30d",    flux: "-30d"  },
-  { label: "Custom", value: "custom", flux: ""      },
+  { label: "15m", value: "15m", flux: "-15m" },
+  { label: "1h", value: "1h", flux: "-1h" },
+  { label: "6h", value: "6h", flux: "-6h" },
+  { label: "24h", value: "24h", flux: "-24h" },
+  { label: "7d", value: "7d", flux: "-7d" },
+  { label: "30d", value: "30d", flux: "-30d" },
+  { label: "Custom", value: "custom", flux: "" },
 ];
 
-// Browser: same-origin (/api) — Caddy proxies to backend
-// SSR:     internal Docker network (http://backend:3000/api)
+// SSR: internal Docker URL  |  Browser: relative (Caddy proxies to backend)
 export const API_BASE =
   typeof window === "undefined"
     ? `${process.env.BACKEND_URL ?? "http://localhost:3000"}/api`
@@ -28,7 +27,12 @@ export interface ObsSet {
 }
 
 export const PRESET_COLORS = [
-  "#00e5ff", "#69ff47", "#ff4444", "#ff9800", "#c084fc", "#ffffff",
+  "#00e5ff",
+  "#69ff47",
+  "#ff4444",
+  "#ff9800",
+  "#c084fc",
+  "#ffffff",
 ] as const;
 
 export function nextColor(sets: ObsSet[]): string {
