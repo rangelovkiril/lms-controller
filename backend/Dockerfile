@@ -17,10 +17,14 @@ RUN bun build src/index.ts \
     --minify-whitespace \
     --tree-shaking
 
+# Create an empty dir owned by nonroot to copy into distroless
+RUN mkdir -p /tmp/empty-data && chown 65532:65532 /tmp/empty-data
+
 FROM gcr.io/distroless/cc-debian12:nonroot
 WORKDIR /app
 
 COPY --from=build --chown=65532:65532 /app/server .
+COPY --from=build --chown=65532:65532 /tmp/empty-data /app/data
 
 USER 65532:65532
 EXPOSE 3000

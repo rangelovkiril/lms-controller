@@ -3,7 +3,7 @@
 import Link      from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { API_BASE } from "@/types";
+import { apiFetch } from "@/lib/api";
 import { getWsUrl, type Station } from "@/lib/stations";
 import {
   buildSubscribeMessage,
@@ -88,7 +88,7 @@ export function StationCard({
     if (!confirmDel) { setConfirmDel(true); return; }
     setDeleting(true);
     try {
-      await fetch(`${API_BASE}/stations/${station.id}`, { method: "DELETE" });
+      await apiFetch(`/stations/${station.id}`, { method: "DELETE" });
       onDelete(station.id);
     } catch {
       setDeleting(false);

@@ -1,29 +1,37 @@
-"use client";
+"use client"
+import Link                from "next/link"
+import { useEffect, useState } from "react"
+import { useTranslations } from "next-intl"
+import { apiGet }          from "@/lib/api"
+import { type Station }    from "@/lib/stations"
+import { StationCard }     from "./StationCard"
+import { LoginGate }       from "@/components/ui/LoginGate"
 
-import Link      from "next/link";
-import { useEffect, useState } from "react";
-import { useTranslations }     from "next-intl";
-import { type Station, getAllStations } from "@/lib/stations";
-import { StationCard } from "./StationCard";
+function metaToStation(meta: any): Station {
+  return {
+    id: meta.stationId, name: meta.name ?? meta.stationId,
+    lat: meta.lat ?? 0, lon: meta.lon ?? 0,
+    description: meta.description, backendUrl: meta.backendUrl ?? "", hardware: meta.hardware,
+  }
+}
 
-export default function StationsPage() {
-  const t = useTranslations("stations");
-  const [stations, setStations] = useState<Station[]>([]);
-  const [loading,  setLoading]  = useState(true);
+function StationsContent() {
+  const t = useTranslations("stations")
+  const [stations, setStations] = useState<Station[]>([])
+  const [loading,  setLoading]  = useState(true)
 
   useEffect(() => {
-    getAllStations()
-      .then(setStations)
-      .finally(() => setLoading(false));
-  }, []);
+    apiGet<any[]>("/stations")
+      .then(data => setStations(data.map(metaToStation)))
+      .catch(() => setStations([]))
+      .finally(() => setLoading(false))
+  }, [])
 
-  const handleDelete = (id: string) =>
-    setStations((prev) => prev.filter((s) => s.id !== id));
+  const handleDelete = (id: string) => setStations(prev => prev.filter(s => s.id !== id))
 
   return (
     <div className="h-full overflow-y-auto p-6">
       <div className="max-w-6xl mx-auto flex flex-col gap-5">
-
         <div className="flex items-baseline justify-between">
           <div>
             <h1 className="text-base font-semibold tracking-tight text-text">{t("title")}</h1>
@@ -31,14 +39,11 @@ export default function StationsPage() {
               {loading ? "…" : t("registered", { count: stations.length })}
             </p>
           </div>
-          <Link
-            href="/stations/new"
-            className="px-3 py-1.5 rounded-md text-[13px] font-mono font-medium border border-border bg-surface text-text-muted hover:text-text hover:border-border-hi transition-colors no-underline"
-          >
+          <Link href="/stations/new"
+            className="px-3 py-1.5 rounded-md text-[13px] font-mono font-medium border border-border bg-surface text-text-muted hover:text-text hover:border-border-hi transition-colors no-underline">
             {t("new")}
           </Link>
         </div>
-
         {loading ? (
           <div className="flex items-center justify-center py-24">
             <div className="w-5 h-5 border-[1.5px] border-border border-t-accent rounded-full animate-spin" />
@@ -46,24 +51,22 @@ export default function StationsPage() {
         ) : stations.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 gap-3 text-text-muted">
             <svg className="w-10 h-10 opacity-20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <circle cx="12" cy="12" r="3"/>
-              <path d="M3 12h3M18 12h3M12 3v3M12 18v3"/>
+              <circle cx="12" cy="12" r="3"/><path d="M3 12h3M18 12h3M12 3v3M12 18v3"/>
             </svg>
             <span className="font-mono text-[13px]">{t("empty")}</span>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-            {stations.map((station) => (
-              <StationCard
-                key={station.id}
-                station={station}
-                onDelete={handleDelete}
-              />
+            {stations.map(station => (
+              <StationCard key={station.id} station={station} onDelete={handleDelete} />
             ))}
           </div>
         )}
-
       </div>
     </div>
-  );
+  )
+}
+
+export default function StationsPage() {
+  return <LoginGate><StationsContent /></LoginGate>
 }

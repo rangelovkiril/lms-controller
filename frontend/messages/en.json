@@ -2,7 +2,11 @@
   "nav": {
     "stations": "Stations",
     "trajectories": "Trajectories",
-    "info": "Info"
+    "info": "Info",
+    "orgs": "Organizations",
+    "manageOrgs": "Manage organizations",
+    "signOut": "Sign out",
+    "signIn": "Sign in"
   },
   "stations": {
     "title": "Stations",
@@ -191,5 +195,47 @@
       "log": "slr/{id}/log/{LEVEL} — log messages",
       "cmd": "slr/{id}/cmd — server commands"
     }
+  },
+  "orgs": {
+    "title": "Organizations",
+    "subtitle": "Create a new organization or join an existing one with an invite code.",
+    "createTab": "Create organization",
+    "joinTab": "Join with invite code",
+    "createPlaceholder": "Organization name",
+    "create": "Create",
+    "joinPlaceholder": "INVITE CODE",
+    "join": "Join",
+    "inviteCode": "Invite code",
+    "inviteHint": "Share this code for others to join",
+    "members": "Members",
+    "leave": "Leave",
+    "leaving": "Leaving...",
+    "deleteOrg": "Delete organization",
+    "deleteConfirm": "Delete \"{name}\" and all its data?",
+    "switch": "Switch",
+    "noOrgs": "No organizations yet",
+    "noOrgsHint": "Create one or ask a teammate for an invite code",
+    "yourOrgs": "Your organizations ({count})",
+    "regenerate": "Regenerate",
+    "copied": "Copied"
+  },
+  "auth": {
+    "welcomeBack": "Welcome back",
+    "signIn": "Sign in to LMS",
+    "email": "Email",
+    "password": "Password",
+    "signInButton": "Sign in",
+    "signingIn": "Signing in...",
+    "noAccount": "No account?",
+    "register": "Register",
+    "createAccount": "Create account",
+    "createAccountSub": "Then create or join an organization",
+    "yourName": "Your name",
+    "createButton": "Create account",
+    "creating": "Creating...",
+    "hasAccount": "Already have an account?",
+    "signInLink": "Sign in",
+    "loginRequired": "Sign in to continue",
+    "loginRequiredHint": "You need to be logged in to access this page."
   }
 }

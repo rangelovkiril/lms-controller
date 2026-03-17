@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useTranslations }     from "next-intl";
-import { API_BASE, TIME_PRESETS } from "@/types";
+import { apiFetch }            from "@/lib/api";
+import { TIME_PRESETS }        from "@/types";
 
 export function useExport(stations: string[], loadingStations: boolean) {
   const t = useTranslations("errors");
@@ -32,7 +33,7 @@ export function useExport(stations: string[], loadingStations: boolean) {
     const loadObjects = async () => {
       patch({ status: "loading-objects", objects: [], object: "" });
       try {
-        const res  = await fetch(`${API_BASE}/stations/${state.station}/objects`, { signal: controller.signal });
+        const res  = await apiFetch(`/stations/${state.station}/objects`, { signal: controller.signal });
         const data = await res.json();
         patch({ objects: data, object: data[0] || "", status: "idle" });
       } catch (e: any) {
@@ -57,7 +58,7 @@ export function useExport(stations: string[], loadingStations: boolean) {
         params.set("start", fluxPreset || "-1h");
       }
 
-      const res = await fetch(`${API_BASE}/data?${params}`);
+      const res = await apiFetch(`/data?${params}`);
       if (!res.ok) throw new Error(t("fetchData"));
 
       const rows = await res.json();
