@@ -1,5 +1,3 @@
-<div align="center">
-
 # 🛰️ lms-controller
 
 **Real-time satellite tracking control system with 3D visualization**
@@ -11,12 +9,10 @@
 [![Three.js](https://img.shields.io/badge/3D-Three.js-000?style=flat-square&logo=three.js)](https://threejs.org)
 [![InfluxDB](https://img.shields.io/badge/TSDB-InfluxDB_2-22ADF6?style=flat-square&logo=influxdb&logoColor=white)](https://influxdata.com)
 [![Docker](https://img.shields.io/badge/deploy-Docker_Compose-2496ED?style=flat-square&logo=docker&logoColor=white)](https://docs.docker.com/compose/)
-[![License](https://img.shields.io/badge/license-BSL_1.1-blue?style=flat-square)](LICENSE)
+[![License](https://img.shields.io/badge/license-GPL_v3-blue?style=flat-square)](LICENSE)
 
 Backend, frontend and infrastructure for the [LMS](https://github.com/Didi0dum/LMS) mini SLR station.
 Single `docker compose up` deployment. See also [lms-hardware](https://github.com/rangelovkiril/lms-hardware) for the Raspberry Pi station software.
-
-</div>
 
 ---
 
@@ -30,27 +26,26 @@ Single `docker compose up` deployment. See also [lms-hardware](https://github.co
 
 **Observation sets** — Import, overlay and compare multiple tracking sessions as colored traces in the same 3D scene
 
-**One-command deploy** — Docker Compose with InfluxDB, Mosquitto, Bun backend and Next.js frontend
+**One-command deploy** — Docker Compose with InfluxDB, Mosquitto, Bun backend and Next.js frontend behind Caddy
 
 ## Architecture
 
-```               
-┌─────────────┐      MQTT pub      ┌────────────┐
-│  Raspberry  │ ────────────────>  │  Mosquitto │
-│  Pi Station │ <────────────────  │   Broker   │
-└─────────────┘      MQTT cmd      └──────┬─────┘
-                                          │ subscribe
-                                    ┌─────▼──────┐
-                                    │            │
-┌──────────────┐  REST + WebSocket  │   Elysia   │
-│   Browser    │ ←────────────────→ │  Backend   │
-│  (Next.js)   │                    │            │
-└──────────────┘                    └──┬──────┬──┘
-                                       │      │
-                                ┌──────▼┐  ┌──▼───────┐
-                                │InfluxDB│  │  SQLite  │
-                                │ (TSDB) │  │  (Auth)  │
-                                └────────┘  └──────────┘
+```
+                  ┌────────────────────────────────────────────────┐
+                  │  Caddy (reverse proxy, TLS)                    │
+                  │  :80/:443 → /api, /ws → :4000  else → :4001    │
+                  └────────────┬─────────────────────┬─────────────┘
+                               │                     │
+┌─────────────┐         ┌──────▼──────┐       ┌──────▼──────┐
+│  Raspberry  │  MQTT   │   Backend   │       │  Frontend   │
+│  Pi Station │ ──────> │   (Elysia)  │       │  (Next.js)  │
+└─────────────┘         │   :4000     │       │   :4001     │
+                        └──┬──────┬───┘       └─────────────┘
+                           │      │
+                     ┌─────▼┐  ┌──▼──────┐
+                     │Influx│  │  SQLite  │
+                     │  DB  │  │  (Auth)  │
+                     └──────┘  └──────────┘
 ```
 
 **Data flow:** Station publishes to MQTT → Backend subscribes, converts polar→cartesian, writes to InfluxDB and broadcasts via WebSocket → Browser renders in Three.js. Commands flow in reverse.
@@ -60,6 +55,7 @@ Single `docker compose up` deployment. See also [lms-hardware](https://github.co
 ### Prerequisites
 
 - Docker + Docker Compose
+- [Caddy](https://caddyserver.com/docs/install) (on the host, not in Docker)
 - Git
 
 ### 1. Clone and configure
@@ -70,33 +66,77 @@ cd lms-controller
 cp .env.example .env
 ```
 
-Edit `.env` and replace the placeholder values with secure random strings. You can use `openssl rand -hex 32` to generate them.
+Generate secrets and fill in `.env`:
 
-<details>
-<summary><b>Environment variables reference</b></summary>
+```bash
+# Generate all secrets at once
+INFLUX_TOKEN=$(openssl rand -hex 32)
+JWT_SECRET=$(openssl rand -hex 32)
+INTERNAL_KEY=$(openssl rand -hex 32)
+INFLUX_ADMIN_PASSWORD=$(openssl rand -hex 16)
 
-| Variable | Description |
-|:--|:--|
-| `INFLUX_TOKEN` | InfluxDB admin token |
-| `JWT_SECRET` | JWT signing key |
-| `INTERNAL_KEY` | Server-to-server auth (Next.js SSR → Backend) |
-| `INFLUX_ADMIN_PASSWORD` | InfluxDB web UI password |
-| `FRONTEND_PORT` | Host port for the web UI (default: `4001`) |
-| `BACKEND_PORT` | Host port for the API (default: `4000`) |
+cat > .env << EOF
+INFLUX_TOKEN=$INFLUX_TOKEN
+INFLUX_ADMIN_PASSWORD=$INFLUX_ADMIN_PASSWORD
+JWT_SECRET=$JWT_SECRET
+INTERNAL_KEY=$INTERNAL_KEY
+EOF
+```
 
-</details>
-
-### 2. Start
+### 2. Start Docker services
 
 ```bash
 docker compose up -d
 ```
 
-First build takes 2–3 minutes. After that, open `http://localhost:4001`.
+First build takes 2–3 minutes. Wait for all services to be healthy:
 
-### 3. Initial setup
+```bash
+docker compose ps
+```
 
-1. **Register** an account
+### 3. Start Caddy
+
+**Local development:**
+
+```bash
+caddy run --config caddy/Caddyfile
+```
+
+Open `http://localhost` in your browser.
+
+**Production (VPS):**
+
+Edit `caddy/Caddyfile` — comment out the `:80` block and uncomment the production block with your domain:
+
+```
+lmsproject.space {
+    handle /api/* {
+        reverse_proxy localhost:4000
+    }
+
+    handle /ws {
+        reverse_proxy localhost:4000
+    }
+
+    handle {
+        reverse_proxy localhost:4001
+    }
+}
+```
+
+Then run Caddy as a systemd service:
+
+```bash
+sudo cp caddy/Caddyfile /etc/caddy/Caddyfile
+sudo systemctl restart caddy
+```
+
+Caddy automatically provisions TLS certificates via Let's Encrypt.
+
+### 4. Initial setup
+
+1. **Register** an account at `http://localhost` (or your domain)
 2. **Create an organization** (or join one with an invite code)
 3. **Add a station** — save the write-only token shown after creation
 4. **Configure the Raspberry Pi** with the token, MQTT broker address and station ID
@@ -117,6 +157,20 @@ cd frontend && bun install && bun run dev
 # Tests
 cd backend && bun test
 ```
+
+When running locally without Docker, set `BACKEND_URL=http://localhost:3000` for the frontend and make sure Caddy points to the right ports.
+
+<details>
+<summary><b>Environment variables reference</b></summary>
+
+| Variable | Description |
+|:--|:--|
+| `INFLUX_TOKEN` | InfluxDB admin API token |
+| `INFLUX_ADMIN_PASSWORD` | InfluxDB web UI password (min 8 chars) |
+| `JWT_SECRET` | JWT signing key for user auth |
+| `INTERNAL_KEY` | Server-to-server auth (Next.js SSR → Backend) |
+
+</details>
 
 <details>
 <summary><b>MQTT topics</b></summary>
@@ -165,6 +219,7 @@ lms-controller/
 │   ├── messages/                    # i18n (en.json, bg.json)
 │   └── Dockerfile
 ├── broker/config/mosquitto.conf
+├── caddy/Caddyfile                  # Reverse proxy config (local + production)
 ├── docker-compose.yaml
 └── .env.example
 ```
@@ -180,4 +235,5 @@ The current Bun + Elysia backend is a working proof of concept. The long-term pl
 The frontend (Next.js + Three.js) and the InfluxDB time-series storage will remain as-is.
 
 ## License
+
 GPL v3 — see [LICENSE](LICENSE) for details.

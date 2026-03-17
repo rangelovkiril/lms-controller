@@ -50,7 +50,7 @@ const cmdRef: CommandHandlerRef = {
 const app = new Elysia()
   .use(
     cors({
-      origin: Bun.env.CORS_ORIGIN ?? "*",
+      origin: true,
       methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
       allowedHeaders: ["Content-Type", "Authorization", "X-Org-Id"],
       credentials: false,
