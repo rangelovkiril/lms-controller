@@ -1,39 +1,48 @@
 import { Elysia } from "elysia"
 import { InfluxDB, Point, WriteApi } from "@influxdata/influxdb-client"
-import { BucketsAPI, OrgsAPI, AuthorizationsAPI } from "@influxdata/influxdb-client-apis"
+import {
+  BucketsAPI,
+  OrgsAPI,
+  AuthorizationsAPI,
+} from "@influxdata/influxdb-client-apis"
 
 export interface InfluxConfig {
-  url:   string
+  url: string
   token: string
-  org:   string
+  org: string
 }
 
 export interface InfluxClient {
-  org:                 string
-  url:                 string
-  writePoint:          (point: Point, bucket: string) => Promise<void>
-  writePointWithToken: (point: Point, bucket: string, token: string) => Promise<void>
-  query:               <T = any>(flux: string) => Promise<T[]>
-  ensureBucket:        (bucket: string) => Promise<void>
-  getOrgId:            () => Promise<string>
-  bucketsApi:          BucketsAPI
-  authApi:             AuthorizationsAPI
+  org: string
+  url: string
+  writePoint: (point: Point, bucket: string) => Promise<void>
+  writePointImmediate: (point: Point, bucket: string) => Promise<void>
+  writePointWithToken: (
+    point: Point,
+    bucket: string,
+    token: string,
+  ) => Promise<void>
+  query: <T = any>(flux: string) => Promise<T[]>
+  ensureBucket: (bucket: string) => Promise<void>
+  getOrgId: () => Promise<string>
+  bucketsApi: BucketsAPI
+  authApi: AuthorizationsAPI
 }
 
 export const influx = (config: InfluxConfig) => {
-  const client     = new InfluxDB({ url: config.url, token: config.token })
-  const queryApi   = client.getQueryApi(config.org)
+  const client = new InfluxDB({ url: config.url, token: config.token })
+  const queryApi = client.getQueryApi(config.org)
   const bucketsApi = new BucketsAPI(client)
-  const orgsApi    = new OrgsAPI(client)
-  const authApi    = new AuthorizationsAPI(client)
+  const orgsApi = new OrgsAPI(client)
+  const authApi = new AuthorizationsAPI(client)
 
-  const writeApis        = new Map<string, WriteApi>()
+  const writeApis = new Map<string, WriteApi>()
   const stationWriteApis = new Map<string, WriteApi>()
   const confirmedBuckets = new Set<string>()
 
   const getOrgId = async (): Promise<string> => {
     const orgs = await orgsApi.getOrgs({ org: config.org })
-    const org  = orgs.orgs?.find((o) => o.name === config.org)
+    const org = orgs.orgs?.find((o) => o.name === config.org)
     if (!org?.id) throw new Error(`Org "${config.org}" not found`)
     return org.id
   }
@@ -47,7 +56,10 @@ export const influx = (config: InfluxConfig) => {
       exists = (res.buckets?.length ?? 0) > 0
     } catch (err: any) {
       if (err?.statusCode !== 404) {
-        console.error(`[InfluxDB] Error checking bucket "${bucket}":`, err?.json ?? err)
+        console.error(
+          `[InfluxDB] Error checking bucket "${bucket}":`,
+          err?.json ?? err,
+        )
         return
       }
     }
@@ -65,7 +77,10 @@ export const influx = (config: InfluxConfig) => {
       confirmedBuckets.add(bucket)
       console.log(`[InfluxDB] Created bucket "${bucket}"`)
     } catch (err: any) {
-      console.error(`[InfluxDB] Could not create bucket "${bucket}":`, err?.json ?? err)
+      console.error(
+        `[InfluxDB] Could not create bucket "${bucket}":`,
+        err?.json ?? err,
+      )
     }
   }
 
@@ -80,7 +95,10 @@ export const influx = (config: InfluxConfig) => {
     const key = `${bucket}::${token}`
     if (!stationWriteApis.has(key)) {
       const stationClient = new InfluxDB({ url: config.url, token })
-      stationWriteApis.set(key, stationClient.getWriteApi(config.org, bucket, "ns"))
+      stationWriteApis.set(
+        key,
+        stationClient.getWriteApi(config.org, bucket, "ns"),
+      )
     }
     return stationWriteApis.get(key)!
   }
@@ -89,6 +107,7 @@ export const influx = (config: InfluxConfig) => {
     org: config.org,
     url: config.url,
 
+    /** Buffered write — good for high-frequency data (positions) */
     writePoint: async (point: Point, bucket: string): Promise<void> => {
       await ensureBucket(bucket)
       try {
@@ -98,16 +117,41 @@ export const influx = (config: InfluxConfig) => {
       }
     },
 
-    writePointWithToken: async (point: Point, bucket: string, token: string): Promise<void> => {
+    /** Write + flush — use for metadata that must be readable immediately */
+    writePointImmediate: async (
+      point: Point,
+      bucket: string,
+    ): Promise<void> => {
+      await ensureBucket(bucket)
       try {
-        getStationWriteApi(bucket, token).writePoint(point)
+        const api = getWriteApi(bucket)
+        api.writePoint(point)
+        await api.flush()
       } catch (err) {
-        console.error(`[InfluxDB] Station write error (bucket: ${bucket}):`, err)
+        console.error(
+          `[InfluxDB] Immediate write error (bucket: ${bucket}):`,
+          err,
+        )
       }
     },
 
-    query:        <T = any>(flux: string): Promise<T[]> =>
-                    queryApi.collectRows(flux) as Promise<T[]>,
+    writePointWithToken: async (
+      point: Point,
+      bucket: string,
+      token: string,
+    ): Promise<void> => {
+      try {
+        getStationWriteApi(bucket, token).writePoint(point)
+      } catch (err) {
+        console.error(
+          `[InfluxDB] Station write error (bucket: ${bucket}):`,
+          err,
+        )
+      }
+    },
+
+    query: <T = any>(flux: string): Promise<T[]> =>
+      queryApi.collectRows(flux) as Promise<T[]>,
     ensureBucket,
     getOrgId,
     bucketsApi,
@@ -119,9 +163,11 @@ export const influx = (config: InfluxConfig) => {
     .onStop(async () => {
       const allApis = [...writeApis.values(), ...stationWriteApis.values()]
       const closers = allApis.map((api) =>
-        api.close().catch((err) =>
-          console.error("[InfluxDB] Failed to flush on shutdown:", err)
-        )
+        api
+          .close()
+          .catch((err) =>
+            console.error("[InfluxDB] Failed to flush on shutdown:", err),
+          ),
       )
       await Promise.all(closers)
       console.log(`[InfluxDB] Closed ${closers.length} write API(s)`)
