@@ -57,6 +57,8 @@ services:
   mqtt:
     image: eclipse-mosquitto:latest
     restart: unless-stopped
+    ports:
+      - "1883:1883"
     volumes:
       - ./broker/config:/mosquitto/config:ro
       - mosquitto-data:/mosquitto/data
