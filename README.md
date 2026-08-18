@@ -12,21 +12,21 @@
 [![License](https://img.shields.io/badge/license-GPL_v3-blue?style=flat-square)](LICENSE)
 
 Backend, frontend and infrastructure for the [LMS](https://github.com/Didi0dum/LMS) mini SLR station.
-Single `docker compose up` deployment. See also [lms-hardware](https://github.com/rangelovkiril/lms-hardware) for the Raspberry Pi station software.
+Raspberry Pi station software: [lms-hardware](https://github.com/rangelovkiril/lms-hardware).
 
 ---
 
 ## Features
 
-**Real-time 3D tracking** — WebGL scene with live position updates at up to 10 Hz, speed-colored trajectory trace and satellite model
+**Real-time 3D tracking:** WebGL scene, position updates up to 10 Hz, speed-colored trajectory trace and satellite model
 
-**MQTT telemetry pipeline** — Station → Mosquitto → Backend → InfluxDB + WebSocket → Browser, with polar→cartesian coordinate conversion
+**MQTT telemetry pipeline:** Station → Mosquitto → Backend → InfluxDB + WebSocket → Browser
 
-**Multi-organization** — Independent user accounts, invite-code groups, role-based access (owner / admin / member), station isolation per org
+**Multi-organization:** independent user accounts, invite-code groups, roles (owner / admin / member), station isolation per org
 
-**Observation sets** — Import, overlay and compare multiple tracking sessions as colored traces in the same 3D scene
+**Observation sets:** import, overlay and compare tracking sessions as colored traces in one 3D scene
 
-**One-command deploy** — Docker Compose with InfluxDB, Mosquitto, Bun backend and Next.js frontend behind Caddy
+**One-command deploy:** Docker Compose with InfluxDB, Mosquitto, Bun backend and Next.js frontend behind Caddy
 
 ## Architecture
 
@@ -48,7 +48,7 @@ Single `docker compose up` deployment. See also [lms-hardware](https://github.co
                      └──────┘  └──────────┘
 ```
 
-**Data flow:** Station publishes to MQTT → Backend subscribes, converts polar→cartesian, writes to InfluxDB and broadcasts via WebSocket → Browser renders in Three.js. Commands flow in reverse.
+**Data flow:** the backend converts polar→cartesian on ingest, writes to InfluxDB and pushes over WebSocket; the browser renders in Three.js. Commands flow in reverse.
 
 ## Quick Start
 
@@ -66,10 +66,9 @@ cd lms-controller
 cp .env.example .env
 ```
 
-Generate secrets and fill in `.env`:
+Secrets for `.env`:
 
 ```bash
-# Generate all secrets at once
 INFLUX_TOKEN=$(openssl rand -hex 32)
 JWT_SECRET=$(openssl rand -hex 32)
 INTERNAL_KEY=$(openssl rand -hex 32)
@@ -89,7 +88,7 @@ EOF
 docker compose up -d
 ```
 
-First build takes 2–3 minutes. Wait for all services to be healthy:
+First build takes 2-3 minutes. Service health:
 
 ```bash
 docker compose ps
@@ -103,11 +102,11 @@ docker compose ps
 caddy run --config caddy/Caddyfile
 ```
 
-Open `http://localhost` in your browser.
+Serves on `http://localhost`.
 
 **Production (VPS):**
 
-Edit `caddy/Caddyfile` — comment out the `:80` block and uncomment the production block with your domain:
+In `caddy/Caddyfile`, comment out the `:80` block and uncomment the production block:
 
 ```
 lmsproject.space {
@@ -125,22 +124,22 @@ lmsproject.space {
 }
 ```
 
-Then run Caddy as a systemd service:
+As a systemd service:
 
 ```bash
 sudo cp caddy/Caddyfile /etc/caddy/Caddyfile
 sudo systemctl restart caddy
 ```
 
-Caddy automatically provisions TLS certificates via Let's Encrypt.
+Caddy handles TLS via Let's Encrypt automatically.
 
 ### 4. Initial setup
 
-1. **Register** an account at `http://localhost` (or your domain)
-2. **Create an organization** (or join one with an invite code)
-3. **Add a station** — save the write-only token shown after creation
-4. **Configure the Raspberry Pi** with the token, MQTT broker address and station ID
-5. Start the hardware client — data appears in the 3D view
+1. Account registration at `http://localhost` or the deployed domain
+2. Organization creation, or joining with an invite code
+3. Station creation, returning a write-only token to save
+4. Raspberry Pi configuration with the token, broker address and station ID
+5. Hardware client start; data appears in the 3D view
 
 ## Development
 
@@ -158,7 +157,7 @@ cd frontend && bun install && bun run dev
 cd backend && bun test
 ```
 
-When running locally without Docker, set `BACKEND_URL=http://localhost:3000` for the frontend and make sure Caddy points to the right ports.
+Without Docker, the frontend needs `BACKEND_URL=http://localhost:3000` and Caddy the matching ports.
 
 <details>
 <summary><b>Environment variables reference</b></summary>
@@ -188,9 +187,9 @@ When running locally without Docker, set `BACKEND_URL=http://localhost:3000` for
 <details>
 <summary><b>Auth model</b></summary>
 
-- **Users** are independent — register with email + password
-- **Organizations** are groups with 8-character invite codes
-- A user can be in multiple organizations (owner / admin / member)
+- **Users**: independent accounts, email + password
+- **Organizations**: groups with 8-character invite codes
+- A user can belong to multiple organizations
 - Stations belong to an organization, scoped via `X-Org-Id` header
 - JWT (HS256) in `Authorization: Bearer` header
 - `X-Internal-Key` for server-to-server calls (Next.js SSR → Backend)
@@ -226,14 +225,14 @@ lms-controller/
 
 ## Roadmap
 
-The current Bun + Elysia backend is a working proof of concept. The long-term plan is to rewrite the backend on the **BEAM VM**:
+The Bun + Elysia backend is a proof of concept. Long-term plan: rewrite on the **BEAM VM**.
 
-- 🔜 **Elixir/OTP** backend — leveraging lightweight processes, fault tolerance and built-in distribution for handling hundreds of concurrent station connections
-- 🔜 **EMQX** replacing Mosquitto — clustered MQTT broker with native Elixir integration, rule engine and better scalability
-- 🔜 **LiveView** or Phoenix Channels for real-time UI updates without a separate WebSocket layer
+- **Elixir/OTP**: lightweight processes, fault tolerance and distribution for hundreds of concurrent station connections
+- **EMQX** instead of Mosquitto: clustered broker, native Elixir integration, rule engine
+- **LiveView** or Phoenix Channels for real-time UI without a separate WebSocket layer
 
-The frontend (Next.js + Three.js) and the InfluxDB time-series storage will remain as-is.
+Frontend (Next.js + Three.js) and InfluxDB storage stay as-is.
 
 ## License
 
-GPL v3 — see [LICENSE](LICENSE) for details.
+GPL v3, see [LICENSE](LICENSE).
